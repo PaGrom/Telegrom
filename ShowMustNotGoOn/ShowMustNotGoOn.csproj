@@ -12,6 +12,7 @@
     <PackageReference Include="Serilog.Sinks.File" Version="4.0.0" />
     <PackageReference Include="Serilog.Sinks.RollingFile" Version="3.3.0" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
+    <PackageReference Include="System.Threading.Channels" Version="4.5.0" />
     <PackageReference Include="Telegram.Bot" Version="15.0.0" />
   </ItemGroup>
 
