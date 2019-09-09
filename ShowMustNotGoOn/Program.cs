@@ -3,7 +3,7 @@ using System.Configuration;
 using System.Threading.Tasks;
 using Autofac;
 using Serilog;
-using ShowMustNotGoOn.MyShowsApi;
+using ShowMustNotGoOn.MyShowsRepository;
 using Telegram.Bot;
 
 namespace ShowMustNotGoOn
@@ -25,7 +25,7 @@ namespace ShowMustNotGoOn
             builder.RegisterInstance(new TelegramBotClient(ConfigurationManager.AppSettings["TelegramApiToken"]))
                 .AsImplementedInterfaces();
 
-            builder.RegisterModule(new MyShowsApiModule
+            builder.RegisterModule(new MyShowsRepositoryModule
             {
                 MyShowsApiUrl = ConfigurationManager.AppSettings["MyShowsApiUrl"]
             });

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Serilog;
+using ShowMustNotGoOn.Core;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 
@@ -9,19 +10,19 @@ namespace ShowMustNotGoOn
     public class Application
     {
         private readonly ITelegramBotClient _telegramBotClient;
-        private readonly MyShowsApi.MyShowsApi _myShowsApi;
+        private readonly ITvShowsRepository _tvShowsRepository;
         private readonly ILogger _logger;
 
-        public Application(ITelegramBotClient telegramBotClient, MyShowsApi.MyShowsApi myShowsApi, ILogger logger)
+        public Application(ITelegramBotClient telegramBotClient, ITvShowsRepository tvShowsRepository, ILogger logger)
         {
             _telegramBotClient = telegramBotClient;
-            _myShowsApi = myShowsApi;
+            _tvShowsRepository = tvShowsRepository;
             _logger = logger;
         }
 
         public async Task RunAsync()
         {
-            var data = await _myShowsApi.SearchShowAsync("Dark");
+            var data = await _tvShowsRepository.SearchTvShowsAsync("Dark");
 
             _logger.Information("Application start");
             var me = await _telegramBotClient.GetMeAsync();

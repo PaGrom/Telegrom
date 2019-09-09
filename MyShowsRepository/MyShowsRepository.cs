@@ -1,23 +1,28 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using AutoMapper;
 using RestSharp;
 using Serilog;
-using ShowMustNotGoOn.MyShowsApi.Model;
+using ShowMustNotGoOn.Core;
+using ShowMustNotGoOn.MyShowsRepository.Model;
 
-namespace ShowMustNotGoOn.MyShowsApi
+namespace ShowMustNotGoOn.MyShowsRepository
 {
-    public sealed class MyShowsApi
+    public sealed class MyShowsRepository : ITvShowsRepository
     {
         private readonly IRestClient _client;
+        private readonly IMapper _mapper;
         private readonly ILogger _logger;
 
-        public MyShowsApi(IRestClient client, ILogger logger)
+        public MyShowsRepository(IRestClient client, IMapper mapper, ILogger logger)
         {
             _client = client;
+            _mapper = mapper;
             _logger = logger;
         }
 
-        public async Task<ResponseResult> SearchShowAsync(string param)
+        public async Task<IEnumerable<TvShow>> SearchTvShowsAsync(string name)
         {
             var request = new RestRequest(Method.POST)
             {
@@ -29,12 +34,14 @@ namespace ShowMustNotGoOn.MyShowsApi
                 method = "shows.Search",
                 @params = new
                 {
-                    query = param
+                    query = name
                 },
                 id = 1
             });
 
-            return await ExecuteAsync<ResponseResult>(request);
+            var responseResult = await ExecuteAsync<ResponseResult>(request);
+
+            return _mapper.Map<List<Result>, IEnumerable<TvShow>>(responseResult.Result);
         }
 
         private async Task<T> ExecuteAsync<T>(IRestRequest request) where T : new()
