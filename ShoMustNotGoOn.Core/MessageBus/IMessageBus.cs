@@ -5,8 +5,8 @@ namespace ShowMustNotGoOn.Core.MessageBus
 {
     public interface IMessageBus
     {
-        void RegisterHandler<T>(Action<T> handleAction) where T : IJob;
-        Task Enqueue(IJob job);
+        void RegisterHandler<T>(Action<T> handleAction) where T : IMessage;
+        Task Enqueue(IMessage job);
         void Stop();
     }
 }

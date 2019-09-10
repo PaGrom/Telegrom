@@ -1,6 +1,6 @@
 ﻿namespace ShowMustNotGoOn.Core.MessageBus
 {
-    public interface IJob
+    public interface IMessage
     {
     }
 }

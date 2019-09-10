@@ -6,14 +6,14 @@ using ShowMustNotGoOn.Core.MessageBus;
 
 namespace ShowMustNotGoOn
 {
-    public sealed class MessageBus : IMessageBus
+    public sealed class MessageBus : IMessageBus, IDisposable
     {
-        private readonly ChannelWriter<IJob> _writer;
-        private readonly Dictionary<Type, Action<IJob>> _handlers = new Dictionary<Type, Action<IJob>>();
+        private readonly ChannelWriter<IMessage> _writer;
+        private readonly Dictionary<Type, Action<IMessage>> _handlers = new Dictionary<Type, Action<IMessage>>();
 
         public MessageBus()
         {
-            var channel = Channel.CreateUnbounded<IJob>();
+            var channel = Channel.CreateUnbounded<IMessage>();
             var reader = channel.Reader;
             _writer = channel.Writer;
 
@@ -31,13 +31,13 @@ namespace ShowMustNotGoOn
             }, TaskCreationOptions.LongRunning);
         }
 
-        public void RegisterHandler<T>(Action<T> handleAction) where T : IJob
+        public void RegisterHandler<T>(Action<T> handleAction) where T : IMessage
         {
-            void ActionWrapper(IJob job) => handleAction((T) job);
+            void ActionWrapper(IMessage job) => handleAction((T) job);
             _handlers.Add(typeof(T), ActionWrapper);
         }
 
-        public async Task Enqueue(IJob job)
+        public async Task Enqueue(IMessage job)
         {
             await _writer.WriteAsync(job);
         }
@@ -45,6 +45,11 @@ namespace ShowMustNotGoOn
         public void Stop()
         {
             _writer.Complete();
+        }
+
+        public void Dispose()
+        {
+            Stop();
         }
     }
 }

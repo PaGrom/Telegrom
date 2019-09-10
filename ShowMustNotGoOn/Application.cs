@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Serilog;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.MessageBus;
+using ShowMustNotGoOn.Messages;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 
@@ -16,7 +17,10 @@ namespace ShowMustNotGoOn
         private readonly IMessageBus _messageBus;
         private readonly ILogger _logger;
 
-        public Application(ITelegramBotClient telegramBotClient, ITvShowsRepository tvShowsRepository, IMessageBus messageBus, ILogger logger)
+        public Application(ITelegramBotClient telegramBotClient,
+            ITvShowsRepository tvShowsRepository,
+            IMessageBus messageBus,
+            ILogger logger)
         {
             _telegramBotClient = telegramBotClient;
             _tvShowsRepository = tvShowsRepository;
@@ -56,10 +60,5 @@ namespace ShowMustNotGoOn
             var message = e.Message;
             _logger.Information("Get message {@message}", message);
         }
-    }
-
-    public class RequestTvShow : IJob
-    {
-        public string Name { get; set; }
     }
 }
