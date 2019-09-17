@@ -1,10 +1,15 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Configuration;
+using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
+using AutoMapper;
+using DbRepository;
 using Serilog;
 using ShowMustNotGoOn.Core.MessageBus;
 using ShowMustNotGoOn.MyShowsRepository;
+using ShowMustNotGoOn.MyShowsRepository.Model;
 using Telegram.Bot;
 
 namespace ShowMustNotGoOn
@@ -34,6 +39,24 @@ namespace ShowMustNotGoOn
             {
                 MyShowsApiUrl = ConfigurationManager.AppSettings["MyShowsApiUrl"]
             });
+
+            builder.RegisterModule(new DbRepositoryModule
+            {
+                ConnectionString = ConfigurationManager.ConnectionStrings["DefaultConnection"].ConnectionString
+            });
+
+            builder.Register(ctx => new MapperConfiguration(cfg =>
+            {
+                var profiles = ctx.Resolve<IEnumerable<Profile>>().ToList();
+                foreach (var profile in profiles)
+                {
+                    cfg.AddProfile(profile);
+                }
+            }));
+
+            builder.Register(ctx => ctx.Resolve<MapperConfiguration>().CreateMapper())
+                .As<IMapper>()
+                .InstancePerLifetimeScope();
 
             builder.RegisterType<Application>();
 

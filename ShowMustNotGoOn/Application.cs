@@ -15,16 +15,19 @@ namespace ShowMustNotGoOn
         private readonly ITelegramBotClient _telegramBotClient;
         private readonly ITvShowsRepository _tvShowsRepository;
         private readonly IMessageBus _messageBus;
+        private readonly IShowsDbRepository _dbRepository;
         private readonly ILogger _logger;
 
         public Application(ITelegramBotClient telegramBotClient,
             ITvShowsRepository tvShowsRepository,
             IMessageBus messageBus,
+            IShowsDbRepository dbRepository,
             ILogger logger)
         {
             _telegramBotClient = telegramBotClient;
             _tvShowsRepository = tvShowsRepository;
             _messageBus = messageBus;
+            _dbRepository = dbRepository;
             _logger = logger;
         }
 
@@ -32,10 +35,20 @@ namespace ShowMustNotGoOn
         {
             _logger.Information("Application start");
 
+            _messageBus.RegisterHandler<SaveTvShowToDb>(async r =>
+            {
+                var tvShow = await _dbRepository.AddNewTvShowAsync(r.TvShow);
+            });
+
             _messageBus.RegisterHandler<RequestTvShow>(async r =>
             {
                 var tvShows = await _tvShowsRepository.SearchTvShowsAsync(r.Name);
-                _logger.Information($"Found {tvShows.Count()} by name {r.Name}");
+                var shows = tvShows.ToList();
+                _logger.Information($"Found {shows.Count} by name {r.Name}");
+                await _messageBus.Enqueue(new SaveTvShowToDb
+                {
+                    TvShow = shows.First()
+                });
             });
 
             await _messageBus.Enqueue(new RequestTvShow

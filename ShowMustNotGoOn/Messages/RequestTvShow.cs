@@ -1,9 +1,10 @@
-﻿using ShowMustNotGoOn.Core.MessageBus;
+﻿using ShowMustNotGoOn.Core;
+using ShowMustNotGoOn.Core.MessageBus;
 
 namespace ShowMustNotGoOn.Messages
 {
-    public class RequestTvShow : IMessage
+    public sealed class SaveTvShowToDb : IMessage
     {
-        public string Name { get; set; }
+        public TvShow TvShow { get; set; }
     }
 }
