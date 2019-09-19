@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShowMustNotGoOn.Core", "Sho
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyShowsRepository", "MyShowsRepository\MyShowsRepository.csproj", "{BE1DB38B-EAD7-4937-8EFF-3D1FDBEF6A75}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbRepository", "DbRepository\DbRepository.csproj", "{B67C3F8D-4664-490F-B983-C4DD88E95B75}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DbRepository", "DbRepository\DbRepository.csproj", "{B67C3F8D-4664-490F-B983-C4DD88E95B75}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

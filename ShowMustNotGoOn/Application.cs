@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Autofac;
 using Serilog;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.MessageBus;
@@ -10,7 +11,7 @@ using Telegram.Bot.Args;
 
 namespace ShowMustNotGoOn
 {
-    public class Application
+    public class Application : IStartable
     {
         private readonly ITelegramBotClient _telegramBotClient;
         private readonly ITvShowsRepository _tvShowsRepository;
@@ -72,6 +73,11 @@ namespace ShowMustNotGoOn
         {
             var message = e.Message;
             _logger.Information("Get message {@message}", message);
+        }
+
+        public void Start()
+        {
+            RunAsync().ConfigureAwait(false).GetAwaiter().GetResult();
         }
     }
 }
