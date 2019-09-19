@@ -1,35 +1,31 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
-using Autofac;
 using Serilog;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.MessageBus;
 using ShowMustNotGoOn.Messages;
-using Telegram.Bot;
-using Telegram.Bot.Args;
 
 namespace ShowMustNotGoOn
 {
-    public class Application : IStartable
+    public class Application
     {
-        private readonly ITelegramBotClient _telegramBotClient;
         private readonly ITvShowsRepository _tvShowsRepository;
         private readonly IMessageBus _messageBus;
         private readonly IShowsDbRepository _dbRepository;
         private readonly ILogger _logger;
 
-        public Application(ITelegramBotClient telegramBotClient,
-            ITvShowsRepository tvShowsRepository,
+        public Application(ITvShowsRepository tvShowsRepository,
             IMessageBus messageBus,
             IShowsDbRepository dbRepository,
             ILogger logger)
         {
-            _telegramBotClient = telegramBotClient;
             _tvShowsRepository = tvShowsRepository;
             _messageBus = messageBus;
             _dbRepository = dbRepository;
             _logger = logger;
+
+            Task.Factory.StartNew(async () => { await RunAsync(); },
+                TaskCreationOptions.LongRunning);
         }
 
         public async Task RunAsync()
@@ -57,27 +53,8 @@ namespace ShowMustNotGoOn
                 Name = "Dark"
             });
 
-            await Task.Delay(100000);
+            await Task.Delay(1000000);
 
-            var me = await _telegramBotClient.GetMeAsync();
-            _logger.Information($"Hello, World! I am user {me.Id} and my name is {me.FirstName}.");
-
-            _telegramBotClient.OnMessage += BotOnMessageReceived;
-
-            _telegramBotClient.StartReceiving();
-            Console.ReadLine();
-            _telegramBotClient.StopReceiving();
-        }
-
-        private void BotOnMessageReceived(object sender, MessageEventArgs e)
-        {
-            var message = e.Message;
-            _logger.Information("Get message {@message}", message);
-        }
-
-        public void Start()
-        {
-            RunAsync().ConfigureAwait(false).GetAwaiter().GetResult();
         }
     }
 }

@@ -7,6 +7,7 @@ using AutoMapper;
 using DbRepository;
 using Microsoft.Extensions.Configuration;
 using Serilog;
+using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.MessageBus;
 using ShowMustNotGoOn.MyShowsRepository;
 using Telegram.Bot;
@@ -55,7 +56,15 @@ namespace ShowMustNotGoOn
                 .As<IMapper>()
                 .InstancePerLifetimeScope();
 
-            builder.RegisterType<Application>().AsSelf().As<IStartable>();
+            builder.RegisterType<TelegramService>()
+                .As<ITelegramService>()
+                .SingleInstance()
+                .AutoActivate();
+
+            builder.RegisterType<Application>()
+                .AsSelf()
+                .SingleInstance()
+                .AutoActivate();
         }
     }
 }
