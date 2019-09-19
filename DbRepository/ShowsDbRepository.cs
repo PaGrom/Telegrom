@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using AutoMapper;
+using DbRepository.Entities;
 using ShowMustNotGoOn.Core;
 
 namespace DbRepository
@@ -17,7 +18,7 @@ namespace DbRepository
 
         public async Task<TvShow> AddNewTvShowAsync(TvShow tvShow)
         {
-            var show = _dbContext.TvShows.Add(_mapper.Map<DbRepository.Model.TvShow>(tvShow)).Entity;
+            var show = _dbContext.TvShows.Add(_mapper.Map<TvShows>(tvShow)).Entity;
             await _dbContext.SaveChangesAsync();
             return _mapper.Map<TvShow>(show);
         }

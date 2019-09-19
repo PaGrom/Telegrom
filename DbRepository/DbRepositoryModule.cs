@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using AutoMapper;
+using DbRepository.Entities;
 
 namespace DbRepository
 {

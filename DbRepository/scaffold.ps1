@@ -1,0 +1,1 @@
+﻿Scaffold-DbContext "Data Source=C:\Users\PaGrom\source\repos\ShowMustNotGoOn\DbRepository\ShowMustNotGoOn.db" Microsoft.EntityFrameworkCore.Sqlite -DataAnnotations -Force -Context ShowsDbContext -OutputDir Entities
