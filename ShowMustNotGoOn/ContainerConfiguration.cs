@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Serilog;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.MessageBus;
+using ShowMustNotGoOn.Messages.Handlers;
 using ShowMustNotGoOn.MyShowsRepository;
 using Telegram.Bot;
 
@@ -58,6 +59,14 @@ namespace ShowMustNotGoOn
 
             builder.RegisterType<TelegramService>()
                 .As<ITelegramService>()
+                .SingleInstance()
+                .AutoActivate();
+
+            builder.RegisterType<DbMessageHandler>()
+                .SingleInstance()
+                .AutoActivate();
+
+            builder.RegisterType<MyShowsMessageHandler>()
                 .SingleInstance()
                 .AutoActivate();
 
