@@ -23,6 +23,7 @@ namespace DbRepository
         public async Task<TvShow> AddNewTvShowAsync(TvShow tvShow)
         {
             var show = _mapper.Map<TvShows>(tvShow);
+            using var transaction = _dbContext.Database.BeginTransaction();
             var existingShow = await _dbContext.TvShows.SingleOrDefaultAsync(s => s.MyShowsId == show.MyShowsId);
             if (existingShow != null)
             {
@@ -35,6 +36,8 @@ namespace DbRepository
                 show = _dbContext.TvShows.Add(show).Entity;
                 await _dbContext.SaveChangesAsync();
             }
+
+            transaction.Commit();
 
             return _mapper.Map<TvShow>(show);
         }
