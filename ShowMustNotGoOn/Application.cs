@@ -4,6 +4,8 @@ using Serilog;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.MessageBus;
 using ShowMustNotGoOn.Messages;
+using ShowMustNotGoOn.Messages.Commands;
+using ShowMustNotGoOn.Messages.Event;
 
 namespace ShowMustNotGoOn
 {
@@ -32,26 +34,27 @@ namespace ShowMustNotGoOn
         {
             _logger.Information("Application start");
 
-            _messageBus.RegisterHandler<SaveTvShowToDb>(async r =>
+            _messageBus.RegisterHandler<AddTvShowToDbCommand>(async r =>
             {
                 var tvShow = await _dbRepository.AddNewTvShowAsync(r.TvShow);
+                _logger.Information($"TvShow {tvShow.Title} added to db");
+                await _messageBus.Enqueue(new TvShowAddedToDbEvent(tvShow));
             });
 
-            _messageBus.RegisterHandler<RequestTvShow>(async r =>
+            _messageBus.RegisterHandler<TvShowFoundEvent>(async e =>
+                await _messageBus.Enqueue(new AddTvShowToDbCommand(e.TvShow)));
+
+            _messageBus.RegisterHandler<SearchTvShowByNameCommand>(async r =>
             {
+                _logger.Information($"Searching TV Show by name {r.Name} at position {r.Position}");
                 var tvShows = await _tvShowsRepository.SearchTvShowsAsync(r.Name);
-                var shows = tvShows.ToList();
-                _logger.Information($"Found {shows.Count} by name {r.Name}");
-                await _messageBus.Enqueue(new SaveTvShowToDb
-                {
-                    TvShow = shows.First()
-                });
+                var shows = tvShows.ToArray();
+                _logger.Information($"Found {shows.Length} by name {r.Name}");
+                var show = shows[r.Position];
+                await _messageBus.Enqueue(new TvShowFoundEvent(show));
             });
 
-            await _messageBus.Enqueue(new RequestTvShow
-            {
-                Name = "Dark"
-            });
+            await _messageBus.Enqueue(new SearchTvShowByNameCommand("Dark"));
 
             await Task.Delay(1000000);
 
