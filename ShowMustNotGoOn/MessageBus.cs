@@ -9,11 +9,33 @@ using ShowMustNotGoOn.Core.MessageBus;
 
 namespace ShowMustNotGoOn
 {
+    public static class DelegateUtility
+    {
+        public static T Cast<T>(Delegate source) where T : class
+        {
+            return Cast(source, typeof(T)) as T;
+        }
+        public static Delegate Cast(Delegate source, Type type)
+        {
+            if (source == null)
+                return null;
+            Delegate[] delegates = source.GetInvocationList();
+            if (delegates.Length == 1)
+                return Delegate.CreateDelegate(type,
+                    delegates[0].Target, delegates[0].Method);
+            Delegate[] delegatesDest = new Delegate[delegates.Length];
+            for (int nDelegate = 0; nDelegate < delegates.Length; nDelegate++)
+                delegatesDest[nDelegate] = Delegate.CreateDelegate(type,
+                    delegates[nDelegate].Target, delegates[nDelegate].Method);
+            return Delegate.Combine(delegatesDest);
+        }
+    }
+
     public sealed class MessageBus : IMessageBus, IDisposable
     {
         private readonly ILogger _logger;
         private readonly ChannelWriter<IMessage> _writer;
-        private readonly Dictionary<Type, Delegate> _handlers = new Dictionary<Type, Delegate>();
+        private readonly Dictionary<Type, Func<IMessage, Task>> _handlers = new Dictionary<Type, Func<IMessage, Task>>();
 
         private readonly ReaderWriterLockSlim _readerWriterLock =
             new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
@@ -30,16 +52,17 @@ namespace ShowMustNotGoOn
             {
                 while (await reader.WaitToReadAsync())
                 {
+                    _readerWriterLock.EnterReadLock();
                     try
                     {
-                        _readerWriterLock.EnterReadLock();
                         var message = await reader.ReadAsync();
-                        var handlerExists = _handlers.TryGetValue(message.GetType(), out var value);
+                        var messageType = message.GetType();
+                        var handlerExists = _handlers.TryGetValue(messageType, out var value);
                         if (!handlerExists)
                         {
                             continue;
                         }
-                        value.DynamicInvoke(message);
+                        await value(message);
                     }
                     finally
                     {
@@ -49,7 +72,17 @@ namespace ShowMustNotGoOn
             }, TaskCreationOptions.LongRunning);
         }
 
-        public void RegisterHandler<T>(Action<T> handleAction) where T : IMessage
+        private Func<IMessage, Task> ConvertToIMessage<T>(Func<T, Task> function) where T : IMessage
+        {
+            return x => function((T)x);
+        }
+
+        private Func<T, Task> ConvertFromIMessage<T>(Func<IMessage, Task> function) where T : IMessage
+        {
+            return x => function((IMessage)x);
+        }
+
+        public void RegisterHandler<T>(Func<T, Task> handleAction) where T : IMessage
         {
             var messageType = typeof(T);
             try
@@ -62,13 +95,13 @@ namespace ShowMustNotGoOn
                         _readerWriterLock.EnterWriteLock();
                         if (!_handlers.TryGetValue(messageType, out handler))
                         {
-                            _handlers.Add(messageType, handleAction);
+                            _handlers.Add(messageType, ConvertToIMessage<T>(handleAction));
                         }
                         else
                         {
-                            var typedHandler = (Action<T>)handler;
+                            var typedHandler = ConvertFromIMessage<T>(handler);
                             typedHandler += handleAction;
-                            _handlers[messageType] = typedHandler;
+                            _handlers[messageType] = ConvertToIMessage<T>(typedHandler);
                         }
                     }
                     finally
@@ -81,9 +114,9 @@ namespace ShowMustNotGoOn
                     try
                     {
                         _readerWriterLock.EnterWriteLock();
-                        var typedHandler = (Action<T>)handler;
+                        var typedHandler = ConvertFromIMessage<T>(handler);
                         typedHandler += handleAction;
-                        _handlers[messageType] = typedHandler;
+                        _handlers[messageType] = ConvertToIMessage<T>(typedHandler);
                     }
                     finally
                     {
@@ -100,7 +133,7 @@ namespace ShowMustNotGoOn
         }
 
         [SuppressMessage("ReSharper", "DelegateSubtraction")]
-        public void UnregisterHandler<T>(Action<T> handleAction) where T : IMessage
+        public void UnregisterHandler<T>(Func<T, Task> handleAction) where T : IMessage
         {
             var messageType = typeof(T);
             try
@@ -114,11 +147,11 @@ namespace ShowMustNotGoOn
                 try
                 {
                     _readerWriterLock.EnterWriteLock();
-                    var typedHandler = (Action<T>)handler;
+                    var typedHandler = ConvertFromIMessage<T>(handler);
                     typedHandler -= handleAction;
                     if (typedHandler != null)
                     {
-                        _handlers[messageType] = typedHandler;
+                        _handlers[messageType] = ConvertToIMessage<T>(typedHandler);
                     }
                     else
                     {

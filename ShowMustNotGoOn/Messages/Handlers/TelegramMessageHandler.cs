@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Serilog;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.MessageBus;
@@ -39,7 +40,7 @@ namespace ShowMustNotGoOn.Messages.Handlers
             _messageBus.UnregisterHandler<TelegramMessageReceivedEvent>(HandleTelegramMessageReceivedEvent);
         }
 
-        private async void HandleTelegramMessageReceivedEvent(TelegramMessageReceivedEvent @event)
+        private async Task HandleTelegramMessageReceivedEvent(TelegramMessageReceivedEvent @event)
         {
             await _messageBus.Enqueue(new AddOrUpdateUserCommand(@event.Message.FromUser));
         }

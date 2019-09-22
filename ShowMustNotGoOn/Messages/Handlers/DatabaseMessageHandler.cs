@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Serilog;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.MessageBus;
@@ -43,14 +44,14 @@ namespace ShowMustNotGoOn.Messages.Handlers
             _messageBus.UnregisterHandler<AddOrUpdateUserCommand>(HandleAddOrUpdateUserCommand);
         }
 
-        private async void HandleAddTvShowToDbCommand(AddTvShowToDbCommand r)
+        private async Task HandleAddTvShowToDbCommand(AddTvShowToDbCommand r)
         {
             var tvShow = await _dbRepository.AddNewTvShowAsync(r.TvShow);
             _logger.Information($"TvShow {tvShow.Title} added to db");
             await _messageBus.Enqueue(new TvShowAddedToDbEvent(tvShow));
         }
 
-        private async void HandleAddOrUpdateUserCommand(AddOrUpdateUserCommand command)
+        private async Task HandleAddOrUpdateUserCommand(AddOrUpdateUserCommand command)
         {
             await _dbRepository.AddOrUpdateUserAsync(command.User);
         }

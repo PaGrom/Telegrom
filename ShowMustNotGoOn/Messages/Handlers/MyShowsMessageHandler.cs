@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Serilog;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.MessageBus;
@@ -42,12 +43,12 @@ namespace ShowMustNotGoOn.Messages.Handlers
             _messageBus.UnregisterHandler<TvShowFoundEvent>(HandleTvShowFoundEvent);
         }
 
-        private async void HandleTvShowFoundEvent(TvShowFoundEvent @event)
+        private async Task HandleTvShowFoundEvent(TvShowFoundEvent @event)
         {
             await _messageBus.Enqueue(new AddTvShowToDbCommand(@event.TvShow));
         }
 
-        private async void HandleSearchTvShowByNameCommand(SearchTvShowByNameCommand command)
+        private async Task HandleSearchTvShowByNameCommand(SearchTvShowByNameCommand command)
         {
             _logger.Information($"Searching TV Show by name {command.Name} at position {command.Position}");
             var tvShows = await _tvShowsRepository.SearchTvShowsAsync(command.Name);
