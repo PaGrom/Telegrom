@@ -7,9 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShowMustNotGoOn", "ShowMust
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShowMustNotGoOn.Core", "ShoMustNotGoOn.Core\ShowMustNotGoOn.Core.csproj", "{020C5387-289F-4A30-B2DB-84CF723FD042}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyShowsRepository", "MyShowsRepository\MyShowsRepository.csproj", "{BE1DB38B-EAD7-4937-8EFF-3D1FDBEF6A75}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShowMustNotGoOn.MyShowsService", "MyShowsRepository\ShowMustNotGoOn.MyShowsService.csproj", "{BE1DB38B-EAD7-4937-8EFF-3D1FDBEF6A75}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DbRepository", "DbRepository\DbRepository.csproj", "{B67C3F8D-4664-490F-B983-C4DD88E95B75}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShowMustNotGoOn.DatabaseService", "DbRepository\ShowMustNotGoOn.DatabaseService.csproj", "{B67C3F8D-4664-490F-B983-C4DD88E95B75}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShowMustNotGoOn.TelegramService", "ShowMustNotGoOn.TelegramService\ShowMustNotGoOn.TelegramService.csproj", "{55BEFE0B-A20D-47B0-ACD1-BE239061E4F1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{B67C3F8D-4664-490F-B983-C4DD88E95B75}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B67C3F8D-4664-490F-B983-C4DD88E95B75}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B67C3F8D-4664-490F-B983-C4DD88E95B75}.Release|Any CPU.Build.0 = Release|Any CPU
+		{55BEFE0B-A20D-47B0-ACD1-BE239061E4F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55BEFE0B-A20D-47B0-ACD1-BE239061E4F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55BEFE0B-A20D-47B0-ACD1-BE239061E4F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55BEFE0B-A20D-47B0-ACD1-BE239061E4F1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

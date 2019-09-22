@@ -3,7 +3,7 @@ using AutoMapper;
 using RestSharp;
 using ShowMustNotGoOn.Core;
 
-namespace ShowMustNotGoOn.MyShowsRepository
+namespace ShowMustNotGoOn.MyShowsService
 {
     public class MyShowsRepositoryModule : Module
     {

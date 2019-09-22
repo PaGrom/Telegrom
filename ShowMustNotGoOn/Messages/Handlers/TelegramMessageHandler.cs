@@ -7,17 +7,17 @@ using ShowMustNotGoOn.Messages.Event;
 
 namespace ShowMustNotGoOn.Messages.Handlers
 {
-    public sealed class DbMessageHandler : IDisposable
+    public sealed class TelegramMessageHandler : IDisposable
     {
-        private readonly IShowsDbRepository _dbRepository;
+        private readonly ITelegramService _telegramService;
         private readonly IMessageBus _messageBus;
         private readonly ILogger _logger;
 
-        public DbMessageHandler(IShowsDbRepository dbRepository,
+        public TelegramMessageHandler(ITelegramService telegramService,
             IMessageBus messageBus,
             ILogger logger)
         {
-            _dbRepository = dbRepository;
+            _telegramService = telegramService;
             _messageBus = messageBus;
             _logger = logger;
 
@@ -31,19 +31,17 @@ namespace ShowMustNotGoOn.Messages.Handlers
 
         private void RegisterHandlers()
         {
-            _messageBus.RegisterHandler<AddTvShowToDbCommand>(HandleAddTvShowToDbCommand);
+            _messageBus.RegisterHandler<TelegramMessageReceivedEvent>(HandleTelegramMessageReceivedEvent);
         }
 
         private void UnregisterHandlers()
         {
-            _messageBus.UnregisterHandler<AddTvShowToDbCommand>(HandleAddTvShowToDbCommand);
+            _messageBus.UnregisterHandler<TelegramMessageReceivedEvent>(HandleTelegramMessageReceivedEvent);
         }
 
-        private async void HandleAddTvShowToDbCommand(AddTvShowToDbCommand r)
+        private async void HandleTelegramMessageReceivedEvent(TelegramMessageReceivedEvent @event)
         {
-            var tvShow = await _dbRepository.AddNewTvShowAsync(r.TvShow);
-            _logger.Information($"TvShow {tvShow.Title} added to db");
-            await _messageBus.Enqueue(new TvShowAddedToDbEvent(tvShow));
+            await _messageBus.Enqueue(new AddOrUpdateUserCommand(@event.Message.FromUser));
         }
     }
 }

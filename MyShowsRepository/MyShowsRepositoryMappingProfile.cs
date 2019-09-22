@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
-using ShowMustNotGoOn.Core;
-using ShowMustNotGoOn.MyShowsRepository.Model;
+using ShowMustNotGoOn.Core.Model;
+using ShowMustNotGoOn.MyShowsService.Model;
 
-namespace ShowMustNotGoOn.MyShowsRepository
+namespace ShowMustNotGoOn.MyShowsService
 {
     public class MyShowsRepositoryMappingProfile : Profile
     {

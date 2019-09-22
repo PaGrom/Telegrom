@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace DbRepository.Entities
+namespace ShowMustNotGoOn.DatabaseService.Entities
 {
     public partial class TvShows
     {

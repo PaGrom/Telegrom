@@ -1,32 +1,36 @@
 ﻿using System;
+using AutoMapper;
 using Serilog;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.MessageBus;
-using ShowMustNotGoOn.Messages.Event;
+using ShowMustNotGoOn.Core.Model;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 
-namespace ShowMustNotGoOn
+namespace ShowMustNotGoOn.TelegramService
 {
     public class TelegramService : ITelegramService, IDisposable
     {
         private readonly ITelegramBotClient _telegramBotClient;
-        private readonly IMessageBus _messageBus;
+        private readonly IMapper _mapper;
         private readonly ILogger _logger;
+        private Action<Message> _messageReceivedHandler;
 
         public TelegramService(ITelegramBotClient telegramBotClient,
-            IMessageBus messageBus,
+            IMapper mapper,
             ILogger logger)
         {
             _telegramBotClient = telegramBotClient;
-            _messageBus = messageBus;
+            _mapper = mapper;
             _logger = logger;
 
             var me = _telegramBotClient.GetMeAsync().GetAwaiter().GetResult();
             _logger.Information($"Hello, World! I am user {me.Id} and my name is {me.FirstName}.");
+        }
 
+        public void Start()
+        {
             RegisterHandlers();
-
             _telegramBotClient.StartReceiving();
         }
 
@@ -35,11 +39,16 @@ namespace ShowMustNotGoOn
             _telegramBotClient.OnMessage += BotOnMessageReceived;
         }
 
+        public void SetMessageReceivedHandler(Action<Message> handler)
+        {
+            _messageReceivedHandler = handler;
+        }
+
         private void BotOnMessageReceived(object sender, MessageEventArgs e)
         {
             var message = e.Message;
             _logger.Information("Get message {@message}", message);
-            _messageBus.Enqueue(new TelegramMessageReceivedEvent(message));
+            _messageReceivedHandler?.Invoke(_mapper.Map<Message>(message));
         }
 
         public void Dispose()

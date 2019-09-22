@@ -1,4 +1,4 @@
-﻿namespace ShowMustNotGoOn.Core
+﻿namespace ShowMustNotGoOn.Core.Model
 {
     public sealed class TvShow
     {

@@ -4,14 +4,14 @@ using System.IO;
 using System.Linq;
 using Autofac;
 using AutoMapper;
-using DbRepository;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.MessageBus;
+using ShowMustNotGoOn.DatabaseService;
 using ShowMustNotGoOn.Messages.Handlers;
-using ShowMustNotGoOn.MyShowsRepository;
-using Telegram.Bot;
+using ShowMustNotGoOn.MyShowsService;
+using ShowMustNotGoOn.TelegramService;
 
 namespace ShowMustNotGoOn
 {
@@ -31,15 +31,17 @@ namespace ShowMustNotGoOn
                 .As<IMessageBus>()
                 .SingleInstance();
 
-            builder.RegisterInstance(new TelegramBotClient(ConfigurationManager.AppSettings["TelegramApiToken"]))
-                .AsImplementedInterfaces();
+            builder.RegisterModule(new TelegramServiceModule
+            {
+                TelegramApiToken = ConfigurationManager.AppSettings["TelegramApiToken"]
+            });
 
             builder.RegisterModule(new MyShowsRepositoryModule
             {
                 MyShowsApiUrl = ConfigurationManager.AppSettings["MyShowsApiUrl"]
             });
 
-            builder.RegisterModule(new DbRepositoryModule
+            builder.RegisterModule(new DatabaseRepositoryModule
             {
                 ConnectionString = ConfigurationManager.ConnectionStrings["DefaultConnection"].ConnectionString
             });
@@ -57,16 +59,15 @@ namespace ShowMustNotGoOn
                 .As<IMapper>()
                 .InstancePerLifetimeScope();
 
-            builder.RegisterType<TelegramService>()
-                .As<ITelegramService>()
-                .SingleInstance()
-                .AutoActivate();
-
-            builder.RegisterType<DbMessageHandler>()
+            builder.RegisterType<DatabaseMessageHandler>()
                 .SingleInstance()
                 .AutoActivate();
 
             builder.RegisterType<MyShowsMessageHandler>()
+                .SingleInstance()
+                .AutoActivate();
+
+            builder.RegisterType<TelegramMessageHandler>()
                 .SingleInstance()
                 .AutoActivate();
 

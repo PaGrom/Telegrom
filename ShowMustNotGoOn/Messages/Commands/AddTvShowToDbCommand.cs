@@ -1,5 +1,6 @@
 ﻿using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.MessageBus;
+using ShowMustNotGoOn.Core.Model;
 
 namespace ShowMustNotGoOn.Messages.Commands
 {

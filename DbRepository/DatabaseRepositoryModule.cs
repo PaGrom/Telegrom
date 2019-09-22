@@ -1,23 +1,23 @@
 ﻿using Autofac;
 using AutoMapper;
-using DbRepository.Entities;
+using ShowMustNotGoOn.DatabaseService.Entities;
 
-namespace DbRepository
+namespace ShowMustNotGoOn.DatabaseService
 {
-    public class DbRepositoryModule : Module
+    public class DatabaseRepositoryModule : Module
     {
         public string ConnectionString { get; set; }
 
         protected override void Load(ContainerBuilder builder)
         {
             builder.RegisterType<ShowsDbContext>()
-                .WithParameter("options", DbContextOptionsFactory.Get(ConnectionString))
+                .WithParameter("options", DatabaseContextOptionsFactory.Get(ConnectionString))
                 .InstancePerLifetimeScope();
 
-            builder.RegisterType<ShowsDbRepository>()
+            builder.RegisterType<DatabaseRepository>()
                 .AsImplementedInterfaces();
 
-            builder.RegisterType<DbRepositoryMappingProfile>()
+            builder.RegisterType<DatabaseRepositoryMappingProfile>()
                 .As<Profile>()
                 .InstancePerLifetimeScope();
         }

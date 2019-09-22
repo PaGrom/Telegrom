@@ -5,9 +5,10 @@ using AutoMapper;
 using RestSharp;
 using Serilog;
 using ShowMustNotGoOn.Core;
-using ShowMustNotGoOn.MyShowsRepository.Model;
+using ShowMustNotGoOn.Core.Model;
+using ShowMustNotGoOn.MyShowsService.Model;
 
-namespace ShowMustNotGoOn.MyShowsRepository
+namespace ShowMustNotGoOn.MyShowsService
 {
     public sealed class MyShowsRepository : ITvShowsRepository
     {

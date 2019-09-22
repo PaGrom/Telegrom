@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
-namespace DbRepository.Entities
+namespace ShowMustNotGoOn.DatabaseService.Entities
 {
     public partial class ShowsDbContext : DbContext
     {
@@ -16,6 +16,7 @@ namespace DbRepository.Entities
         }
 
         public virtual DbSet<TvShows> TvShows { get; set; }
+        public virtual DbSet<Users> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -27,6 +28,17 @@ namespace DbRepository.Entities
                     .IsUnique();
 
                 entity.HasIndex(e => e.MyShowsId)
+                    .IsUnique();
+
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            });
+
+            modelBuilder.Entity<Users>(entity =>
+            {
+                entity.HasIndex(e => e.Id)
+                    .IsUnique();
+
+                entity.HasIndex(e => e.TelegramId)
                     .IsUnique();
 
                 entity.Property(e => e.Id).ValueGeneratedOnAdd();

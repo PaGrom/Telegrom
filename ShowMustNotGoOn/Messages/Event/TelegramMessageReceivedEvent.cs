@@ -1,15 +1,15 @@
 ﻿using ShowMustNotGoOn.Core.MessageBus;
-using Telegram.Bot.Types;
+using ShowMustNotGoOn.Core.Model;
 
 namespace ShowMustNotGoOn.Messages.Event
 {
     public sealed class TelegramMessageReceivedEvent : IMessage
     {
-        private readonly Message _message;
+        public Message Message { get; }
 
         public TelegramMessageReceivedEvent(Message message)
         {
-            _message = message;
+            Message = message;
         }
     }
 }

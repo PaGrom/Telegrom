@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace ShowMustNotGoOn.MyShowsRepository.Model
+namespace ShowMustNotGoOn.MyShowsService.Model
 {
     public sealed class Result
     {

@@ -1,9 +1,9 @@
-﻿using DbRepository.Entities;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using ShowMustNotGoOn.DatabaseService.Entities;
 
-namespace DbRepository
+namespace ShowMustNotGoOn.DatabaseService
 {
-    public class DbContextOptionsFactory
+    public class DatabaseContextOptionsFactory
     {
         public static DbContextOptions<ShowsDbContext> Get(string connectionString)
         {
