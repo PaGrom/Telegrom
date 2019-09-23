@@ -3,5 +3,9 @@
     public sealed class Message
     {
         public User FromUser { get; set; }
+
+        public string Text { get; set; }
+
+        public BotCommandType? BotCommand { get; set; }
     }
 }

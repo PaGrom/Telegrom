@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using AutoMapper;
 using Serilog;
 using ShowMustNotGoOn.Core;
@@ -49,6 +50,11 @@ namespace ShowMustNotGoOn.TelegramService
             _logger.Information("Get message {@message}", message);
             _messageReceivedHandler?.Invoke(_mapper.Map<Message>(message));
         }
+
+        public async Task SendWelcomeMessageToUser(User user)
+        {
+            await _telegramBotClient.SendTextMessageAsync(user.TelegramId, "Welcome");
+        } 
 
         public void Dispose()
         {

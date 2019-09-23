@@ -44,7 +44,10 @@ namespace ShowMustNotGoOn.MessageBus
                     }
                     finally
                     {
-                        _readerWriterLock.ExitReadLock();
+                        if (_readerWriterLock.IsReadLockHeld)
+                        {
+                            _readerWriterLock.ExitReadLock();
+                        }
                     }
                 }
             }, TaskCreationOptions.LongRunning);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using ShowMustNotGoOn.Core.Model;
 
 namespace ShowMustNotGoOn.Core
@@ -7,5 +8,6 @@ namespace ShowMustNotGoOn.Core
     {
         void SetMessageReceivedHandler(Action<Message> handler);
         void Start();
+        Task SendWelcomeMessageToUser(User user);
     }
 }
