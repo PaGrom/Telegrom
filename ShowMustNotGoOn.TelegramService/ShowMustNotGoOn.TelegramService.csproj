@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ShoMustNotGoOn.Core\ShowMustNotGoOn.Core.csproj" />
+    <ProjectReference Include="..\ShowMustNotGoOn.Core\ShowMustNotGoOn.Core.csproj" />
   </ItemGroup>
 
 </Project>

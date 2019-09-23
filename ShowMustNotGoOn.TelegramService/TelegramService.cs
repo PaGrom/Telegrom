@@ -2,7 +2,6 @@
 using AutoMapper;
 using Serilog;
 using ShowMustNotGoOn.Core;
-using ShowMustNotGoOn.Core.MessageBus;
 using ShowMustNotGoOn.Core.Model;
 using Telegram.Bot;
 using Telegram.Bot.Args;

@@ -6,7 +6,6 @@ using Autofac;
 using AutoMapper;
 using Microsoft.Extensions.Configuration;
 using Serilog;
-using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.MessageBus;
 using ShowMustNotGoOn.DatabaseService;
 using ShowMustNotGoOn.Messages.Handlers;

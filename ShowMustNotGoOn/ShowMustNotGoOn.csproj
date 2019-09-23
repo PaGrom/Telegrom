@@ -21,8 +21,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DbRepository\ShowMustNotGoOn.DatabaseService.csproj" />
-    <ProjectReference Include="..\MyShowsRepository\ShowMustNotGoOn.MyShowsService.csproj" />
+    <ProjectReference Include="..\ShowMustNotGoOn.Core\ShowMustNotGoOn.Core.csproj" />
+    <ProjectReference Include="..\ShowMustNotGoOn.DatabaseService\ShowMustNotGoOn.DatabaseService.csproj" />
+    <ProjectReference Include="..\ShowMustNotGoOn.MyShowsService\ShowMustNotGoOn.MyShowsService.csproj" />
     <ProjectReference Include="..\ShowMustNotGoOn.TelegramService\ShowMustNotGoOn.TelegramService.csproj" />
   </ItemGroup>
 
