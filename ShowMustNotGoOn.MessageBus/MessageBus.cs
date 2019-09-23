@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Serilog;
 using ShowMustNotGoOn.Core.MessageBus;
 
-namespace ShowMustNotGoOn
+namespace ShowMustNotGoOn.MessageBus
 {
     public sealed class MessageBus : IMessageBus, IDisposable
     {

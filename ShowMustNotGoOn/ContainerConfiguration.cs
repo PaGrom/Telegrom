@@ -6,8 +6,8 @@ using Autofac;
 using AutoMapper;
 using Microsoft.Extensions.Configuration;
 using Serilog;
-using ShowMustNotGoOn.Core.MessageBus;
 using ShowMustNotGoOn.DatabaseService;
+using ShowMustNotGoOn.MessageBus;
 using ShowMustNotGoOn.Messages.Handlers;
 using ShowMustNotGoOn.MyShowsService;
 using ShowMustNotGoOn.TelegramService;
@@ -26,9 +26,7 @@ namespace ShowMustNotGoOn
                     .CreateLogger())
                 .SingleInstance();
 
-            builder.RegisterType<MessageBus>()
-                .As<IMessageBus>()
-                .SingleInstance();
+            builder.RegisterModule<MessageBusModule>();
 
             builder.RegisterModule(new TelegramServiceModule
             {
