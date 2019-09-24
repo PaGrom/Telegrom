@@ -22,10 +22,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ShowMustNotGoOn.Core\ShowMustNotGoOn.Core.csproj" />
-    <ProjectReference Include="..\ShowMustNotGoOn.DatabaseService\ShowMustNotGoOn.DatabaseService.csproj" />
+    <ProjectReference Include="..\ShowMustNotGoOn.DatabaseContext\ShowMustNotGoOn.DatabaseContext.csproj" />
     <ProjectReference Include="..\ShowMustNotGoOn.MessageBus\ShowMustNotGoOn.MessageBus.csproj" />
     <ProjectReference Include="..\ShowMustNotGoOn.MyShowsService\ShowMustNotGoOn.MyShowsService.csproj" />
     <ProjectReference Include="..\ShowMustNotGoOn.TelegramService\ShowMustNotGoOn.TelegramService.csproj" />
+    <ProjectReference Include="..\ShowMustNotGoOn.UsersService\ShowMustNotGoOn.UsersService.csproj" />
   </ItemGroup>
 
 </Project>

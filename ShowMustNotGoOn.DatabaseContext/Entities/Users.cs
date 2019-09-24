@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace ShowMustNotGoOn.DatabaseService.Entities
+namespace ShowMustNotGoOn.DatabaseContext.Entities
 {
     public partial class Users
     {

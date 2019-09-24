@@ -1,12 +1,12 @@
 ﻿using AutoMapper;
 using ShowMustNotGoOn.Core.Model;
-using ShowMustNotGoOn.DatabaseService.Entities;
+using ShowMustNotGoOn.DatabaseContext.Entities;
 
-namespace ShowMustNotGoOn.DatabaseService
+namespace ShowMustNotGoOn.DatabaseContext
 {
-    public class DatabaseRepositoryMappingProfile : Profile
+    public class DatabaseContextMappingProfile : Profile
     {
-        public DatabaseRepositoryMappingProfile()
+        public DatabaseContextMappingProfile()
         {
             CreateMap<TvShow, TvShows>()
                 .ForMember(

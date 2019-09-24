@@ -4,21 +4,20 @@ using Serilog;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.MessageBus;
 using ShowMustNotGoOn.Messages.Commands;
-using ShowMustNotGoOn.Messages.Event;
 
 namespace ShowMustNotGoOn.Messages.Handlers
 {
-    public sealed class DatabaseMessageHandler : IDisposable
+    public sealed class UsersMessageHandler : IDisposable
     {
-        private readonly IDatabaseRepository _dbRepository;
+        private readonly IUsersService _usersService;
         private readonly IMessageBus _messageBus;
         private readonly ILogger _logger;
 
-        public DatabaseMessageHandler(IDatabaseRepository dbRepository,
+        public UsersMessageHandler(IUsersService usersService,
             IMessageBus messageBus,
             ILogger logger)
         {
-            _dbRepository = dbRepository;
+            _usersService = usersService;
             _messageBus = messageBus;
             _logger = logger;
 
@@ -32,19 +31,17 @@ namespace ShowMustNotGoOn.Messages.Handlers
 
         private void RegisterHandlers()
         {
-            _messageBus.RegisterHandler<AddTvShowToDbCommand>(HandleAddTvShowToDbCommand);
+            _messageBus.RegisterHandler<AddOrUpdateUserCommand>(HandleAddOrUpdateUserCommand);
         }
 
         private void UnregisterHandlers()
         {
-            _messageBus.UnregisterHandler<AddTvShowToDbCommand>(HandleAddTvShowToDbCommand);
+            _messageBus.UnregisterHandler<AddOrUpdateUserCommand>(HandleAddOrUpdateUserCommand);
         }
 
-        private async Task HandleAddTvShowToDbCommand(AddTvShowToDbCommand r)
+        private async Task HandleAddOrUpdateUserCommand(AddOrUpdateUserCommand command)
         {
-            var tvShow = await _dbRepository.AddNewTvShowAsync(r.TvShow);
-            _logger.Information($"TvShow {tvShow.Title} added to db");
-            await _messageBus.Enqueue(new TvShowAddedToDbEvent(tvShow));
+            await _usersService.AddOrUpdateUserAsync(command.User);
         }
     }
 }

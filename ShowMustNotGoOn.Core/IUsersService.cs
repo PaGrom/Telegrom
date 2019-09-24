@@ -3,8 +3,8 @@ using ShowMustNotGoOn.Core.Model;
 
 namespace ShowMustNotGoOn.Core
 {
-    public interface IDatabaseRepository
+    public interface IUsersService
     {
-        Task<TvShow> AddNewTvShowAsync(TvShow tvShow);
+        Task<User> AddOrUpdateUserAsync(User user);
     }
 }

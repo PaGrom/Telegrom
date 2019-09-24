@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ShowMustNotGoOn.DatabaseService.Entities;
+using ShowMustNotGoOn.DatabaseContext.Entities;
 
-namespace ShowMustNotGoOn.DatabaseService
+namespace ShowMustNotGoOn.DatabaseContext
 {
     public class DatabaseContextOptionsFactory
     {

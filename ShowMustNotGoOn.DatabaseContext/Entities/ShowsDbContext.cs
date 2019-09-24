@@ -1,8 +1,6 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
+﻿using Microsoft.EntityFrameworkCore;
 
-namespace ShowMustNotGoOn.DatabaseService.Entities
+namespace ShowMustNotGoOn.DatabaseContext.Entities
 {
     public partial class ShowsDbContext : DbContext
     {

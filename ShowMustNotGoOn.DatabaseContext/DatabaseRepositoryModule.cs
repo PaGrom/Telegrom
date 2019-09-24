@@ -1,8 +1,8 @@
 ﻿using Autofac;
 using AutoMapper;
-using ShowMustNotGoOn.DatabaseService.Entities;
+using ShowMustNotGoOn.DatabaseContext.Entities;
 
-namespace ShowMustNotGoOn.DatabaseService
+namespace ShowMustNotGoOn.DatabaseContext
 {
     public class DatabaseRepositoryModule : Module
     {
@@ -17,7 +17,7 @@ namespace ShowMustNotGoOn.DatabaseService
             builder.RegisterType<DatabaseRepository>()
                 .AsImplementedInterfaces();
 
-            builder.RegisterType<DatabaseRepositoryMappingProfile>()
+            builder.RegisterType<DatabaseContextMappingProfile>()
                 .As<Profile>()
                 .InstancePerLifetimeScope();
         }

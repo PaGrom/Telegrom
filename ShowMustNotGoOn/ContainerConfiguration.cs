@@ -6,11 +6,12 @@ using Autofac;
 using AutoMapper;
 using Microsoft.Extensions.Configuration;
 using Serilog;
-using ShowMustNotGoOn.DatabaseService;
+using ShowMustNotGoOn.DatabaseContext;
 using ShowMustNotGoOn.MessageBus;
 using ShowMustNotGoOn.Messages.Handlers;
 using ShowMustNotGoOn.MyShowsService;
 using ShowMustNotGoOn.TelegramService;
+using ShowMustNotGoOn.UsersService;
 
 namespace ShowMustNotGoOn
 {
@@ -28,6 +29,13 @@ namespace ShowMustNotGoOn
 
             builder.RegisterModule<MessageBusModule>();
 
+            builder.RegisterModule(new DatabaseRepositoryModule
+            {
+                ConnectionString = ConfigurationManager.ConnectionStrings["DefaultConnection"].ConnectionString
+            });
+
+            builder.RegisterModule<UsersServiceModule>();
+
             builder.RegisterModule(new TelegramServiceModule
             {
                 TelegramApiToken = ConfigurationManager.AppSettings["TelegramApiToken"]
@@ -36,11 +44,6 @@ namespace ShowMustNotGoOn
             builder.RegisterModule(new MyShowsRepositoryModule
             {
                 MyShowsApiUrl = ConfigurationManager.AppSettings["MyShowsApiUrl"]
-            });
-
-            builder.RegisterModule(new DatabaseRepositoryModule
-            {
-                ConnectionString = ConfigurationManager.ConnectionStrings["DefaultConnection"].ConnectionString
             });
 
             builder.Register(ctx => new MapperConfiguration(cfg =>
@@ -55,6 +58,10 @@ namespace ShowMustNotGoOn
             builder.Register(ctx => ctx.Resolve<MapperConfiguration>().CreateMapper())
                 .As<IMapper>()
                 .InstancePerLifetimeScope();
+
+            builder.RegisterType<UsersMessageHandler>()
+                .SingleInstance()
+                .AutoActivate();
 
             builder.RegisterType<DatabaseMessageHandler>()
                 .SingleInstance()
