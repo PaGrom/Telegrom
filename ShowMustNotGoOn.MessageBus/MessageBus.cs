@@ -31,23 +31,22 @@ namespace ShowMustNotGoOn.MessageBus
                 while (await reader.WaitToReadAsync())
                 {
                     _readerWriterLock.EnterReadLock();
+                    var message = await reader.ReadAsync();
+                    var messageType = message.GetType();
+                    var handlerExists = _handlers.TryGetValue(messageType, out var handler);
+                    _readerWriterLock.ExitReadLock();
+                    if (!handlerExists)
+                    {
+                        continue;
+                    }
+
                     try
                     {
-                        var message = await reader.ReadAsync();
-                        var messageType = message.GetType();
-                        var handlerExists = _handlers.TryGetValue(messageType, out var value);
-                        if (!handlerExists)
-                        {
-                            continue;
-                        }
-                        await value(message);
+                        await handler(message);
                     }
-                    finally
+                    catch (Exception ex)
                     {
-                        if (_readerWriterLock.IsReadLockHeld)
-                        {
-                            _readerWriterLock.ExitReadLock();
-                        }
+                        _logger.Error(ex, $"Message {messageType.Name} handler throws exception");
                     }
                 }
             }, TaskCreationOptions.LongRunning);
