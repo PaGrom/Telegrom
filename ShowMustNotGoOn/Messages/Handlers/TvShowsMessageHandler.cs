@@ -9,17 +9,17 @@ using ShowMustNotGoOn.Messages.Event;
 
 namespace ShowMustNotGoOn.Messages.Handlers
 {
-    public sealed class MyShowsMessageHandler : IDisposable
+    public sealed class TvShowsMessageHandler : IDisposable
     {
-        private readonly ITvShowsRepository _tvShowsRepository;
+        private readonly ITvShowsService _tvShowsService;
         private readonly IMessageBus _messageBus;
         private readonly ILogger _logger;
 
-        public MyShowsMessageHandler(ITvShowsRepository tvShowsRepository,
+        public TvShowsMessageHandler(ITvShowsService tvShowsService,
             IMessageBus messageBus,
             ILogger logger)
         {
-            _tvShowsRepository = tvShowsRepository;
+            _tvShowsService = tvShowsService;
             _messageBus = messageBus;
             _logger = logger;
 
@@ -33,14 +33,23 @@ namespace ShowMustNotGoOn.Messages.Handlers
 
         private void RegisterHandlers()
         {
+            _messageBus.RegisterHandler<AddTvShowToDbCommand>(HandleAddTvShowToDbCommand);
             _messageBus.RegisterHandler<SearchTvShowByNameCommand>(HandleSearchTvShowByNameCommand);
             _messageBus.RegisterHandler<TvShowFoundEvent>(HandleTvShowFoundEvent);
         }
 
         private void UnregisterHandlers()
         {
+            _messageBus.UnregisterHandler<AddTvShowToDbCommand>(HandleAddTvShowToDbCommand);
             _messageBus.UnregisterHandler<SearchTvShowByNameCommand>(HandleSearchTvShowByNameCommand);
             _messageBus.UnregisterHandler<TvShowFoundEvent>(HandleTvShowFoundEvent);
+        }
+
+        private async Task HandleAddTvShowToDbCommand(AddTvShowToDbCommand r)
+        {
+            var tvShow = await _tvShowsService.AddNewTvShowAsync(r.TvShow);
+            _logger.Information($"TvShow {tvShow.Title} added to db");
+            await _messageBus.Enqueue(new TvShowAddedToDbEvent(tvShow));
         }
 
         private async Task HandleTvShowFoundEvent(TvShowFoundEvent @event)
@@ -51,7 +60,7 @@ namespace ShowMustNotGoOn.Messages.Handlers
         private async Task HandleSearchTvShowByNameCommand(SearchTvShowByNameCommand command)
         {
             _logger.Information($"Searching TV Show by name {command.Name} at position {command.Position}");
-            var tvShows = await _tvShowsRepository.SearchTvShowsAsync(command.Name);
+            var tvShows = await _tvShowsService.SearchTvShowsAsync(command.Name);
             var shows = tvShows.ToArray();
             _logger.Information($"Found {shows.Length} by name {command.Name}");
             var show = shows[command.Position];

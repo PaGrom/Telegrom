@@ -4,7 +4,7 @@ using ShowMustNotGoOn.DatabaseContext.Entities;
 
 namespace ShowMustNotGoOn.DatabaseContext
 {
-    public class DatabaseRepositoryModule : Module
+    public class DatabaseContextModule : Module
     {
         public string ConnectionString { get; set; }
 
@@ -13,9 +13,6 @@ namespace ShowMustNotGoOn.DatabaseContext
             builder.RegisterType<ShowsDbContext>()
                 .WithParameter("options", DatabaseContextOptionsFactory.Get(ConnectionString))
                 .InstancePerLifetimeScope();
-
-            builder.RegisterType<DatabaseRepository>()
-                .AsImplementedInterfaces();
 
             builder.RegisterType<DatabaseContextMappingProfile>()
                 .As<Profile>()

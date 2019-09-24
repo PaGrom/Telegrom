@@ -9,8 +9,8 @@ using Serilog;
 using ShowMustNotGoOn.DatabaseContext;
 using ShowMustNotGoOn.MessageBus;
 using ShowMustNotGoOn.Messages.Handlers;
-using ShowMustNotGoOn.MyShowsService;
 using ShowMustNotGoOn.TelegramService;
+using ShowMustNotGoOn.TvShowsService;
 using ShowMustNotGoOn.UsersService;
 
 namespace ShowMustNotGoOn
@@ -29,21 +29,21 @@ namespace ShowMustNotGoOn
 
             builder.RegisterModule<MessageBusModule>();
 
-            builder.RegisterModule(new DatabaseRepositoryModule
+            builder.RegisterModule(new DatabaseContextModule
             {
                 ConnectionString = ConfigurationManager.ConnectionStrings["DefaultConnection"].ConnectionString
             });
 
             builder.RegisterModule<UsersServiceModule>();
 
+            builder.RegisterModule(new TvShowsServiceModule
+            {
+                MyShowsApiUrl = ConfigurationManager.AppSettings["MyShowsApiUrl"]
+            });
+
             builder.RegisterModule(new TelegramServiceModule
             {
                 TelegramApiToken = ConfigurationManager.AppSettings["TelegramApiToken"]
-            });
-
-            builder.RegisterModule(new MyShowsRepositoryModule
-            {
-                MyShowsApiUrl = ConfigurationManager.AppSettings["MyShowsApiUrl"]
             });
 
             builder.Register(ctx => new MapperConfiguration(cfg =>
@@ -63,11 +63,7 @@ namespace ShowMustNotGoOn
                 .SingleInstance()
                 .AutoActivate();
 
-            builder.RegisterType<DatabaseMessageHandler>()
-                .SingleInstance()
-                .AutoActivate();
-
-            builder.RegisterType<MyShowsMessageHandler>()
+            builder.RegisterType<TvShowsMessageHandler>()
                 .SingleInstance()
                 .AutoActivate();
 

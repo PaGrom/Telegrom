@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -6,16 +7,21 @@ using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.Model;
 using ShowMustNotGoOn.DatabaseContext.Entities;
 
-namespace ShowMustNotGoOn.DatabaseContext
+namespace ShowMustNotGoOn.TvShowsService
 {
-    public class DatabaseRepository : IDatabaseRepository
+    public class TvShowsService : ITvShowsService
     {
+        private readonly ITvShowsRepository _tvShowsRepository;
         private readonly ShowsDbContext _dbContext;
         private readonly IMapper _mapper;
         private readonly ILogger _logger;
 
-        public DatabaseRepository(ShowsDbContext dbContext, IMapper mapper, ILogger logger)
+        public TvShowsService(ITvShowsRepository tvShowsRepository,
+            ShowsDbContext dbContext,
+            IMapper mapper,
+            ILogger logger)
         {
+            _tvShowsRepository = tvShowsRepository;
             _dbContext = dbContext;
             _mapper = mapper;
             _logger = logger;
@@ -41,6 +47,11 @@ namespace ShowMustNotGoOn.DatabaseContext
             transaction.Commit();
 
             return _mapper.Map<TvShow>(show);
+        }
+
+        public async Task<IEnumerable<TvShow>> SearchTvShowsAsync(string name)
+        {
+            return await _tvShowsRepository.SearchTvShowsAsync(name);
         }
     }
 }
