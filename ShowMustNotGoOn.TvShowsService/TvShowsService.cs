@@ -5,19 +5,18 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.Model;
-using ShowMustNotGoOn.DatabaseContext.Entities;
 
 namespace ShowMustNotGoOn.TvShowsService
 {
     public class TvShowsService : ITvShowsService
     {
         private readonly ITvShowsRepository _tvShowsRepository;
-        private readonly ShowsDbContext _dbContext;
+        private readonly DatabaseContext.DatabaseContext _dbContext;
         private readonly IMapper _mapper;
         private readonly ILogger _logger;
 
         public TvShowsService(ITvShowsRepository tvShowsRepository,
-            ShowsDbContext dbContext,
+            DatabaseContext.DatabaseContext dbContext,
             IMapper mapper,
             ILogger logger)
         {
@@ -29,9 +28,10 @@ namespace ShowMustNotGoOn.TvShowsService
 
         public async Task<TvShow> AddNewTvShowAsync(TvShow tvShow)
         {
-            var show = _mapper.Map<TvShows>(tvShow);
+            //var show = _mapper.Map<TvShows>(tvShow);
+            TvShow show;
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
-            var existingShow = await _dbContext.TvShows.SingleOrDefaultAsync(s => s.MyShowsId == show.MyShowsId);
+            var existingShow = await _dbContext.TvShows.SingleOrDefaultAsync(s => s.MyShowsId == tvShow.MyShowsId);
             if (existingShow != null)
             {
                 _logger.Information($"TV Show '{existingShow.Title}' (Id: {existingShow.MyShowsId}) already exists in db");
@@ -39,14 +39,14 @@ namespace ShowMustNotGoOn.TvShowsService
             }
             else
             {
-                _logger.Information($"Adding TV Show '{existingShow.Title}' (Id: {existingShow.MyShowsId}) to db");
-                show = _dbContext.TvShows.Add(show).Entity;
+                _logger.Information($"Adding TV Show '{tvShow.Title}' (Id: {tvShow.MyShowsId}) to db");
+                show = _dbContext.TvShows.Add(tvShow).Entity;
                 await _dbContext.SaveChangesAsync();
             }
 
             transaction.Commit();
 
-            return _mapper.Map<TvShow>(show);
+            return show;
         }
 
         public async Task<IEnumerable<TvShow>> SearchTvShowsAsync(string name)

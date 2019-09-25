@@ -32,7 +32,7 @@ namespace ShowMustNotGoOn
         public async Task RunAsync()
         {
             _logger.Information("Application start");
-            await Task.Delay(1000);
+            await Task.Delay(5000);
             await _messageBus.Enqueue(new SearchTvShowByNameCommand("Dark"));
 
             await Task.Delay(1000000);

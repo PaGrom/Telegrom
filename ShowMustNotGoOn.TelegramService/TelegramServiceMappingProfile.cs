@@ -10,7 +10,9 @@ namespace ShowMustNotGoOn.TelegramService
         {
             CreateMap<Telegram.Bot.Types.User, ShowMustNotGoOn.Core.Model.User>()
                 .ForMember(dest => dest.TelegramId,
-                    opt => opt.MapFrom(src => src.Id));
+                    opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.Id,
+                    opt => opt.Ignore());
 
             CreateMap<Telegram.Bot.Types.Message, ShowMustNotGoOn.Core.Model.Message>()
                 .ForMember(dest => dest.FromUser,
