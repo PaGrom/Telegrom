@@ -5,10 +5,12 @@ using System.Linq;
 using Autofac;
 using AutoMapper;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Serilog;
 using ShowMustNotGoOn.DatabaseContext;
 using ShowMustNotGoOn.MessageBus;
 using ShowMustNotGoOn.Messages.Handlers;
+using ShowMustNotGoOn.Settings;
 using ShowMustNotGoOn.TelegramService;
 using ShowMustNotGoOn.TvShowsService;
 using ShowMustNotGoOn.UsersService;
@@ -23,27 +25,39 @@ namespace ShowMustNotGoOn
                     .MinimumLevel.Information()
                     .WriteTo.Console()
                     .WriteTo.RollingFile(
-                        Path.Combine(ConfigurationManager.AppSettings["LogFolder"], "Log-{Date}.txt"))
+                        Path.Combine(configuration.GetSection("LogFolder").Value, "Log-{Date}.txt"))
                     .CreateLogger())
                 .SingleInstance();
+
+            var appSettings = new AppSettings
+            {
+                DatabaseSettings = configuration.GetSection("Database").Get<DatabaseSettings>(),
+                TelegramSettings = configuration.GetSection("Telegram").Get<TelegramSettings>(),
+                MyShowsSettings = configuration.GetSection("MyShows").Get<MyShowsSettings>(),
+                GlobalSettings = configuration.GetSection("Global").Get<GlobalSettings>()
+            };
+            
+            builder.RegisterInstance(appSettings).SingleInstance();
 
             builder.RegisterModule<MessageBusModule>();
 
             builder.RegisterModule(new DatabaseContextModule
             {
-                ConnectionString = ConfigurationManager.ConnectionStrings["DefaultConnection"].ConnectionString
+                ConnectionString = appSettings.DatabaseSettings.ConnectionString
             });
 
             builder.RegisterModule<UsersServiceModule>();
 
             builder.RegisterModule(new TvShowsServiceModule
             {
-                MyShowsApiUrl = ConfigurationManager.AppSettings["MyShowsApiUrl"]
+                MyShowsApiUrl = appSettings.MyShowsSettings.MyShowsApiUrl,
+                ProxyAddress = appSettings.GlobalSettings.ProxyAddress
             });
 
             builder.RegisterModule(new TelegramServiceModule
             {
-                TelegramApiToken = ConfigurationManager.AppSettings["TelegramApiToken"]
+                TelegramApiToken = appSettings.TelegramSettings.TelegramApiToken,
+                ProxyAddress = appSettings.GlobalSettings.ProxyAddress
             });
 
             builder.Register(ctx => new MapperConfiguration(cfg =>

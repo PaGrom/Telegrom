@@ -25,7 +25,6 @@ namespace ShowMustNotGoOn
 
         public void Configure(IApplicationBuilder app)
         {
-
         }
     }
 }

@@ -7,6 +7,7 @@ namespace ShowMustNotGoOn.TvShowsService
     public class TvShowsServiceModule : Module
     {
         public string MyShowsApiUrl { get; set; }
+        public string ProxyAddress { get; set; }
 
         protected override void Load(ContainerBuilder builder)
         {
@@ -15,7 +16,8 @@ namespace ShowMustNotGoOn.TvShowsService
 
             builder.RegisterModule(new MyShowsServiceModule
             {
-                MyShowsApiUrl = MyShowsApiUrl
+                MyShowsApiUrl = MyShowsApiUrl,
+                ProxyAddress = ProxyAddress
             });
         }
     }

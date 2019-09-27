@@ -1,5 +1,4 @@
 ﻿using Autofac;
-using AutoMapper;
 
 namespace ShowMustNotGoOn.DatabaseContext
 {
