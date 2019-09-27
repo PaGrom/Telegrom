@@ -5,7 +5,7 @@ using ShowMustNotGoOn.Core;
 
 namespace ShowMustNotGoOn.MyShowsService
 {
-    public class MyShowsRepositoryModule : Module
+    public class MyShowsServiceModule : Module
     {
         public string MyShowsApiUrl { get; set; }
 
@@ -14,10 +14,10 @@ namespace ShowMustNotGoOn.MyShowsService
             builder.RegisterInstance(new RestClient(MyShowsApiUrl))
                 .As<IRestClient>();
 
-            builder.RegisterType<MyShowsRepository>()
-                .As<ITvShowsRepository>();
+            builder.RegisterType<MyShowsService>()
+                .As<IMyShowsService>();
 
-            builder.RegisterType<MyShowsRepositoryMappingProfile>()
+            builder.RegisterType<MyShowsServiceMappingProfile>()
                 .As<Profile>()
                 .InstancePerLifetimeScope();
         }

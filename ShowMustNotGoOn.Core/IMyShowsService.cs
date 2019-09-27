@@ -4,7 +4,7 @@ using ShowMustNotGoOn.Core.Model;
 
 namespace ShowMustNotGoOn.Core
 {
-    public interface ITvShowsRepository
+    public interface IMyShowsService
     {
         Task<IEnumerable<TvShow>> SearchTvShowsAsync(string name);
     }

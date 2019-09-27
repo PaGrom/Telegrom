@@ -10,13 +10,13 @@ using ShowMustNotGoOn.MyShowsService.Model;
 
 namespace ShowMustNotGoOn.MyShowsService
 {
-    public sealed class MyShowsRepository : ITvShowsRepository
+    public sealed class MyShowsService : IMyShowsService
     {
         private readonly IRestClient _client;
         private readonly IMapper _mapper;
         private readonly ILogger _logger;
 
-        public MyShowsRepository(IRestClient client, IMapper mapper, ILogger logger)
+        public MyShowsService(IRestClient client, IMapper mapper, ILogger logger)
         {
             _client = client;
             _mapper = mapper;
@@ -49,13 +49,13 @@ namespace ShowMustNotGoOn.MyShowsService
         {
             var response = await _client.ExecutePostTaskAsync<T>(request);
 
-            if (response.ErrorException != null)
+            if (response.ErrorException == null)
             {
-                const string message = "Error retrieving response.  Check inner details for more info.";
-                var ex = new Exception(message, response.ErrorException);
-                throw ex;
+                return response.Data;
             }
-            return response.Data;
+            const string message = "Error retrieving response.  Check inner details for more info.";
+            var ex = new Exception(message, response.ErrorException);
+            throw ex;
         }
     }
 }

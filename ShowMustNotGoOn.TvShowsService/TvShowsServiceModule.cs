@@ -13,7 +13,7 @@ namespace ShowMustNotGoOn.TvShowsService
             builder.RegisterType<TvShowsService>()
                 .As<ITvShowsService>();
 
-            builder.RegisterModule(new MyShowsRepositoryModule
+            builder.RegisterModule(new MyShowsServiceModule
             {
                 MyShowsApiUrl = MyShowsApiUrl
             });

@@ -4,9 +4,9 @@ using ShowMustNotGoOn.MyShowsService.Model;
 
 namespace ShowMustNotGoOn.MyShowsService
 {
-    public class MyShowsRepositoryMappingProfile : Profile
+    public class MyShowsServiceMappingProfile : Profile
     {
-        public MyShowsRepositoryMappingProfile()
+        public MyShowsServiceMappingProfile()
         {
             CreateMap<Result, TvShow>()
                 .ForMember(dest => dest.MyShowsId,

@@ -10,17 +10,17 @@ namespace ShowMustNotGoOn.TvShowsService
 {
     public class TvShowsService : ITvShowsService
     {
-        private readonly ITvShowsRepository _tvShowsRepository;
+        private readonly IMyShowsService _myShowsService;
         private readonly DatabaseContext.DatabaseContext _dbContext;
         private readonly IMapper _mapper;
         private readonly ILogger _logger;
 
-        public TvShowsService(ITvShowsRepository tvShowsRepository,
+        public TvShowsService(IMyShowsService myShowsService,
             DatabaseContext.DatabaseContext dbContext,
             IMapper mapper,
             ILogger logger)
         {
-            _tvShowsRepository = tvShowsRepository;
+            _myShowsService = myShowsService;
             _dbContext = dbContext;
             _mapper = mapper;
             _logger = logger;
@@ -51,7 +51,7 @@ namespace ShowMustNotGoOn.TvShowsService
 
         public async Task<IEnumerable<TvShow>> SearchTvShowsAsync(string name)
         {
-            return await _tvShowsRepository.SearchTvShowsAsync(name);
+            return await _myShowsService.SearchTvShowsAsync(name);
         }
     }
 }
