@@ -28,7 +28,6 @@ namespace ShowMustNotGoOn.TvShowsService
 
         public async Task<TvShow> AddNewTvShowAsync(TvShow tvShow)
         {
-            //var show = _mapper.Map<TvShows>(tvShow);
             TvShow show;
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
             var existingShow = await _dbContext.TvShows.SingleOrDefaultAsync(s => s.MyShowsId == tvShow.MyShowsId);

@@ -13,22 +13,19 @@ namespace ShowMustNotGoOn.MyShowsService
 
         protected override void Load(ContainerBuilder builder)
         {
-            if (string.IsNullOrEmpty(ProxyAddress))
+            builder.Register(ctx =>
             {
-                builder.RegisterInstance(new RestClient(MyShowsApiUrl))
-                    .As<IRestClient>();
-            }
-            else
-            {
-                builder.RegisterInstance(new RestClient(MyShowsApiUrl)
+                var restClient = new RestClient(MyShowsApiUrl);
+                if (!string.IsNullOrEmpty(ProxyAddress))
+                {
+                    restClient.Proxy = new WebProxy(ProxyAddress)
                     {
-                        Proxy = new WebProxy(ProxyAddress)
-                        {
-                            UseDefaultCredentials = true
-                        }
-                    })
-                    .As<IRestClient>();
-            }
+                        UseDefaultCredentials = true
+                    };
+                }
+
+                return restClient;
+            }).As<IRestClient>();
 
             builder.RegisterType<MyShowsService>()
                 .As<IMyShowsService>();

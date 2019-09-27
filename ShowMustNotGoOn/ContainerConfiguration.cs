@@ -33,8 +33,7 @@ namespace ShowMustNotGoOn
             {
                 DatabaseSettings = configuration.GetSection("Database").Get<DatabaseSettings>(),
                 TelegramSettings = configuration.GetSection("Telegram").Get<TelegramSettings>(),
-                MyShowsSettings = configuration.GetSection("MyShows").Get<MyShowsSettings>(),
-                GlobalSettings = configuration.GetSection("Global").Get<GlobalSettings>()
+                MyShowsSettings = configuration.GetSection("MyShows").Get<MyShowsSettings>()
             };
             
             builder.RegisterInstance(appSettings).SingleInstance();
@@ -51,13 +50,16 @@ namespace ShowMustNotGoOn
             builder.RegisterModule(new TvShowsServiceModule
             {
                 MyShowsApiUrl = appSettings.MyShowsSettings.MyShowsApiUrl,
-                ProxyAddress = appSettings.GlobalSettings.ProxyAddress
+                ProxyAddress = appSettings.MyShowsSettings.ProxyAddress
             });
 
             builder.RegisterModule(new TelegramServiceModule
             {
                 TelegramApiToken = appSettings.TelegramSettings.TelegramApiToken,
-                ProxyAddress = appSettings.GlobalSettings.ProxyAddress
+                Socks5HostName = appSettings.TelegramSettings.Socks5HostName,
+                Socks5Port = appSettings.TelegramSettings.Socks5Port,
+                Socks5Username = appSettings.TelegramSettings.Socks5Username,
+                Socks5Password = appSettings.TelegramSettings.Socks5Password
             });
 
             builder.Register(ctx => new MapperConfiguration(cfg =>
