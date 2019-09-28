@@ -5,7 +5,6 @@ using System.Linq;
 using Autofac;
 using AutoMapper;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
 using Serilog;
 using ShowMustNotGoOn.DatabaseContext;
 using ShowMustNotGoOn.MessageBus;
@@ -74,18 +73,6 @@ namespace ShowMustNotGoOn
             builder.Register(ctx => ctx.Resolve<MapperConfiguration>().CreateMapper())
                 .As<IMapper>()
                 .InstancePerLifetimeScope();
-
-            builder.RegisterType<UsersMessageHandler>()
-                .SingleInstance()
-                .AutoActivate();
-
-            builder.RegisterType<TvShowsMessageHandler>()
-                .SingleInstance()
-                .AutoActivate();
-
-            builder.RegisterType<TelegramMessageHandler>()
-                .SingleInstance()
-                .AutoActivate();
 
             builder.RegisterType<Application>()
                 .AsSelf()
