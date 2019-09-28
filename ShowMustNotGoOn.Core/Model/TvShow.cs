@@ -11,6 +11,7 @@ namespace ShowMustNotGoOn.Core.Model
         public string Description { get; set; }
         public int TotalSeasons { get; set; }
         public string Status { get; set; }
+        public string Image { get; set; }
 
         public ICollection<UserTvShows> Users { get; set; }
     }

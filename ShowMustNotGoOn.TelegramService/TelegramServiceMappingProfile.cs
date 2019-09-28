@@ -23,6 +23,12 @@ namespace ShowMustNotGoOn.TelegramService
                         opt.PreCondition(src => src.Entities?.FirstOrDefault()?.Type == MessageEntityType.BotCommand);
                         opt.MapFrom(src => MapBotCommand(src.EntityValues.FirstOrDefault()));
                     });
+
+            CreateMap<Telegram.Bot.Types.CallbackQuery, ShowMustNotGoOn.Core.Model.CallbackQuery>()
+                .ForMember(dest => dest.FromUser,
+                    opt => opt.MapFrom(src => src.From))
+                .ForMember(dest => dest.Message,
+                    opt => opt.MapFrom(src => src.Message));
         }
 
         public static ShowMustNotGoOn.Core.Model.BotCommandType? MapBotCommand(string botCommand)

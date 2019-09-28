@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoMapper;
 using Serilog;
@@ -6,6 +7,11 @@ using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.Model;
 using Telegram.Bot;
 using Telegram.Bot.Args;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
+using CallbackQuery = ShowMustNotGoOn.Core.Model.CallbackQuery;
+using Message = ShowMustNotGoOn.Core.Model.Message;
+using User = ShowMustNotGoOn.Core.Model.User;
 
 namespace ShowMustNotGoOn.TelegramService
 {
@@ -15,6 +21,7 @@ namespace ShowMustNotGoOn.TelegramService
         private readonly IMapper _mapper;
         private readonly ILogger _logger;
         private Action<Message> _messageReceivedHandler;
+        private Action<CallbackQuery> _callbackQueryReceivedHandler;
 
         public TelegramService(ITelegramBotClient telegramBotClient,
             IMapper mapper,
@@ -37,11 +44,24 @@ namespace ShowMustNotGoOn.TelegramService
         private void RegisterHandlers()
         {
             _telegramBotClient.OnMessage += BotOnMessageReceived;
+            _telegramBotClient.OnCallbackQuery += BotOnCallbackQueryReceived;
+        }
+
+        private void BotOnCallbackQueryReceived(object sender, CallbackQueryEventArgs e)
+        {
+            var callback = e.CallbackQuery;
+            _logger.Information("Get callback query {@callback}", callback);
+            _callbackQueryReceivedHandler?.Invoke(_mapper.Map<CallbackQuery>(callback));
         }
 
         public void SetMessageReceivedHandler(Action<Message> handler)
         {
             _messageReceivedHandler = handler;
+        }
+
+        public void SetCallbackQueryReceivedHandler(Action<CallbackQuery> handler)
+        {
+            _callbackQueryReceivedHandler = handler;
         }
 
         private void BotOnMessageReceived(object sender, MessageEventArgs e)
@@ -51,10 +71,44 @@ namespace ShowMustNotGoOn.TelegramService
             _messageReceivedHandler?.Invoke(_mapper.Map<Message>(message));
         }
 
-        public async Task SendWelcomeMessageToUser(User user)
+        public async Task SendTextMessageToUser(User user, string text)
         {
-            await _telegramBotClient.SendTextMessageAsync(user.TelegramId, "Welcome");
-        } 
+            await _telegramBotClient.SendTextMessageAsync(user.TelegramId, text);
+        }
+
+        public async Task SendTvShowToUser(User user, TvShow show, string nextCallbackQueryData)
+        {
+            if (!string.IsNullOrEmpty(nextCallbackQueryData))
+            {
+                var button = InlineKeyboardButton.WithCallbackData("Next", nextCallbackQueryData);
+                var markup = new InlineKeyboardMarkup(button);
+                await _telegramBotClient.SendPhotoAsync(user.TelegramId, show.Image,
+                    $"{show.Title} / {show.TitleOriginal}", replyMarkup: markup);
+                return;
+            }
+
+            await _telegramBotClient.SendPhotoAsync(user.TelegramId, show.Image,
+                $"{show.Title} / {show.TitleOriginal}");
+        }
+
+        public async Task UpdateTvShowMessage(User user, TvShow show, int messageId, string nextCallbackQueryData, string prevCallbackQueryData)
+        {
+            var navigateButtons = new List<InlineKeyboardButton>();
+            if (prevCallbackQueryData != null)
+            {
+                navigateButtons.Add(InlineKeyboardButton.WithCallbackData("Prev", prevCallbackQueryData));
+            }
+            if (nextCallbackQueryData != null)
+            {
+                navigateButtons.Add(InlineKeyboardButton.WithCallbackData("Next", nextCallbackQueryData));
+            }
+            var markup = new InlineKeyboardMarkup(navigateButtons);
+
+            await _telegramBotClient.EditMessageMediaAsync(user.TelegramId, messageId,
+                new InputMediaPhoto(new InputMedia(show.Image)));
+            await _telegramBotClient.EditMessageCaptionAsync(user.TelegramId, messageId,
+                $"{show.Title} / {show.TitleOriginal}", markup);
+        }
 
         public void Dispose()
         {

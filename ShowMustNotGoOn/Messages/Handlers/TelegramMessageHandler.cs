@@ -54,7 +54,7 @@ namespace ShowMustNotGoOn.Messages.Handlers
 
         private async Task HandleSendWelcomeMessageToUserCommand(SendWelcomeMessageToUserCommand command)
         {
-            await _telegramService.SendWelcomeMessageToUser(command.User);
+            await _telegramService.SendTextMessageToUser(command.User, "Welcome");
         }
     }
 }
