@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.MessageBus;
 using ShowMustNotGoOn.Core.Model;
+using ShowMustNotGoOn.Core.Model.CallbackQuery;
 using ShowMustNotGoOn.MessageBus;
 using ShowMustNotGoOn.Messages.Event;
 
@@ -18,19 +19,21 @@ namespace ShowMustNotGoOn
         private readonly ITelegramService _telegramService;
         private readonly IUsersService _usersService;
         private readonly ITvShowsService _tvShowsService;
+        private readonly DatabaseContext.DatabaseContext _databaseContext;
         private readonly ILogger _logger;
-        private readonly Regex _callbackQueryRegex = new Regex(@"^(?<searchPattern>[^@]+)@(?<pageCount>\d+)@(?<command>[^@]+)$");
 
         private readonly LruChannelCollection _channelCollection = new LruChannelCollection(1);
 
         public Application(ITelegramService telegramService,
             IUsersService usersService,
             ITvShowsService tvShowsService,
+            DatabaseContext.DatabaseContext databaseContext,
             ILogger logger)
         {
             _telegramService = telegramService;
             _usersService = usersService;
             _tvShowsService = tvShowsService;
+            _databaseContext = databaseContext;
             _logger = logger;
 
             _telegramService.SetMessageReceivedHandler(HandleTelegramMessageReceived);
@@ -111,54 +114,108 @@ namespace ShowMustNotGoOn
         private async Task HandleCallbackQuery(CallbackQuery callbackQuery)
         {
             _logger.Information($"Received callback query from user {callbackQuery.FromUser.TelegramId}");
-            var match = _callbackQueryRegex.Match(callbackQuery.Data);
-            if (!match.Success)
+
+            var callbackQueryDataString = (await _databaseContext.ButtonCallbackQueryDatas
+                .SingleOrDefaultAsync(c => c.User.TelegramId == callbackQuery.FromUser.TelegramId
+                                           && c.Id == callbackQuery.CallbackQueryDataId))
+                ?.Data;
+
+            if (string.IsNullOrEmpty(callbackQueryDataString))
             {
-                _logger.Error($"Can't parse callback query data: {callbackQuery.Data}");
+                _logger.Error($"Can't find callback query data");
                 return;
             }
 
-            var searchPattern = match.Groups["searchPattern"].Value;
-            var pageCount = int.Parse(match.Groups["pageCount"].Value);
-            var command = match.Groups["command"].Value;
+            callbackQuery.CallbackQueryData = CallbackQueryDataSerializer.Deserialize(callbackQueryDataString);
 
-            if (command == "next")
+            switch (callbackQuery.CallbackQueryData)
             {
-                pageCount++;
-                var tvShows = (await _tvShowsService.SearchTvShowsAsync(searchPattern)).ToList();
-                var callBackData = $"{searchPattern}@{pageCount}";
-                var nextCallbackQueryData = $"{callBackData}@next";
-                var prevCallbackQueryData = $"{callBackData}@prev";
-                if (tvShows.Count == pageCount + 1)
+                case NavigateCallbackQueryData _:
+                    await HandleNavigateCallbackQueryData(callbackQuery);
+                    break;
+            }
+        }
+
+        private async Task HandleNavigateCallbackQueryData(CallbackQuery callbackQuery)
+        {
+            var navigateCallbackQueryData = (NavigateCallbackQueryData) callbackQuery.CallbackQueryData;
+            int pageCount;
+            switch (navigateCallbackQueryData.CallbackQueryType)
+            {
+                case CallbackQueryType.Prev:
+                    pageCount = navigateCallbackQueryData.PageCount - 1;
+                    break;
+                case CallbackQueryType.Next:
+                    pageCount = navigateCallbackQueryData.PageCount + 1;
+                    break;
+                default:
+                    _logger.Error($"Something go wrong with NavigateCallbackQueryData");
+                    return;
+            }
+
+            string searchPattern = navigateCallbackQueryData.SearchPattern;
+
+            var tvShows = (await _tvShowsService.SearchTvShowsAsync(searchPattern)).ToList();
+            var tvShow = tvShows.Skip(pageCount).FirstOrDefault();
+
+            using var transaction = await _databaseContext.Database.BeginTransactionAsync();
+
+            var user = await _databaseContext.Users.SingleOrDefaultAsync(u =>
+                u.TelegramId == callbackQuery.FromUser.TelegramId);
+
+            if (user == null)
+            {
+                _logger.Error($"Can't find user with Telegram Id {callbackQuery.FromUser.TelegramId} in db");
+                return;
+            }
+
+            ButtonCallbackQueryData prevButtonCallbackQueryData = null;
+            ButtonCallbackQueryData nextButtonCallbackQueryData = null;
+
+            if (pageCount > 0)
+            {
+                var prevNavigateCallbackQueryData = new PrevNavigateCallbackQueryData
                 {
-                    nextCallbackQueryData = null;
-                }
-                var tvShow = (await _tvShowsService.SearchTvShowsAsync(searchPattern)).Skip(pageCount).FirstOrDefault();
-                await _telegramService.UpdateTvShowMessage(callbackQuery.FromUser, tvShow, callbackQuery.Message.MessageId, nextCallbackQueryData, prevCallbackQueryData);
-                return;
+                    PageCount = pageCount,
+                    SearchPattern = searchPattern
+                };
+
+                prevButtonCallbackQueryData = _databaseContext.ButtonCallbackQueryDatas.Add(new ButtonCallbackQueryData
+                {
+                    User = user,
+                    Data = CallbackQueryDataSerializer.Serialize(prevNavigateCallbackQueryData)
+                }).Entity;
             }
 
-            if (command == "prev")
+            if (tvShows.Count > pageCount + 1)
             {
-                pageCount--;
-                var tvShows = (await _tvShowsService.SearchTvShowsAsync(searchPattern)).ToList();
-                var callBackData = $"{searchPattern}@{pageCount}";
-                var nextCallbackQueryData = $"{callBackData}@next";
-                var prevCallbackQueryData = $"{callBackData}@prev";
-                if (pageCount == 0)
+                var nextNavigateCallbackQueryData = new NextNavigateCallbackQueryData
                 {
-                    prevCallbackQueryData = null;
-                }
-                var tvShow = (await _tvShowsService.SearchTvShowsAsync(searchPattern)).Skip(pageCount).FirstOrDefault();
-                await _telegramService.UpdateTvShowMessage(callbackQuery.FromUser, tvShow, callbackQuery.Message.MessageId, nextCallbackQueryData, prevCallbackQueryData);
-                return;
+                    PageCount = pageCount,
+                    SearchPattern = searchPattern
+                };
+
+                nextButtonCallbackQueryData = _databaseContext.ButtonCallbackQueryDatas.Add(new ButtonCallbackQueryData
+                {
+                    User = user,
+                    Data = CallbackQueryDataSerializer.Serialize(nextNavigateCallbackQueryData)
+                }).Entity;
             }
+
+            await _databaseContext.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            int? prevNavigateCallbackQueryDataId = prevButtonCallbackQueryData?.Id;
+            int? nextNavigateCallbackQueryDataId = nextButtonCallbackQueryData?.Id;
+
+            await _telegramService.UpdateTvShowMessage(callbackQuery.FromUser, tvShow, callbackQuery.Message.MessageId,
+                prevNavigateCallbackQueryDataId, nextNavigateCallbackQueryDataId);
         }
 
         private async Task HandleMessage(Message message)
         {
             _logger.Information($"Received message from user {message.FromUser.Username}");
-            await _usersService.AddOrUpdateUserAsync(message.FromUser);
+            var user = await _usersService.AddOrUpdateUserAsync(message.FromUser);
             if (message.BotCommand == BotCommandType.Start)
             {
                 await _telegramService.SendTextMessageToUser(message.FromUser, "Welcome");
@@ -176,14 +233,30 @@ namespace ShowMustNotGoOn
                 return;
             }
 
-            string nextCallbackQueryData = null;
+            ButtonCallbackQueryData nextButtonCallbackQueryData = null;
 
             if (tvShows.Count > 1)
             {
-                nextCallbackQueryData = $"{searchPattern}@{pageCount}@next";
+                using var transaction = await _databaseContext.Database.BeginTransactionAsync();
+                var nextNavigateCallbackQueryData = new NextNavigateCallbackQueryData
+                {
+                    PageCount = pageCount,
+                    SearchPattern = searchPattern
+                };
+
+                nextButtonCallbackQueryData = _databaseContext.ButtonCallbackQueryDatas.Add(new ButtonCallbackQueryData
+                {
+                    User = user,
+                    Data = CallbackQueryDataSerializer.Serialize(nextNavigateCallbackQueryData)
+                }).Entity;
+
+                await _databaseContext.SaveChangesAsync();
+                await transaction.CommitAsync();
             }
 
-            await _telegramService.SendTvShowToUser(message.FromUser, tvShows.First(), nextCallbackQueryData);
+            int? nextNavigateCallbackQueryDataId = nextButtonCallbackQueryData?.Id;
+
+            await _telegramService.SendTvShowToUser(message.FromUser, tvShows.First(), nextNavigateCallbackQueryDataId);
         }
     }
 }

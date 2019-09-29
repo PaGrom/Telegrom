@@ -24,11 +24,13 @@ namespace ShowMustNotGoOn.TelegramService
                         opt.MapFrom(src => MapBotCommand(src.EntityValues.FirstOrDefault()));
                     });
 
-            CreateMap<Telegram.Bot.Types.CallbackQuery, ShowMustNotGoOn.Core.Model.CallbackQuery>()
+            CreateMap<Telegram.Bot.Types.CallbackQuery, ShowMustNotGoOn.Core.Model.CallbackQuery.CallbackQuery>()
                 .ForMember(dest => dest.FromUser,
                     opt => opt.MapFrom(src => src.From))
                 .ForMember(dest => dest.Message,
-                    opt => opt.MapFrom(src => src.Message));
+                    opt => opt.MapFrom(src => src.Message))
+                .ForMember(dest => dest.CallbackQueryDataId,
+                    opt => opt.MapFrom(src => int.Parse(src.Data)));
         }
 
         public static ShowMustNotGoOn.Core.Model.BotCommandType? MapBotCommand(string botCommand)

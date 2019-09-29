@@ -1,5 +1,6 @@
 ﻿using ShowMustNotGoOn.Core.MessageBus;
 using ShowMustNotGoOn.Core.Model;
+using ShowMustNotGoOn.Core.Model.CallbackQuery;
 
 namespace ShowMustNotGoOn.Messages.Event
 {

@@ -17,6 +17,7 @@ namespace ShowMustNotGoOn.DatabaseContext
 
         public DbSet<TvShow> TvShows { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<ButtonCallbackQueryData> ButtonCallbackQueryDatas { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -56,6 +57,14 @@ namespace ShowMustNotGoOn.DatabaseContext
                 .HasOne(pt => pt.TvShow)
                 .WithMany(t => t.Users)
                 .HasForeignKey(pt => pt.TvShowId);
+
+            modelBuilder.Entity<ButtonCallbackQueryData>(entity =>
+            {
+                entity.HasIndex(e => e.Id)
+                    .IsUnique();
+
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            });
         }
     }
 }

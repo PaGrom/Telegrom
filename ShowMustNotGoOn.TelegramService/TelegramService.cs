@@ -2,14 +2,16 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoMapper;
+using Newtonsoft.Json;
 using Serilog;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.Model;
+using ShowMustNotGoOn.Core.Model.CallbackQuery;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
-using CallbackQuery = ShowMustNotGoOn.Core.Model.CallbackQuery;
+using CallbackQuery = ShowMustNotGoOn.Core.Model.CallbackQuery.CallbackQuery;
 using Message = ShowMustNotGoOn.Core.Model.Message;
 using User = ShowMustNotGoOn.Core.Model.User;
 
@@ -76,11 +78,13 @@ namespace ShowMustNotGoOn.TelegramService
             await _telegramBotClient.SendTextMessageAsync(user.TelegramId, text);
         }
 
-        public async Task SendTvShowToUser(User user, TvShow show, string nextCallbackQueryData)
+        public async Task SendTvShowToUser(User user, TvShow show,
+            int? nextNavigateCallbackQueryDataId)
         {
-            if (!string.IsNullOrEmpty(nextCallbackQueryData))
+            if (nextNavigateCallbackQueryDataId != null)
             {
-                var button = InlineKeyboardButton.WithCallbackData("Next", nextCallbackQueryData);
+                var button = InlineKeyboardButton.WithCallbackData("Next",
+                    nextNavigateCallbackQueryDataId.ToString());
                 var markup = new InlineKeyboardMarkup(button);
                 await _telegramBotClient.SendPhotoAsync(user.TelegramId, show.Image,
                     $"{show.Title} / {show.TitleOriginal}", replyMarkup: markup);
@@ -91,16 +95,20 @@ namespace ShowMustNotGoOn.TelegramService
                 $"{show.Title} / {show.TitleOriginal}");
         }
 
-        public async Task UpdateTvShowMessage(User user, TvShow show, int messageId, string nextCallbackQueryData, string prevCallbackQueryData)
+        public async Task UpdateTvShowMessage(User user, TvShow show, int messageId,
+            int? prevNavigateCallbackQueryDataId,
+            int? nextNavigateCallbackQueryDataId)
         {
             var navigateButtons = new List<InlineKeyboardButton>();
-            if (prevCallbackQueryData != null)
+            if (prevNavigateCallbackQueryDataId != null)
             {
-                navigateButtons.Add(InlineKeyboardButton.WithCallbackData("Prev", prevCallbackQueryData));
+                navigateButtons.Add(InlineKeyboardButton.WithCallbackData("Prev",
+                    prevNavigateCallbackQueryDataId.ToString()));
             }
-            if (nextCallbackQueryData != null)
+            if (nextNavigateCallbackQueryDataId != null)
             {
-                navigateButtons.Add(InlineKeyboardButton.WithCallbackData("Next", nextCallbackQueryData));
+                navigateButtons.Add(InlineKeyboardButton.WithCallbackData("Next",
+                    nextNavigateCallbackQueryDataId.ToString()));
             }
             var markup = new InlineKeyboardMarkup(navigateButtons);
 
