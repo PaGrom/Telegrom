@@ -95,7 +95,8 @@ namespace ShowMustNotGoOn.TelegramService
                 $"{show.Title} / {show.TitleOriginal}");
         }
 
-        public async Task UpdateTvShowMessage(User user, TvShow show, int messageId,
+        public async Task UpdateTvShowMessage(User user, TvShow show,
+            CallbackQuery callbackQuery,
             int? prevNavigateCallbackQueryDataId,
             int? nextNavigateCallbackQueryDataId)
         {
@@ -112,9 +113,10 @@ namespace ShowMustNotGoOn.TelegramService
             }
             var markup = new InlineKeyboardMarkup(navigateButtons);
 
-            await _telegramBotClient.EditMessageMediaAsync(user.TelegramId, messageId,
+            await _telegramBotClient.AnswerCallbackQueryAsync(callbackQuery.Id);
+            await _telegramBotClient.EditMessageMediaAsync(user.TelegramId, callbackQuery.Message.MessageId,
                 new InputMediaPhoto(new InputMedia(show.Image)));
-            await _telegramBotClient.EditMessageCaptionAsync(user.TelegramId, messageId,
+            await _telegramBotClient.EditMessageCaptionAsync(user.TelegramId, callbackQuery.Message.MessageId,
                 $"{show.Title} / {show.TitleOriginal}", markup);
         }
 

@@ -208,7 +208,7 @@ namespace ShowMustNotGoOn
             int? prevNavigateCallbackQueryDataId = prevButtonCallbackQueryData?.Id;
             int? nextNavigateCallbackQueryDataId = nextButtonCallbackQueryData?.Id;
 
-            await _telegramService.UpdateTvShowMessage(callbackQuery.FromUser, tvShow, callbackQuery.Message.MessageId,
+            await _telegramService.UpdateTvShowMessage(callbackQuery.FromUser, tvShow, callbackQuery,
                 prevNavigateCallbackQueryDataId, nextNavigateCallbackQueryDataId);
         }
 

@@ -13,7 +13,8 @@ namespace ShowMustNotGoOn.Core
         Task SendTextMessageToUser(User user, string text);
         Task SendTvShowToUser(User user, TvShow show,
             int? nextNavigateCallbackQueryDataId);
-        Task UpdateTvShowMessage(User user, TvShow show, int messageId,
+        Task UpdateTvShowMessage(User user, TvShow show,
+            CallbackQuery callbackQuery,
             int? prevNavigateCallbackQueryDataId,
             int? nextNavigateCallbackQueryDataId);
     }
