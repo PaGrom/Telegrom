@@ -76,24 +76,28 @@ namespace ShowMustNotGoOn.TelegramService
             await _telegramBotClient.SendTextMessageAsync(user.TelegramId, text);
         }
 
-        public async Task SendTvShowToUser(User user, TvShow show,
+        public async Task<Message> SendTvShowToUser(User user, TvShow show,
             int? nextNavigateCallbackQueryDataId)
         {
+            Telegram.Bot.Types.Message sentMessage;
             if (nextNavigateCallbackQueryDataId != null)
             {
                 var button = InlineKeyboardButton.WithCallbackData("Next",
                     nextNavigateCallbackQueryDataId.ToString());
                 var markup = new InlineKeyboardMarkup(button);
-                await _telegramBotClient.SendPhotoAsync(user.TelegramId, show.Image,
+                sentMessage = await _telegramBotClient.SendPhotoAsync(user.TelegramId, show.Image,
                     $"{show.Title} / {show.TitleOriginal}", replyMarkup: markup);
-                return;
+            }
+            else
+            {
+                sentMessage = await _telegramBotClient.SendPhotoAsync(user.TelegramId, show.Image,
+                    $"{show.Title} / {show.TitleOriginal}");
             }
 
-            await _telegramBotClient.SendPhotoAsync(user.TelegramId, show.Image,
-                $"{show.Title} / {show.TitleOriginal}");
+            return _mapper.Map<Message>(sentMessage);
         }
 
-        public async Task UpdateTvShowMessage(User user, TvShow show,
+        public async Task<Message> UpdateTvShowMessage(User user, TvShow show,
             CallbackQuery callbackQuery,
             int? prevNavigateCallbackQueryDataId,
             int? nextNavigateCallbackQueryDataId)
@@ -113,15 +117,16 @@ namespace ShowMustNotGoOn.TelegramService
 
             if (string.IsNullOrEmpty(show.Image))
             {
-                show.Image =
-                    "https://user-images.githubusercontent.com/24848110/33519396-7e56363c-d79d-11e7-969b-09782f5ccbab.png";
+                show.Image = "https://user-images.githubusercontent.com/24848110/33519396-7e56363c-d79d-11e7-969b-09782f5ccbab.png";
             }
 
             await _telegramBotClient.AnswerCallbackQueryAsync(callbackQuery.Id);
             await _telegramBotClient.EditMessageMediaAsync(user.TelegramId, callbackQuery.Message.MessageId,
                 new InputMediaPhoto(new InputMedia(show.Image)));
-            await _telegramBotClient.EditMessageCaptionAsync(user.TelegramId, callbackQuery.Message.MessageId,
+            var updatedMessage = await _telegramBotClient.EditMessageCaptionAsync(user.TelegramId, callbackQuery.Message.MessageId,
                 $"{show.Title} / {show.TitleOriginal}", markup);
+
+            return _mapper.Map<Message>(updatedMessage);
         }
 
         public void Dispose()

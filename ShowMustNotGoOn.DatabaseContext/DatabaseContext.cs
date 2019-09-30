@@ -29,7 +29,8 @@ namespace ShowMustNotGoOn.DatabaseContext
                 entity.HasIndex(e => e.MyShowsId)
                     .IsUnique();
 
-                entity.Property(e => e.Id).ValueGeneratedOnAdd();
+                entity.Property(e => e.Id)
+                    .ValueGeneratedOnAdd();
             });
 
             modelBuilder.Entity<User>(entity =>
@@ -40,7 +41,8 @@ namespace ShowMustNotGoOn.DatabaseContext
                 entity.HasIndex(e => e.TelegramId)
                     .IsUnique();
 
-                entity.Property(e => e.Id).ValueGeneratedOnAdd();
+                entity.Property(e => e.Id)
+                    .ValueGeneratedOnAdd();
             });
 
             modelBuilder.Entity<UserTvShows>(entity =>
@@ -63,7 +65,14 @@ namespace ShowMustNotGoOn.DatabaseContext
                 entity.HasIndex(e => e.Id)
                     .IsUnique();
 
-                entity.Property(e => e.Id).ValueGeneratedOnAdd();
+                entity.Property(e => e.Id)
+                    .ValueGeneratedOnAdd();
+
+                entity.Property(e => e.MessageId)
+                    .IsRequired();
+
+                entity.Property(e => e.Data)
+                    .IsRequired();
             });
         }
     }

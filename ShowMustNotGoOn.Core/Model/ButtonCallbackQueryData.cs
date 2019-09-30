@@ -4,6 +4,7 @@
     {
         public int Id { get; set; }
         public User User { get; set; }
+        public int MessageId { get; set; }
         public string Data { get; set; }
     }
 }
