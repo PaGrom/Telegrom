@@ -9,8 +9,7 @@ using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.MessageBus;
 using ShowMustNotGoOn.Core.Model;
 using ShowMustNotGoOn.Core.Model.CallbackQuery;
-using ShowMustNotGoOn.MessageBus;
-using ShowMustNotGoOn.Messages.Event;
+using ShowMustNotGoOn.Messages.Events;
 
 namespace ShowMustNotGoOn
 {
@@ -47,9 +46,6 @@ namespace ShowMustNotGoOn
         public async Task RunAsync()
         {
             _logger.Information("Application start");
-            await Task.Delay(5000);
-            //await _messageBus.Enqueue(new SearchTvShowByNameCommand("Dark"));
-
             await Task.Delay(1000000);
         }
 
@@ -153,7 +149,7 @@ namespace ShowMustNotGoOn
                     return;
             }
 
-            string searchPattern = navigateCallbackQueryData.SearchPattern;
+            var searchPattern = navigateCallbackQueryData.SearchPattern;
 
             var tvShows = (await _tvShowsService.SearchTvShowsAsync(searchPattern)).ToList();
             var tvShow = tvShows.Skip(pageCount).FirstOrDefault();
@@ -205,8 +201,8 @@ namespace ShowMustNotGoOn
             await _databaseContext.SaveChangesAsync();
             await transaction.CommitAsync();
 
-            int? prevNavigateCallbackQueryDataId = prevButtonCallbackQueryData?.Id;
-            int? nextNavigateCallbackQueryDataId = nextButtonCallbackQueryData?.Id;
+            var prevNavigateCallbackQueryDataId = prevButtonCallbackQueryData?.Id;
+            var nextNavigateCallbackQueryDataId = nextButtonCallbackQueryData?.Id;
 
             await _telegramService.UpdateTvShowMessage(callbackQuery.FromUser, tvShow, callbackQuery,
                 prevNavigateCallbackQueryDataId, nextNavigateCallbackQueryDataId);
@@ -254,7 +250,7 @@ namespace ShowMustNotGoOn
                 await transaction.CommitAsync();
             }
 
-            int? nextNavigateCallbackQueryDataId = nextButtonCallbackQueryData?.Id;
+            var nextNavigateCallbackQueryDataId = nextButtonCallbackQueryData?.Id;
 
             await _telegramService.SendTvShowToUser(message.FromUser, tvShows.First(), nextNavigateCallbackQueryDataId);
         }

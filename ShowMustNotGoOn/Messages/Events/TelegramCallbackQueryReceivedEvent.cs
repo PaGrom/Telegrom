@@ -1,8 +1,7 @@
 ﻿using ShowMustNotGoOn.Core.MessageBus;
-using ShowMustNotGoOn.Core.Model;
 using ShowMustNotGoOn.Core.Model.CallbackQuery;
 
-namespace ShowMustNotGoOn.Messages.Event
+namespace ShowMustNotGoOn.Messages.Events
 {
     public class TelegramCallbackQueryReceivedEvent : IMessage
     {

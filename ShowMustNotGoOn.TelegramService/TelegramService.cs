@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoMapper;
-using Newtonsoft.Json;
 using Serilog;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.Model;
-using ShowMustNotGoOn.Core.Model.CallbackQuery;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types;
@@ -112,6 +110,12 @@ namespace ShowMustNotGoOn.TelegramService
                     nextNavigateCallbackQueryDataId.ToString()));
             }
             var markup = new InlineKeyboardMarkup(navigateButtons);
+
+            if (string.IsNullOrEmpty(show.Image))
+            {
+                show.Image =
+                    "https://user-images.githubusercontent.com/24848110/33519396-7e56363c-d79d-11e7-969b-09782f5ccbab.png";
+            }
 
             await _telegramBotClient.AnswerCallbackQueryAsync(callbackQuery.Id);
             await _telegramBotClient.EditMessageMediaAsync(user.TelegramId, callbackQuery.Message.MessageId,

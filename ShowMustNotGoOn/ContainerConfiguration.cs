@@ -7,8 +7,6 @@ using AutoMapper;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using ShowMustNotGoOn.DatabaseContext;
-using ShowMustNotGoOn.MessageBus;
-using ShowMustNotGoOn.Messages.Handlers;
 using ShowMustNotGoOn.Settings;
 using ShowMustNotGoOn.TelegramService;
 using ShowMustNotGoOn.TvShowsService;
@@ -37,8 +35,6 @@ namespace ShowMustNotGoOn
             
             builder.RegisterInstance(appSettings).SingleInstance();
 
-            builder.RegisterModule<MessageBusModule>();
-
             builder.RegisterModule(new DatabaseContextModule
             {
                 ConnectionString = appSettings.DatabaseSettings.ConnectionString
@@ -55,6 +51,7 @@ namespace ShowMustNotGoOn
             builder.RegisterModule(new TelegramServiceModule
             {
                 TelegramApiToken = appSettings.TelegramSettings.TelegramApiToken,
+                ProxyAddress = appSettings.TelegramSettings.ProxyAddress,
                 Socks5HostName = appSettings.TelegramSettings.Socks5HostName,
                 Socks5Port = appSettings.TelegramSettings.Socks5Port,
                 Socks5Username = appSettings.TelegramSettings.Socks5Username,

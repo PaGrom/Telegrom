@@ -1,7 +1,7 @@
 ﻿using ShowMustNotGoOn.Core.MessageBus;
 using ShowMustNotGoOn.Core.Model;
 
-namespace ShowMustNotGoOn.Messages.Event
+namespace ShowMustNotGoOn.Messages.Events
 {
     public sealed class TelegramMessageReceivedEvent : IMessage
     {

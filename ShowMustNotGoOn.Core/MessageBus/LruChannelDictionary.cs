@@ -4,22 +4,19 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using ShowMustNotGoOn.Core.MessageBus;
 
-namespace ShowMustNotGoOn.MessageBus
+namespace ShowMustNotGoOn.Core.MessageBus
 {
     public class LruChannelCollection
     {
         private class ChannelNode : IDisposable
         {
-            private readonly Task _readerTask;
             private readonly CancellationTokenSource _cancellationTokenSource;
             public int UsageCount { get; private set; } = default;
             public Channel<IMessage> Channel { get; }
 
             public ChannelNode(Channel<IMessage> channel, Task readerTask, CancellationTokenSource cancellationTokenSource)
             {
-                _readerTask = readerTask;
                 _cancellationTokenSource = cancellationTokenSource;
                 Channel = channel;
             }
@@ -97,28 +94,6 @@ namespace ShowMustNotGoOn.MessageBus
             }
             _readerWriterLock.ExitReadLock();
             return result;
-        }
-
-        public ICollection<int> SessionIds
-        {
-            get
-            {
-                _readerWriterLock.EnterReadLock();
-                var keys = _dictionary.Keys;
-                _readerWriterLock.ExitReadLock();
-                return keys;
-            }
-        }
-
-        public ICollection<Channel<IMessage>> Channels
-        {
-            get
-            {
-                _readerWriterLock.EnterReadLock();
-                var values = _dictionary.Values.Select(n => n.Channel).ToList();
-                _readerWriterLock.ExitReadLock();
-                return values;
-            }
         }
 
         public void Clear()

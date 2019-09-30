@@ -10,6 +10,7 @@ namespace ShowMustNotGoOn.TelegramService
     public class TelegramServiceModule : Module
     {
         public string TelegramApiToken { get; set; }
+        public string ProxyAddress { get; set; }
         public string Socks5HostName { get; set; }
         public int? Socks5Port { get; set; }
         public string Socks5Username { get; set; }
@@ -17,7 +18,15 @@ namespace ShowMustNotGoOn.TelegramService
 
         protected override void Load(ContainerBuilder builder)
         {
-            if (!string.IsNullOrEmpty(Socks5HostName)
+            if (!string.IsNullOrEmpty(ProxyAddress))
+            {
+                builder.RegisterInstance(new TelegramBotClient(TelegramApiToken, new WebProxy(ProxyAddress)
+                    {
+                        UseDefaultCredentials = true
+                    }))
+                    .AsImplementedInterfaces();
+            }
+            else if (!string.IsNullOrEmpty(Socks5HostName)
                 && Socks5Port.HasValue)
             {
                 HttpToSocks5Proxy proxy;
