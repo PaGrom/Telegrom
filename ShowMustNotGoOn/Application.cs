@@ -46,7 +46,10 @@ namespace ShowMustNotGoOn
         public async Task RunAsync()
         {
             _logger.Information("Application start");
-            await Task.Delay(1000000);
+            while (true)
+            {
+                await Task.Delay(1000000);
+            }
         }
 
         public async void HandleTelegramMessageReceived(Message message)

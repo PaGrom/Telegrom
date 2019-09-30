@@ -12,18 +12,12 @@ namespace ShowMustNotGoOn.Core.MessageBus
         private class ChannelNode : IDisposable
         {
             private readonly CancellationTokenSource _cancellationTokenSource;
-            public int UsageCount { get; private set; } = default;
             public Channel<IMessage> Channel { get; }
 
             public ChannelNode(Channel<IMessage> channel, Task readerTask, CancellationTokenSource cancellationTokenSource)
             {
                 _cancellationTokenSource = cancellationTokenSource;
                 Channel = channel;
-            }
-
-            public void IncreaseUsageCount()
-            {
-                UsageCount++;
             }
 
             public void Dispose()
@@ -33,9 +27,9 @@ namespace ShowMustNotGoOn.Core.MessageBus
             }
         }
 
-        public int Count { get; private set; } = default;
         private readonly int _capacity;
         private readonly Dictionary<int, ChannelNode> _dictionary = new Dictionary<int, ChannelNode>();
+        private readonly LinkedList<int> _channelsUsageQueue = new LinkedList<int>();
         private readonly ReaderWriterLockSlim _readerWriterLock = new ReaderWriterLockSlim();
 
         public LruChannelCollection(int capacity)
@@ -50,15 +44,16 @@ namespace ShowMustNotGoOn.Core.MessageBus
         public void Add(int sessionId, Channel<IMessage> channel, Task readerTask, CancellationTokenSource cancellationTokenSource)
         {
             _readerWriterLock.EnterWriteLock();
-            if (Count == _capacity)
+            if (_dictionary.Count == _capacity)
             {
-                var minUsageNode = _dictionary.OrderBy(x => x.Value.UsageCount).First();
-                _dictionary.Remove(minUsageNode.Key);
-                minUsageNode.Value.Dispose();
-                Count--;
+                var minUsageChannelKey = _channelsUsageQueue.Last();
+                var minUsageChannel = _dictionary[minUsageChannelKey];
+                _dictionary.Remove(minUsageChannelKey);
+                _channelsUsageQueue.RemoveLast();
+                minUsageChannel.Dispose();
             }
             _dictionary[sessionId] = new ChannelNode(channel, readerTask, cancellationTokenSource);
-            Count++;
+            _channelsUsageQueue.AddFirst(sessionId);
             _readerWriterLock.ExitWriteLock();
         }
 
@@ -71,10 +66,6 @@ namespace ShowMustNotGoOn.Core.MessageBus
         {
             _readerWriterLock.EnterWriteLock();
             var result = _dictionary.Remove(sessionId);
-            if (result)
-            {
-                Count--;
-            }
             _readerWriterLock.ExitWriteLock();
             return result;
         }
@@ -86,7 +77,8 @@ namespace ShowMustNotGoOn.Core.MessageBus
             if (result)
             {
                 channel = nodeValue.Channel;
-                nodeValue.IncreaseUsageCount();
+                _channelsUsageQueue.Remove(sessionId);
+                _channelsUsageQueue.AddFirst(sessionId);
             }
             else
             {
@@ -100,7 +92,7 @@ namespace ShowMustNotGoOn.Core.MessageBus
         {
             _readerWriterLock.EnterWriteLock();
             _dictionary.Clear();
-            Count = 0;
+            _channelsUsageQueue.Clear();
             _readerWriterLock.ExitWriteLock();
         }
     }
