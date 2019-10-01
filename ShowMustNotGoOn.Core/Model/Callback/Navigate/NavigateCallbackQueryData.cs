@@ -1,4 +1,4 @@
-﻿namespace ShowMustNotGoOn.Core.Model.CallbackQuery
+﻿namespace ShowMustNotGoOn.Core.Model.Callback.Navigate
 {
     public abstract class NavigateCallbackQueryData : CallbackQueryData
     {

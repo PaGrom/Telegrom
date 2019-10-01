@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using ShowMustNotGoOn.Core;
@@ -21,7 +23,7 @@ namespace ShowMustNotGoOn.UsersService
         public async Task<User> AddOrUpdateUserAsync(User user)
         {
             User newUser;
-            using var transaction = await _dbContext.Database.BeginTransactionAsync();
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync();
             var existingUser = await _dbContext.Users.SingleOrDefaultAsync(u => u.TelegramId == user.TelegramId);
             if (existingUser != null)
             {
@@ -41,6 +43,24 @@ namespace ShowMustNotGoOn.UsersService
             transaction.Commit();
 
             return newUser;
+        }
+
+        public async Task<bool> IsUserSubscribedToTvShowAsync(User user, TvShow tvShow, SubscriptionType type)
+        {
+            var registeredUser = await _dbContext.Users
+                .Include(u => u.Subscriptions)
+                .SingleOrDefaultAsync(u => u.TelegramId == user.TelegramId);
+
+            if (registeredUser != null)
+            {
+                return registeredUser.Subscriptions.Any(s => s.TvShow.MyShowsId == tvShow.MyShowsId
+                                                             && s.SubscriptionType == type);
+            }
+
+            var message = $"Can't find user with Id {user.TelegramId}";
+            _logger.Error(message);
+            throw new ArgumentOutOfRangeException();
+
         }
     }
 }

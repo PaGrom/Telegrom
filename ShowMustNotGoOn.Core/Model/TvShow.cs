@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace ShowMustNotGoOn.Core.Model
+﻿namespace ShowMustNotGoOn.Core.Model
 {
     public sealed class TvShow
     {
@@ -12,7 +10,5 @@ namespace ShowMustNotGoOn.Core.Model
         public int TotalSeasons { get; set; }
         public string Status { get; set; }
         public string Image { get; set; }
-
-        public ICollection<UserTvShows> Users { get; set; }
     }
 }

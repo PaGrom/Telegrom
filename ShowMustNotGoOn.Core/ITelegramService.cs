@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using ShowMustNotGoOn.Core.Model;
-using ShowMustNotGoOn.Core.Model.CallbackQuery;
+using ShowMustNotGoOn.Core.Model.Callback;
 
 namespace ShowMustNotGoOn.Core
 {
@@ -11,11 +11,13 @@ namespace ShowMustNotGoOn.Core
         void SetCallbackQueryReceivedHandler(Action<CallbackQuery> handler);
         void Start();
         Task SendTextMessageToUser(User user, string text);
-        Task<Message> SendTvShowToUser(User user, TvShow show,
-            int? nextNavigateCallbackQueryDataId);
-        Task<Message> UpdateTvShowMessage(User user, TvShow show,
+        Task<Message> SendTvShowToUserAsync(User user, TvShow show,
+            ButtonCallbackQueryData nextNavigateCallbackQueryData,
+            ButtonCallbackQueryData subscribeEndOfShowCallbackQueryData);
+        Task<Message> UpdateTvShowMessageAsync(User user, TvShow show,
             CallbackQuery callbackQuery,
-            int? prevNavigateCallbackQueryDataId,
-            int? nextNavigateCallbackQueryDataId);
+            ButtonCallbackQueryData prevNavigateCallbackQueryData,
+            ButtonCallbackQueryData nextNavigateCallbackQueryData,
+            ButtonCallbackQueryData subscribeEndOfShowCallbackQueryData);
     }
 }

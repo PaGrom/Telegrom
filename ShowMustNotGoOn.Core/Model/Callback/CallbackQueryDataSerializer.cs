@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace ShowMustNotGoOn.Core.Model.CallbackQuery
+namespace ShowMustNotGoOn.Core.Model.Callback
 {
     public static class CallbackQueryDataSerializer
     {

@@ -6,5 +6,6 @@ namespace ShowMustNotGoOn.Core
     public interface IUsersService
     {
         Task<User> AddOrUpdateUserAsync(User user);
+        Task<bool> IsUserSubscribedToTvShowAsync(User user, TvShow tvShow, SubscriptionType type);
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace ShowMustNotGoOn.Core.Model.CallbackQuery
+﻿namespace ShowMustNotGoOn.Core.Model.Callback
 {
     public sealed class CallbackQuery
     {

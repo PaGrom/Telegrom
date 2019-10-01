@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using AutoMapper;
+using ShowMustNotGoOn.Core.Model.Callback;
 using Telegram.Bot.Types.Enums;
 
 namespace ShowMustNotGoOn.TelegramService
@@ -24,7 +25,7 @@ namespace ShowMustNotGoOn.TelegramService
                         opt.MapFrom(src => MapBotCommand(src.EntityValues.FirstOrDefault()));
                     });
 
-            CreateMap<Telegram.Bot.Types.CallbackQuery, ShowMustNotGoOn.Core.Model.CallbackQuery.CallbackQuery>()
+            CreateMap<Telegram.Bot.Types.CallbackQuery, CallbackQuery>()
                 .ForMember(dest => dest.FromUser,
                     opt => opt.MapFrom(src => src.From))
                 .ForMember(dest => dest.Message,

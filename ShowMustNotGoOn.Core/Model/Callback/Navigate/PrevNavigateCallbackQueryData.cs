@@ -1,10 +1,10 @@
-﻿namespace ShowMustNotGoOn.Core.Model.CallbackQuery
+﻿namespace ShowMustNotGoOn.Core.Model.Callback.Navigate
 {
     public sealed class PrevNavigateCallbackQueryData : NavigateCallbackQueryData
     {
         public PrevNavigateCallbackQueryData()
         {
-            CallbackQueryType = CallbackQueryType.Prev;
+            CallbackQueryType = CallbackQueryType.NavigatePrev;
         }
     }
 }

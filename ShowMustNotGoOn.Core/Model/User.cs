@@ -11,6 +11,6 @@ namespace ShowMustNotGoOn.Core.Model
         public string LastName { get; set; }
 
         public ICollection<ButtonCallbackQueryData> ButtonCallbackQueryDatas { get; set; }
-        public ICollection<UserTvShows> TvShows { get; set; }
+        public ICollection<Subscription> Subscriptions { get; set; }
     }
 }

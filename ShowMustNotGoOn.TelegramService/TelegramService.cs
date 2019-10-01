@@ -5,11 +5,12 @@ using AutoMapper;
 using Serilog;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.Model;
+using ShowMustNotGoOn.Core.Model.Callback;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
-using CallbackQuery = ShowMustNotGoOn.Core.Model.CallbackQuery.CallbackQuery;
+using CallbackQuery = ShowMustNotGoOn.Core.Model.Callback.CallbackQuery;
 using Message = ShowMustNotGoOn.Core.Model.Message;
 using User = ShowMustNotGoOn.Core.Model.User;
 
@@ -76,44 +77,73 @@ namespace ShowMustNotGoOn.TelegramService
             await _telegramBotClient.SendTextMessageAsync(user.TelegramId, text);
         }
 
-        public async Task<Message> SendTvShowToUser(User user, TvShow show,
-            int? nextNavigateCallbackQueryDataId)
+        public async Task<Message> SendTvShowToUserAsync(User user, TvShow show,
+            ButtonCallbackQueryData nextNavigateCallbackQueryData,
+            ButtonCallbackQueryData subscribeEndOfShowCallbackQueryData)
         {
-            Telegram.Bot.Types.Message sentMessage;
-            if (nextNavigateCallbackQueryDataId != null)
+            var buttons = new List<List<InlineKeyboardButton>>();
+
+            if (nextNavigateCallbackQueryData?.Id != null)
             {
                 var button = InlineKeyboardButton.WithCallbackData("Next",
-                    nextNavigateCallbackQueryDataId.ToString());
-                var markup = new InlineKeyboardMarkup(button);
-                sentMessage = await _telegramBotClient.SendPhotoAsync(user.TelegramId, show.Image,
-                    $"{show.Title} / {show.TitleOriginal}", replyMarkup: markup);
+                    nextNavigateCallbackQueryData.Id.ToString());
+                
+                buttons.Add(new List<InlineKeyboardButton> { button });
             }
-            else
+
+            var subscribeEndOfShowButtonText = subscribeEndOfShowCallbackQueryData.CallbackQueryType switch
             {
-                sentMessage = await _telegramBotClient.SendPhotoAsync(user.TelegramId, show.Image,
-                    $"{show.Title} / {show.TitleOriginal}");
-            }
+                CallbackQueryType.SubscribeEndOfShow => "Subscribe to end of show",
+                CallbackQueryType.UnsubscribeEndOfShow => "Unsubscribe to end of show",
+                _ => string.Empty
+            };
+
+            buttons.Add(new List<InlineKeyboardButton>
+            {
+                InlineKeyboardButton.WithCallbackData(subscribeEndOfShowButtonText,
+                    subscribeEndOfShowCallbackQueryData.Id.ToString())
+            });
+
+            var markup = new InlineKeyboardMarkup(buttons);
+            var sentMessage = await _telegramBotClient.SendPhotoAsync(user.TelegramId, show.Image,
+                $"{show.Title} / {show.TitleOriginal}", replyMarkup: markup);
 
             return _mapper.Map<Message>(sentMessage);
         }
 
-        public async Task<Message> UpdateTvShowMessage(User user, TvShow show,
+        public async Task<Message> UpdateTvShowMessageAsync(User user, TvShow show,
             CallbackQuery callbackQuery,
-            int? prevNavigateCallbackQueryDataId,
-            int? nextNavigateCallbackQueryDataId)
+            ButtonCallbackQueryData prevNavigateCallbackQueryData,
+            ButtonCallbackQueryData nextNavigateCallbackQueryData,
+            ButtonCallbackQueryData subscribeEndOfShowCallbackQueryData)
         {
             var navigateButtons = new List<InlineKeyboardButton>();
-            if (prevNavigateCallbackQueryDataId != null)
+            var buttons = new List<List<InlineKeyboardButton>> { navigateButtons };
+            if (prevNavigateCallbackQueryData?.Id != null)
             {
                 navigateButtons.Add(InlineKeyboardButton.WithCallbackData("Prev",
-                    prevNavigateCallbackQueryDataId.ToString()));
+                    prevNavigateCallbackQueryData.Id.ToString()));
             }
-            if (nextNavigateCallbackQueryDataId != null)
+            if (nextNavigateCallbackQueryData?.Id != null)
             {
                 navigateButtons.Add(InlineKeyboardButton.WithCallbackData("Next",
-                    nextNavigateCallbackQueryDataId.ToString()));
+                    nextNavigateCallbackQueryData.Id.ToString()));
             }
-            var markup = new InlineKeyboardMarkup(navigateButtons);
+
+            var subscribeEndOfShowButtonText = subscribeEndOfShowCallbackQueryData.CallbackQueryType switch
+            {
+                CallbackQueryType.SubscribeEndOfShow => "Subscribe to end of show",
+                CallbackQueryType.UnsubscribeEndOfShow => "Unsubscribe to end of show",
+                _ => string.Empty
+            };
+
+            buttons.Add(new List<InlineKeyboardButton>
+            {
+                InlineKeyboardButton.WithCallbackData(subscribeEndOfShowButtonText,
+                    subscribeEndOfShowCallbackQueryData.Id.ToString())
+            });
+
+            var markup = new InlineKeyboardMarkup(buttons);
 
             if (string.IsNullOrEmpty(show.Image))
             {
