@@ -1,4 +1,6 @@
-﻿namespace ShowMustNotGoOn.Core.Model
+﻿using ShowMustNotGoOn.Core.Model.Callback;
+
+namespace ShowMustNotGoOn.Core.Model
 {
     public sealed class Message
     {
@@ -9,5 +11,7 @@
         public string Text { get; set; }
 
         public BotCommandType? BotCommand { get; set; }
+
+        public ButtonCallbackQueryData NextButton { get; set; }
     }
 }

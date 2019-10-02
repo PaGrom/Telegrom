@@ -1,6 +1,8 @@
 ﻿using System.Linq;
 using AutoMapper;
+using ShowMustNotGoOn.Core.Model;
 using ShowMustNotGoOn.Core.Model.Callback;
+using ShowMustNotGoOn.Core.Model.Callback.Navigate;
 using Telegram.Bot.Types.Enums;
 
 namespace ShowMustNotGoOn.TelegramService
@@ -23,6 +25,24 @@ namespace ShowMustNotGoOn.TelegramService
                     {
                         opt.PreCondition(src => src.Entities?.FirstOrDefault()?.Type == MessageEntityType.BotCommand);
                         opt.MapFrom(src => MapBotCommand(src.EntityValues.FirstOrDefault()));
+                    })
+                .ForMember(dest => dest.NextButton,
+                    opt =>
+                    {
+                        opt.PreCondition(src => src.ReplyMarkup?.InlineKeyboard?
+                                                    .SelectMany(k => k)
+                                                    .SingleOrDefault(b => CallbackQueryDataSerializer.Deserialize(b.CallbackData)
+                                                        is NextNavigateCallbackQueryData) != null);
+                        opt.MapFrom(src => new ButtonCallbackQueryData
+                        {
+                            MessageId = src.MessageId,
+                            CallbackQueryType = CallbackQueryType.NavigateNext,
+                            Data = src.ReplyMarkup.InlineKeyboard
+                                       .SelectMany(k => k)
+                                       .Single(b => CallbackQueryDataSerializer.Deserialize(b.CallbackData)
+                                           is NextNavigateCallbackQueryData)
+                                       .CallbackData
+                        });
                     });
 
             CreateMap<Telegram.Bot.Types.CallbackQuery, CallbackQuery>()

@@ -7,5 +7,6 @@ namespace ShowMustNotGoOn.Core
     {
         Task<User> AddOrUpdateUserAsync(User user);
         Task<bool> IsUserSubscribedToTvShowAsync(User user, TvShow tvShow, SubscriptionType type);
+        Task<User> SubscribeUserToTvShowAsync(User user, TvShow tvShow, SubscriptionType subscriptionType);
     }
 }

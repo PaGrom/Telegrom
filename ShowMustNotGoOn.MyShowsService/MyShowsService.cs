@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using RestSharp;
@@ -43,6 +44,29 @@ namespace ShowMustNotGoOn.MyShowsService
             var responseResult = await ExecuteAsync<ResponseResult>(request);
 
             return _mapper.Map<List<Result>, IEnumerable<TvShow>>(responseResult.Result);
+        }
+
+        public async Task<TvShow> GetTvShowAsync(int tvShowId)
+        {
+            var request = new RestRequest(Method.POST)
+            {
+                RequestFormat = DataFormat.Json
+            };
+            request.AddJsonBody(new
+            {
+                jsonrpc = "2.0",
+                method = "shows.GetById",
+                @params = new
+                {
+                    showId = tvShowId,
+                    withEpisodes = true
+                },
+                id = 1
+            });
+
+            var responseResult = await ExecuteAsync<ResponseResult>(request);
+
+            return _mapper.Map<Result, TvShow>(responseResult.Result.First());
         }
 
         private async Task<T> ExecuteAsync<T>(IRestRequest request) where T : new()

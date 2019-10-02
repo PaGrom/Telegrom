@@ -142,6 +142,30 @@ namespace ShowMustNotGoOn
 
         private async Task HandleSubscriptionCallbackQueryDataAsync(CallbackQuery callbackQuery)
         {
+            switch (callbackQuery.CallbackQueryData)
+            {
+                case EndOfShowSubscriptionCallbackQueryData _:
+                    await HandleEndOfShowSubscriptionCallbackQueryDataAsync(callbackQuery);
+                    break;
+                case EndOfShowUnsubscriptionCallbackQueryData _:
+                    await HandleEndOfShowUnsubscriptionCallbackQueryDataAsync(callbackQuery);
+                    break;
+                default:
+                    _logger.Error("Something go wrong with SubscriptionCallbackQueryData");
+                    return;
+            }
+        }
+
+        private async Task HandleEndOfShowSubscriptionCallbackQueryDataAsync(CallbackQuery callbackQuery)
+        {
+            var callbackQueryData = (EndOfShowSubscriptionCallbackQueryData) callbackQuery.CallbackQueryData;
+            var tvShow = await _tvShowsService.GetTvShowAsync(callbackQueryData.TvShowId);
+            tvShow = await _tvShowsService.AddNewTvShowAsync(tvShow);
+            var user = await _usersService.SubscribeUserToTvShowAsync(callbackQuery.FromUser, tvShow, SubscriptionType.EndOfShow);
+        }
+
+        private async Task HandleEndOfShowUnsubscriptionCallbackQueryDataAsync(CallbackQuery callbackQuery)
+        {
             throw new NotImplementedException();
         }
 

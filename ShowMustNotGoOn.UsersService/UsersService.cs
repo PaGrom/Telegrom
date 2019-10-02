@@ -60,7 +60,22 @@ namespace ShowMustNotGoOn.UsersService
             var message = $"Can't find user with Id {user.TelegramId}";
             _logger.Error(message);
             throw new ArgumentOutOfRangeException();
+        }
 
+        public async Task<User> SubscribeUserToTvShowAsync(User user, TvShow tvShow, SubscriptionType subscriptionType)
+        {
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync();
+            user = await _dbContext.Users.SingleAsync(u => u.TelegramId == user.TelegramId);
+            tvShow = await _dbContext.TvShows.SingleAsync(s => s.MyShowsId == tvShow.MyShowsId);
+            user.Subscriptions.Add(new Subscription
+            {
+                User = user,
+                TvShow = tvShow,
+                SubscriptionType = subscriptionType
+            });
+            await _dbContext.SaveChangesAsync();
+            await transaction.CommitAsync();
+            return user;
         }
     }
 }

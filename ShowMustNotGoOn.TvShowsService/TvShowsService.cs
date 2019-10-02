@@ -29,7 +29,7 @@ namespace ShowMustNotGoOn.TvShowsService
         public async Task<TvShow> AddNewTvShowAsync(TvShow tvShow)
         {
             TvShow show;
-            using var transaction = await _dbContext.Database.BeginTransactionAsync();
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync();
             var existingShow = await _dbContext.TvShows.SingleOrDefaultAsync(s => s.MyShowsId == tvShow.MyShowsId);
             if (existingShow != null)
             {
@@ -51,6 +51,11 @@ namespace ShowMustNotGoOn.TvShowsService
         public async Task<IEnumerable<TvShow>> SearchTvShowsAsync(string name)
         {
             return await _myShowsService.SearchTvShowsAsync(name);
+        }
+
+        public async Task<TvShow> GetTvShowAsync(int tvShowId)
+        {
+            return await _myShowsService.GetTvShowAsync(tvShowId);
         }
     }
 }

@@ -8,5 +8,6 @@ namespace ShowMustNotGoOn.Core
     {
         Task<TvShow> AddNewTvShowAsync(TvShow tvShow);
         Task<IEnumerable<TvShow>> SearchTvShowsAsync(string name);
+        Task<TvShow> GetTvShowAsync(int tvShowId);
     }
 }
