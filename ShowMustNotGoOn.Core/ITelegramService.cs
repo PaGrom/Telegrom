@@ -7,17 +7,11 @@ namespace ShowMustNotGoOn.Core
 {
     public interface ITelegramService
     {
-        void SetMessageReceivedHandler(Action<Message> handler);
-        void SetCallbackQueryReceivedHandler(Action<CallbackQuery> handler);
+        void SetMessageReceivedHandler(Action<UserMessage> handler);
+        void SetCallbackButtonReceivedHandler(Action<CallbackButton> handler);
         void Start();
-        Task SendTextMessageToUser(User user, string text);
-        Task<Message> SendTvShowToUserAsync(User user, TvShow show,
-            ButtonCallbackQueryData nextNavigateCallbackQueryData,
-            ButtonCallbackQueryData subscribeEndOfShowCallbackQueryData);
-        Task<Message> UpdateTvShowMessageAsync(User user, TvShow show,
-            CallbackQuery callbackQuery,
-            ButtonCallbackQueryData prevNavigateCallbackQueryData,
-            ButtonCallbackQueryData nextNavigateCallbackQueryData,
-            ButtonCallbackQueryData subscribeEndOfShowCallbackQueryData);
+        Task SendTextMessageToUserAsync(User user, string text);
+        Task SendMessageToUserAsync(User user, BotMessage message);
+        Task UpdateMessageAsync(BotMessage message, string callbackId);
     }
 }

@@ -17,8 +17,8 @@ namespace ShowMustNotGoOn.DatabaseContext
 
         public DbSet<TvShow> TvShows { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<BotMessage> BotMessages { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
-        public DbSet<ButtonCallbackQueryData> ButtonCallbackQueryDatas { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -46,6 +46,18 @@ namespace ShowMustNotGoOn.DatabaseContext
                     .ValueGeneratedOnAdd();
             });
 
+            modelBuilder.Entity<BotMessage>(entity =>
+            {
+                entity.HasIndex(e => e.Id)
+                    .IsUnique();
+
+                entity.HasIndex(e => e.MessageId)
+                    .IsUnique();
+
+                entity.Property(e => e.Id)
+                    .ValueGeneratedOnAdd();
+            });
+
             modelBuilder.Entity<Subscription>(entity =>
             {
                 entity.HasIndex(e => e.Id)
@@ -53,21 +65,6 @@ namespace ShowMustNotGoOn.DatabaseContext
 
                 entity.Property(e => e.Id)
                     .ValueGeneratedOnAdd();
-            });
-
-            modelBuilder.Entity<ButtonCallbackQueryData>(entity =>
-            {
-                entity.HasIndex(e => e.Id)
-                    .IsUnique();
-
-                entity.Property(e => e.Id)
-                    .ValueGeneratedOnAdd();
-
-                entity.Property(e => e.MessageId)
-                    .IsRequired();
-
-                entity.Property(e => e.Data)
-                    .IsRequired();
             });
         }
     }

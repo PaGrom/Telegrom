@@ -9,8 +9,6 @@ using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.MessageBus;
 using ShowMustNotGoOn.Core.Model;
 using ShowMustNotGoOn.Core.Model.Callback;
-using ShowMustNotGoOn.Core.Model.Callback.Navigate;
-using ShowMustNotGoOn.Core.Model.Callback.Subscription;
 using ShowMustNotGoOn.Messages.Events;
 
 namespace ShowMustNotGoOn
@@ -38,7 +36,7 @@ namespace ShowMustNotGoOn
             _logger = logger;
 
             _telegramService.SetMessageReceivedHandler(HandleTelegramMessageReceived);
-            _telegramService.SetCallbackQueryReceivedHandler(HandleCallbackQueryReceived);
+            _telegramService.SetCallbackButtonReceivedHandler(HandleCallbackButtonReceived);
             _telegramService.Start();
 
             Task.Factory.StartNew(async () => { await RunAsync(); },
@@ -54,16 +52,16 @@ namespace ShowMustNotGoOn
             }
         }
 
-        public async void HandleTelegramMessageReceived(Message message)
+        public async void HandleTelegramMessageReceived(UserMessage userMessage)
         {
-            var channel = GetChannelForUser(message.FromUser.TelegramId);
-            await channel.Writer.WriteAsync(new TelegramMessageReceivedEvent(message));
+            var channel = GetChannelForUser(userMessage.User.TelegramId);
+            await channel.Writer.WriteAsync(new TelegramMessageReceivedEvent(userMessage));
         }
 
-        private async void HandleCallbackQueryReceived(CallbackQuery callbackQuery)
+        private async void HandleCallbackButtonReceived(CallbackButton callbackButton)
         {
-            var channel = GetChannelForUser(callbackQuery.FromUser.TelegramId);
-            await channel.Writer.WriteAsync(new TelegramCallbackQueryReceivedEvent(callbackQuery));
+            var channel = GetChannelForUser(callbackButton.Message.User.TelegramId);
+            await channel.Writer.WriteAsync(new TelegramCallbackButtonReceivedEvent(callbackButton));
         }
 
         private Channel<IMessage> GetChannelForUser(int userId)
@@ -104,253 +102,66 @@ namespace ShowMustNotGoOn
             switch (message)
             {
                 case TelegramMessageReceivedEvent e:
-                    await HandleMessageAsync(e.Message);
+                    await HandleMessageAsync(e.UserMessage);
                     break;
-                case TelegramCallbackQueryReceivedEvent e:
-                    await HandleCallbackQueryAsync(e.CallbackQuery);
+                case TelegramCallbackButtonReceivedEvent e:
+                    await HandleCallbackButtonAsync(e.CallbackButton);
                     break;
             }
         }
 
-        private async Task HandleCallbackQueryAsync(CallbackQuery callbackQuery)
+        private async Task HandleCallbackButtonAsync(CallbackButton callbackButton)
         {
-            _logger.Information($"Received callback query from user {callbackQuery.FromUser.TelegramId}");
+            var botMessage = callbackButton.Message;
 
-            var callbackQueryDataString = (await _databaseContext.ButtonCallbackQueryDatas
-                .SingleOrDefaultAsync(c => c.User.TelegramId == callbackQuery.FromUser.TelegramId
-                                           && c.Id == callbackQuery.CallbackQueryDataId))
-                ?.Data;
+            var tvShows = (await _tvShowsService.SearchTvShowsAsync(botMessage.SearchPattern)).ToList();
 
-            if (string.IsNullOrEmpty(callbackQueryDataString))
+            switch (callbackButton.CallbackData)
             {
-                _logger.Error($"Can't find callback query data");
+                case "next":
+                    botMessage.CurrentPage++;
+                    break;
+                case "prev":
+                    botMessage.CurrentPage--;
+                    break;
+            }
+
+            botMessage.CurrentShowId = tvShows[botMessage.CurrentPage].MyShowsId;
+
+            await _telegramService.UpdateMessageAsync(botMessage, callbackButton.CallbackId);
+        }
+
+        private async Task HandleMessageAsync(UserMessage userMessage)
+        {
+            _logger.Information($"Received message from user {userMessage.User.Username}");
+
+            if (userMessage.BotCommand == BotCommandType.Start)
+            {
+                await _telegramService.SendTextMessageToUserAsync(userMessage.User, "Welcome");
                 return;
             }
 
-            callbackQuery.CallbackQueryData = CallbackQueryDataSerializer.Deserialize(callbackQueryDataString);
-
-            switch (callbackQuery.CallbackQueryData)
-            {
-                case NavigateCallbackQueryData _:
-                    await HandleNavigateCallbackQueryDataAsync(callbackQuery);
-                    break;
-                case SubscriptionCallbackQueryData _:
-                    await HandleSubscriptionCallbackQueryDataAsync(callbackQuery);
-                    break;
-            }
-        }
-
-        private async Task HandleSubscriptionCallbackQueryDataAsync(CallbackQuery callbackQuery)
-        {
-            switch (callbackQuery.CallbackQueryData)
-            {
-                case EndOfShowSubscriptionCallbackQueryData _:
-                    await HandleEndOfShowSubscriptionCallbackQueryDataAsync(callbackQuery);
-                    break;
-                case EndOfShowUnsubscriptionCallbackQueryData _:
-                    await HandleEndOfShowUnsubscriptionCallbackQueryDataAsync(callbackQuery);
-                    break;
-                default:
-                    _logger.Error("Something go wrong with SubscriptionCallbackQueryData");
-                    return;
-            }
-        }
-
-        private async Task HandleEndOfShowSubscriptionCallbackQueryDataAsync(CallbackQuery callbackQuery)
-        {
-            var callbackQueryData = (EndOfShowSubscriptionCallbackQueryData) callbackQuery.CallbackQueryData;
-            var tvShow = await _tvShowsService.GetTvShowAsync(callbackQueryData.TvShowId);
-            tvShow = await _tvShowsService.AddNewTvShowAsync(tvShow);
-            var user = await _usersService.SubscribeUserToTvShowAsync(callbackQuery.FromUser, tvShow, SubscriptionType.EndOfShow);
-        }
-
-        private async Task HandleEndOfShowUnsubscriptionCallbackQueryDataAsync(CallbackQuery callbackQuery)
-        {
-            throw new NotImplementedException();
-        }
-
-        private async Task HandleNavigateCallbackQueryDataAsync(CallbackQuery callbackQuery)
-        {
-            var navigateCallbackQueryData = (NavigateCallbackQueryData) callbackQuery.CallbackQueryData;
-            int pageCount;
-            switch (navigateCallbackQueryData.CallbackQueryType)
-            {
-                case CallbackQueryType.NavigatePrev:
-                    pageCount = navigateCallbackQueryData.PageCount - 1;
-                    break;
-                case CallbackQueryType.NavigateNext:
-                    pageCount = navigateCallbackQueryData.PageCount + 1;
-                    break;
-                default:
-                    _logger.Error($"Something go wrong with NavigateCallbackQueryData");
-                    return;
-            }
-
-            var searchPattern = navigateCallbackQueryData.SearchPattern;
-
-            var tvShows = (await _tvShowsService.SearchTvShowsAsync(searchPattern)).ToList();
-            var tvShow = tvShows.Skip(pageCount).FirstOrDefault();
-
-            await using var transaction = await _databaseContext.Database.BeginTransactionAsync();
-
-            var user = await _databaseContext.Users.SingleOrDefaultAsync(u =>
-                u.TelegramId == callbackQuery.FromUser.TelegramId);
-
-            if (user == null)
-            {
-                _logger.Error($"Can't find user with Telegram Id {callbackQuery.FromUser.TelegramId} in db");
-                return;
-            }
-
-            object[] existedCallbackQueryDatasForMessage = await _databaseContext.ButtonCallbackQueryDatas
-                .Where(c => c.User.TelegramId == callbackQuery.FromUser.TelegramId
-                            && c.MessageId == callbackQuery.Message.MessageId)
-                .ToArrayAsync();
-
-            _databaseContext.RemoveRange(existedCallbackQueryDatasForMessage);
-
-            ButtonCallbackQueryData prevButtonCallbackQueryData = null;
-            ButtonCallbackQueryData nextButtonCallbackQueryData = null;
-
-            if (pageCount > 0)
-            {
-                prevButtonCallbackQueryData = CreatePrevButtonCallbackQueryData(user, callbackQuery.Message.MessageId, pageCount, searchPattern);
-            }
-
-            if (tvShows.Count > pageCount + 1)
-            {
-                nextButtonCallbackQueryData = CreateNextButtonCallbackQueryData(user, callbackQuery.Message.MessageId, pageCount, searchPattern);
-            }
-
-            var subscribeButtonCallbackQueryData = await _usersService.IsUserSubscribedToTvShowAsync(user, tvShow, SubscriptionType.EndOfShow)
-                ? CreateUnsubscribeButtonCallbackQueryData(user, tvShow, callbackQuery.Message.MessageId)
-                : CreateSubscribeButtonCallbackQueryData(user, tvShow, callbackQuery.Message.MessageId);
-
-            await _databaseContext.SaveChangesAsync();
-            await transaction.CommitAsync();
-
-            await _telegramService.UpdateTvShowMessageAsync(callbackQuery.FromUser, tvShow, callbackQuery,
-                prevButtonCallbackQueryData,
-                nextButtonCallbackQueryData,
-                subscribeButtonCallbackQueryData);
-        }
-
-        private async Task HandleMessageAsync(Message message)
-        {
-            _logger.Information($"Received message from user {message.FromUser.Username}");
-            var user = await _usersService.AddOrUpdateUserAsync(message.FromUser);
-            if (message.BotCommand == BotCommandType.Start)
-            {
-                await _telegramService.SendTextMessageToUser(message.FromUser, "Welcome");
-                return;
-            }
-
-            var searchPattern = message.Text;
-            var pageCount = 0;
+            var searchPattern = userMessage.Text;
+            const int pageCount = 0;
 
             var tvShows = (await _tvShowsService.SearchTvShowsAsync(searchPattern)).ToList();
 
             if (!tvShows.Any())
             {
-                await _telegramService.SendTextMessageToUser(message.FromUser, "Can't find tv show for you");
+                await _telegramService.SendTextMessageToUserAsync(userMessage.User, "Can't find tv show for you");
                 return;
             }
 
-            var tvShow = tvShows.First();
-
-            ButtonCallbackQueryData nextButtonCallbackQueryData = null;
-
-            await using var transaction = await _databaseContext.Database.BeginTransactionAsync();
-            if (tvShows.Count > 1)
+            var botMessage = new BotMessage
             {
-                nextButtonCallbackQueryData = CreateNextButtonCallbackQueryData(user, default, pageCount, searchPattern);
-            }
-
-            var subscribeButtonCallbackQueryData = await _usersService.IsUserSubscribedToTvShowAsync(user, tvShow, SubscriptionType.EndOfShow)
-                ? CreateUnsubscribeButtonCallbackQueryData(user, tvShow, default)
-                : CreateSubscribeButtonCallbackQueryData(user, tvShow, default);
-
-            await _databaseContext.SaveChangesAsync();
-
-            var sentMessage = await _telegramService.SendTvShowToUserAsync(message.FromUser, tvShow,
-                nextButtonCallbackQueryData,
-                subscribeButtonCallbackQueryData);
-
-            if (nextButtonCallbackQueryData != null)
-            {
-                nextButtonCallbackQueryData.MessageId = sentMessage.MessageId;
-            }
-
-            subscribeButtonCallbackQueryData.MessageId = sentMessage.MessageId;
-
-            await _databaseContext.SaveChangesAsync();
-
-            await transaction.CommitAsync();
-        }
-
-        private ButtonCallbackQueryData CreatePrevButtonCallbackQueryData(User user, int messageId, int pageCount, string searchPattern)
-        {
-            var prevNavigateCallbackQueryData = new PrevNavigateCallbackQueryData
-            {
-                PageCount = pageCount,
-                SearchPattern = searchPattern
+                User = userMessage.User,
+                SearchPattern = searchPattern,
+                CurrentShowId = tvShows.First().MyShowsId,
+                CurrentPage = pageCount,
+                TotalPages = tvShows.Count
             };
 
-            return _databaseContext.ButtonCallbackQueryDatas.Add(new ButtonCallbackQueryData
-            {
-                User = user,
-                MessageId = messageId,
-                Data = CallbackQueryDataSerializer.Serialize(prevNavigateCallbackQueryData)
-            }).Entity;
-        }
-
-        private ButtonCallbackQueryData CreateNextButtonCallbackQueryData(User user, int messageId, int pageCount, string searchPattern)
-        {
-            var nextNavigateCallbackQueryData = new NextNavigateCallbackQueryData
-            {
-                PageCount = pageCount,
-                SearchPattern = searchPattern
-            };
-
-            return _databaseContext.ButtonCallbackQueryDatas.Add(new ButtonCallbackQueryData
-            {
-                User = user,
-                MessageId = messageId,
-                CallbackQueryType = nextNavigateCallbackQueryData.CallbackQueryType,
-                Data = CallbackQueryDataSerializer.Serialize(nextNavigateCallbackQueryData)
-            }).Entity;
-        }
-
-        private ButtonCallbackQueryData CreateSubscribeButtonCallbackQueryData(User user, TvShow tvShow, int messageId)
-        {
-            var subscribeEndOfShow = new EndOfShowSubscriptionCallbackQueryData
-            {
-                TvShowId = tvShow.MyShowsId
-            };
-
-            return _databaseContext.ButtonCallbackQueryDatas.Add(new ButtonCallbackQueryData
-            {
-                User = user,
-                MessageId = messageId,
-                CallbackQueryType = subscribeEndOfShow.CallbackQueryType,
-                Data = CallbackQueryDataSerializer.Serialize(subscribeEndOfShow)
-            }).Entity;
-        }
-
-        private ButtonCallbackQueryData CreateUnsubscribeButtonCallbackQueryData(User user, TvShow tvShow, int messageId)
-        {
-            var unsubscribeEndOfShow = new EndOfShowUnsubscriptionCallbackQueryData
-            {
-                TvShowId = tvShow.MyShowsId
-            };
-
-            return _databaseContext.ButtonCallbackQueryDatas.Add(new ButtonCallbackQueryData
-            {
-                User = user,
-                MessageId = messageId,
-                CallbackQueryType = unsubscribeEndOfShow.CallbackQueryType,
-                Data = CallbackQueryDataSerializer.Serialize(unsubscribeEndOfShow)
-            }).Entity;
+            await _telegramService.SendMessageToUserAsync(userMessage.User, botMessage);
         }
     }
 }

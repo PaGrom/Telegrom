@@ -5,11 +5,11 @@ namespace ShowMustNotGoOn.Messages.Events
 {
     public sealed class TelegramMessageReceivedEvent : IMessage
     {
-        public Message Message { get; }
+        public UserMessage UserMessage { get; }
 
-        public TelegramMessageReceivedEvent(Message message)
+        public TelegramMessageReceivedEvent(UserMessage userMessage)
         {
-            Message = message;
+            UserMessage = userMessage;
         }
     }
 }

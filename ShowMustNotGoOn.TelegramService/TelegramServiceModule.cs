@@ -49,6 +49,12 @@ namespace ShowMustNotGoOn.TelegramService
                     .AsImplementedInterfaces();
             }
 
+            builder.RegisterType<UsersService.UsersService>()
+                .As<IUsersService>();
+
+            builder.RegisterType<TvShowsService.TvShowsService>()
+                .As<ITvShowsService>();
+
             builder.RegisterType<TelegramServiceMappingProfile>()
                 .As<Profile>()
                 .InstancePerLifetimeScope();
