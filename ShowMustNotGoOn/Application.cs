@@ -124,6 +124,18 @@ namespace ShowMustNotGoOn
                 case "prev":
                     botMessage.CurrentPage--;
                     break;
+                case "subendofshow":
+                    await _usersService.SubscribeUserToTvShowAsync(botMessage.User,
+                        tvShows[botMessage.CurrentPage],
+                        SubscriptionType.EndOfShow);
+                    break;
+                case "unsubendofshow":
+                    await _usersService.UnsubscribeUserFromTvShowAsync(botMessage.User,
+                        tvShows[botMessage.CurrentPage],
+                        SubscriptionType.EndOfShow);
+                    break;
+                default:
+                    return;
             }
 
             botMessage.CurrentShowId = tvShows[botMessage.CurrentPage].MyShowsId;

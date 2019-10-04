@@ -18,6 +18,8 @@ namespace ShowMustNotGoOn.TelegramService
 {
     public class TelegramService : ITelegramService, IDisposable
     {
+        private const string NotFoundImage = "https://user-images.githubusercontent.com/24848110/33519396-7e56363c-d79d-11e7-969b-09782f5ccbab.png";
+
         private readonly ITelegramBotClient _telegramBotClient;
         private readonly IUsersService _usersService;
         private readonly ITvShowsService _tvShowsService;
@@ -74,6 +76,8 @@ namespace ShowMustNotGoOn.TelegramService
             _logger.Information("Get callback query {@callback}", callback);
             var botMessage = await _databaseContext.BotMessages
                 .Include(m => m.User)
+                .ThenInclude(u => u.Subscriptions)
+                .ThenInclude(s => s.TvShow)
                 .SingleAsync(m => m.User.TelegramId == callback.From.Id
                              && m.MessageId == callback.Message.MessageId);
             var callbackButton = new CallbackButton
@@ -102,9 +106,15 @@ namespace ShowMustNotGoOn.TelegramService
 
         public async Task SendMessageToUserAsync(User user, BotMessage message)
         {
-            var buttons = GetButtons(message);
-            var markup = new InlineKeyboardMarkup(buttons);
             var show = await _tvShowsService.GetTvShowAsync(message.CurrentShowId);
+
+            if (string.IsNullOrEmpty(show.Image))
+            {
+                show.Image = NotFoundImage;
+            }
+
+            var buttons = GetButtons(message, show);
+            var markup = new InlineKeyboardMarkup(buttons);
 
             var sentMessage = await _telegramBotClient.SendPhotoAsync(user.TelegramId, show.Image,
                 $"{show.Title} / {show.TitleOriginal}", replyMarkup: markup);
@@ -112,17 +122,32 @@ namespace ShowMustNotGoOn.TelegramService
             message.MessageId = sentMessage.MessageId;
 
             await using var transaction = await _databaseContext.Database.BeginTransactionAsync();
-            _databaseContext.BotMessages.Add(message);
-            await _databaseContext.SaveChangesAsync();
-            await transaction.CommitAsync();
+            try
+            {
+                _databaseContext.BotMessages.Add(message);
+                await _databaseContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e, "Error while save bot message");
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         public async Task UpdateMessageAsync(BotMessage message, string callbackId)
         {
             var user = message.User;
-            var buttons = GetButtons(message);
-            var markup = new InlineKeyboardMarkup(buttons);
             var show = await _tvShowsService.GetTvShowAsync(message.CurrentShowId);
+
+            if (string.IsNullOrEmpty(show.Image))
+            {
+                show.Image = NotFoundImage;
+            }
+
+            var buttons = GetButtons(message, show);
+            var markup = new InlineKeyboardMarkup(buttons);
 
             await _telegramBotClient.AnswerCallbackQueryAsync(callbackId);
             await _telegramBotClient.EditMessageMediaAsync(user.TelegramId, message.MessageId,
@@ -136,12 +161,27 @@ namespace ShowMustNotGoOn.TelegramService
             await transaction.CommitAsync();
         }
 
-        private List<List<InlineKeyboardButton>> GetButtons(BotMessage message)
+        private List<List<InlineKeyboardButton>> GetButtons(BotMessage message, TvShow show)
         {
             var buttons = new List<List<InlineKeyboardButton>>
             {
-                GetNavigateButtons(message),
+                GetNavigateButtons(message)
             };
+
+            if (message.User.IsSubscribed(show, SubscriptionType.EndOfShow))
+            {
+                buttons.Add(new List<InlineKeyboardButton>
+                {
+                    InlineKeyboardButton.WithCallbackData("Unsubscribe from end of show", "unsubendofshow")
+                });
+            }
+            else
+            {
+                buttons.Add(new List<InlineKeyboardButton>
+                {
+                    InlineKeyboardButton.WithCallbackData("Subscribe to end of show", "subendofshow")
+                });
+            }
 
             return buttons;
         }
