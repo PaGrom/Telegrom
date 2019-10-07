@@ -2,6 +2,7 @@
 {
     public enum BotCommandType
     {
-        Start
+        Start,
+        Subscriptions
     }
 }

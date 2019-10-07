@@ -22,11 +22,12 @@ namespace ShowMustNotGoOn.UsersService
 
         public async Task<User> AddOrUpdateUserAsync(User user)
         {
-            User newUser;
             await using var transaction = await _dbContext.Database.BeginTransactionAsync();
             try
             {
-                    var existingUser = await _dbContext.Users
+                User newUser;
+
+                var existingUser = await _dbContext.Users
                     .Include(u => u.Subscriptions)
                     .ThenInclude(s => s.TvShow)
                     .SingleOrDefaultAsync(u => u.TelegramId == user.TelegramId);

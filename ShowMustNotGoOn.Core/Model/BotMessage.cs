@@ -8,6 +8,8 @@
 
         public int MessageId { get; set; }
 
+        public BotCommandType? BotCommandType { get; set; }
+
         public string SearchPattern { get; set; }
 
         public int CurrentShowId { get; set; }

@@ -156,9 +156,36 @@ namespace ShowMustNotGoOn.TelegramService
                 $"{show.Title} / {show.TitleOriginal}", markup);
 
             await using var transaction = await _databaseContext.Database.BeginTransactionAsync();
-            _databaseContext.BotMessages.Update(message);
-            await _databaseContext.SaveChangesAsync();
-            await transaction.CommitAsync();
+            try
+            {
+                _databaseContext.BotMessages.Update(message);
+                await _databaseContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e, "Error during update message");
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        public async Task RemoveMessageAsync(BotMessage message)
+        {
+            await using var transaction = await _databaseContext.Database.BeginTransactionAsync();
+            try
+            {
+                _databaseContext.BotMessages.Remove(message);
+                await _databaseContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+                await _telegramBotClient.DeleteMessageAsync(message.User.TelegramId, message.MessageId);
+            }
+            catch (Exception e)
+            {
+                _logger.Error(e, "Error during delete message");
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         private List<List<InlineKeyboardButton>> GetButtons(BotMessage message, TvShow show)

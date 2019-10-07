@@ -27,13 +27,12 @@ namespace ShowMustNotGoOn.TelegramService
 
         public static ShowMustNotGoOn.Core.Model.BotCommandType? MapBotCommand(string botCommand)
         {
-            switch (botCommand)
+            return botCommand switch
             {
-                case "/start":
-                    return ShowMustNotGoOn.Core.Model.BotCommandType.Start;
-                default:
-                    return null;
-            }
+                "/start" => ShowMustNotGoOn.Core.Model.BotCommandType.Start,
+                "/subscriptions" => ShowMustNotGoOn.Core.Model.BotCommandType.Subscriptions,
+                _ => (ShowMustNotGoOn.Core.Model.BotCommandType?)null
+            };
         }
     }
 }

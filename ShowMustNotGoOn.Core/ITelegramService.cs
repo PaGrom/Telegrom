@@ -13,5 +13,6 @@ namespace ShowMustNotGoOn.Core
         Task SendTextMessageToUserAsync(User user, string text);
         Task SendMessageToUserAsync(User user, BotMessage message);
         Task UpdateMessageAsync(BotMessage message, string callbackId);
+        Task RemoveMessageAsync(BotMessage message);
     }
 }
