@@ -7,6 +7,8 @@ namespace ShowMustNotGoOn.Messages.Events
     {
         public CallbackButton CallbackButton { get; }
 
+        public int UserId => CallbackButton.Message.User.TelegramId;
+
         public TelegramCallbackButtonReceivedEvent(CallbackButton callbackButton)
         {
             CallbackButton = callbackButton;

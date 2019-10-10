@@ -22,104 +22,70 @@ namespace ShowMustNotGoOn.UsersService
 
         public async Task<User> AddOrUpdateUserAsync(User user)
         {
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync();
-            try
+            User newUser;
+
+            var existingUser = await _dbContext.Users
+                .Include(u => u.Subscriptions)
+                .ThenInclude(s => s.TvShow)
+                .SingleOrDefaultAsync(u => u.TelegramId == user.TelegramId);
+            if (existingUser != null)
             {
-                User newUser;
-
-                var existingUser = await _dbContext.Users
-                    .Include(u => u.Subscriptions)
-                    .ThenInclude(s => s.TvShow)
-                    .SingleOrDefaultAsync(u => u.TelegramId == user.TelegramId);
-                if (existingUser != null)
-                {
-                    _logger.Information($"User {user.Username} (Id: {user.TelegramId}) already exists in db");
-                    user.Id = existingUser.Id;
-                    _dbContext.Entry(existingUser).CurrentValues.SetValues(user);
-                    newUser = existingUser;
-                }
-                else
-                {
-                    _logger.Information($"Adding user {user.Username} (Id: {user.TelegramId}) to db");
-                    newUser = _dbContext.Users.Add(user).Entity;
-                }
-
-                await _dbContext.SaveChangesAsync();
-
-                transaction.Commit();
-
-                return newUser;
+                _logger.Information($"User {user.Username} (Id: {user.TelegramId}) already exists in db");
+                user.Id = existingUser.Id;
+                _dbContext.Entry(existingUser).CurrentValues.SetValues(user);
+                newUser = existingUser;
             }
-            catch (Exception e)
+            else
             {
-                _logger.Error(e, "Error while add or update user");
-                await transaction.RollbackAsync();
-                throw;
+                _logger.Information($"Adding user {user.Username} (Id: {user.TelegramId}) to db");
+                newUser = _dbContext.Users.Add(user).Entity;
             }
+
+            await _dbContext.SaveChangesAsync();
+
+            return newUser;
         }
 
         public async Task SubscribeUserToTvShowAsync(User user, TvShow tvShow, SubscriptionType subscriptionType)
         {
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync();
-            try
+            var savedShow = await _dbContext.TvShows
+                .SingleOrDefaultAsync(s => s.MyShowsId == tvShow.MyShowsId);
+
+            if (savedShow == null)
             {
-                var savedShow = await _dbContext.TvShows
-                    .SingleOrDefaultAsync(s => s.MyShowsId == tvShow.MyShowsId);
-
-                if (savedShow == null)
-                {
-                    tvShow = _dbContext.TvShows.Add(tvShow).Entity;
-                    await _dbContext.SaveChangesAsync();
-                }
-                else
-                {
-                    tvShow = savedShow;
-                }
-
-                var existedSubscription = user.Subscriptions
-                    .SingleOrDefault(s => s.SubscriptionType == subscriptionType
-                                          && s.TvShow.MyShowsId == tvShow.MyShowsId);
-
-                if (existedSubscription == null)
-                {
-                    user.Subscriptions.Add(new Subscription
-                    {
-                        User = user,
-                        TvShow = tvShow,
-                        SubscriptionType = subscriptionType
-                    });
-
-                    await _dbContext.SaveChangesAsync();
-                }
-
-                await transaction.CommitAsync();
+                tvShow = _dbContext.TvShows.Add(tvShow).Entity;
+                await _dbContext.SaveChangesAsync();
             }
-            catch (Exception e)
+            else
             {
-                _logger.Error(e, "Error while subscribe user");
-                await transaction.RollbackAsync();
+                tvShow = savedShow;
+            }
+
+            var existedSubscription = user.Subscriptions
+                .SingleOrDefault(s => s.SubscriptionType == subscriptionType
+                                      && s.TvShow.MyShowsId == tvShow.MyShowsId);
+
+            if (existedSubscription == null)
+            {
+                user.Subscriptions.Add(new Subscription
+                {
+                    User = user,
+                    TvShow = tvShow,
+                    SubscriptionType = subscriptionType
+                });
+
+                await _dbContext.SaveChangesAsync();
             }
         }
 
         public async Task UnsubscribeUserFromTvShowAsync(User user, TvShow tvShow, SubscriptionType subscriptionType)
         {
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync();
-            try
+            var subscription = user.Subscriptions.SingleOrDefault(s => s.SubscriptionType == subscriptionType
+                                                                       && s.TvShow.MyShowsId == tvShow.MyShowsId);
+            if (subscription != null)
             {
-                var subscription = user.Subscriptions.SingleOrDefault(s => s.SubscriptionType == subscriptionType
-                                                                           && s.TvShow.MyShowsId == tvShow.MyShowsId);
-                if (subscription != null)
-                {
-                    _dbContext.Subscriptions.Remove(subscription);
-                    await _dbContext.SaveChangesAsync();
-                }
-                
-                await transaction.CommitAsync();
-            }
-            catch (Exception e)
-            {
-                _logger.Error(e, "Error while unsubscribe user");
-                await transaction.RollbackAsync();
+                _dbContext.Subscriptions.Remove(subscription);
+                await _dbContext.SaveChangesAsync();
             }
         }
     }

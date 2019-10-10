@@ -1,11 +1,11 @@
 using System.Collections.Generic;
-using System.Configuration;
 using System.IO;
 using System.Linq;
 using Autofac;
 using AutoMapper;
 using Microsoft.Extensions.Configuration;
 using Serilog;
+using ShowMustNotGoOn.Core.MessageBus;
 using ShowMustNotGoOn.DatabaseContext;
 using ShowMustNotGoOn.Settings;
 using ShowMustNotGoOn.TelegramService;
@@ -16,6 +16,9 @@ namespace ShowMustNotGoOn
 {
     public class ContainerConfiguration
     {
+        public const string RequestLifetimeScopeTag = "REQUEST";
+        public const string SessionLifetimeScopeTag = "SESSION";
+
         internal static void Init(IConfiguration configuration, ContainerBuilder builder)
         {
             builder.Register<ILogger>((c, p) => new LoggerConfiguration()
@@ -70,6 +73,20 @@ namespace ShowMustNotGoOn
             builder.Register(ctx => ctx.Resolve<MapperConfiguration>().CreateMapper())
                 .As<IMapper>()
                 .InstancePerLifetimeScope();
+
+            builder.RegisterType<Dispatcher>()
+                .InstancePerLifetimeScope();
+
+            builder.RegisterType<MessageHandler>()
+                .InstancePerMatchingLifetimeScope(RequestLifetimeScopeTag);
+
+            builder.RegisterType<ChannelWorker>()
+                .InstancePerMatchingLifetimeScope(SessionLifetimeScopeTag);
+
+            builder.RegisterType<ChannelHolder<IMessage>>()
+                .As<IChannelReaderProvider<IMessage>>()
+                .As<IChannelWriterProvider<IMessage>>()
+                .InstancePerMatchingLifetimeScope(SessionLifetimeScopeTag);
 
             builder.RegisterType<Application>()
                 .AsSelf()

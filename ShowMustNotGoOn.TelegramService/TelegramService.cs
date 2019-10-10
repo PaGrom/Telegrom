@@ -121,19 +121,8 @@ namespace ShowMustNotGoOn.TelegramService
 
             message.MessageId = sentMessage.MessageId;
 
-            await using var transaction = await _databaseContext.Database.BeginTransactionAsync();
-            try
-            {
-                _databaseContext.BotMessages.Add(message);
-                await _databaseContext.SaveChangesAsync();
-                await transaction.CommitAsync();
-            }
-            catch (Exception e)
-            {
-                _logger.Error(e, "Error while save bot message");
-                await transaction.RollbackAsync();
-                throw;
-            }
+            _databaseContext.BotMessages.Add(message);
+            await _databaseContext.SaveChangesAsync();
         }
 
         public async Task UpdateMessageAsync(BotMessage message, string callbackId)
@@ -155,37 +144,15 @@ namespace ShowMustNotGoOn.TelegramService
             var updatedMessage = await _telegramBotClient.EditMessageCaptionAsync(user.TelegramId, message.MessageId,
                 $"{show.Title} / {show.TitleOriginal}", markup);
 
-            await using var transaction = await _databaseContext.Database.BeginTransactionAsync();
-            try
-            {
-                _databaseContext.BotMessages.Update(message);
-                await _databaseContext.SaveChangesAsync();
-                await transaction.CommitAsync();
-            }
-            catch (Exception e)
-            {
-                _logger.Error(e, "Error during update message");
-                await transaction.RollbackAsync();
-                throw;
-            }
+            _databaseContext.BotMessages.Update(message);
+            await _databaseContext.SaveChangesAsync();
         }
 
         public async Task RemoveMessageAsync(BotMessage message)
         {
-            await using var transaction = await _databaseContext.Database.BeginTransactionAsync();
-            try
-            {
-                _databaseContext.BotMessages.Remove(message);
-                await _databaseContext.SaveChangesAsync();
-                await transaction.CommitAsync();
-                await _telegramBotClient.DeleteMessageAsync(message.User.TelegramId, message.MessageId);
-            }
-            catch (Exception e)
-            {
-                _logger.Error(e, "Error during delete message");
-                await transaction.RollbackAsync();
-                throw;
-            }
+            _databaseContext.BotMessages.Remove(message);
+            await _databaseContext.SaveChangesAsync();
+            await _telegramBotClient.DeleteMessageAsync(message.User.TelegramId, message.MessageId);
         }
 
         private List<List<InlineKeyboardButton>> GetButtons(BotMessage message, TvShow show)
