@@ -74,6 +74,7 @@ namespace ShowMustNotGoOn.TelegramService
         {
             var callback = e.CallbackQuery;
             _logger.Information("Get callback query {@callback}", callback);
+            
             var botMessage = await _databaseContext.BotMessages
                 .Include(m => m.User)
                 .ThenInclude(u => u.Subscriptions)

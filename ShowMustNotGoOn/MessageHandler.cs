@@ -11,21 +11,18 @@ namespace ShowMustNotGoOn
 {
     public sealed class MessageHandler
     {
-        private readonly IMessage _message;
         private readonly ITelegramService _telegramService;
         private readonly IUsersService _usersService;
         private readonly ITvShowsService _tvShowsService;
         private readonly DatabaseContext.DatabaseContext _databaseContext;
         private readonly ILogger _logger;
 
-        public MessageHandler(IMessage message,
-            ITelegramService telegramService,
+        public MessageHandler(ITelegramService telegramService,
             IUsersService usersService,
             ITvShowsService tvShowsService,
             DatabaseContext.DatabaseContext databaseContext,
             ILogger logger)
         {
-            _message = message;
             _telegramService = telegramService;
             _usersService = usersService;
             _tvShowsService = tvShowsService;
@@ -33,11 +30,11 @@ namespace ShowMustNotGoOn
             _logger = logger;
         }
 
-        public async Task HandleAsync()
+        public async Task HandleAsync(IMessage message)
         {
             await using var transaction = await _databaseContext.Database.BeginTransactionAsync();
             
-            switch (_message)
+            switch (message)
             {
                 case TelegramMessageReceivedEvent e:
                     await HandleMessageAsync(e.UserMessage);

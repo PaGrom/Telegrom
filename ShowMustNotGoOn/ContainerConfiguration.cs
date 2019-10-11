@@ -80,7 +80,7 @@ namespace ShowMustNotGoOn
             builder.RegisterType<MessageHandler>()
                 .InstancePerMatchingLifetimeScope(RequestLifetimeScopeTag);
 
-            builder.RegisterType<ChannelWorker>()
+            builder.RegisterType<SessionWorker>()
                 .InstancePerMatchingLifetimeScope(SessionLifetimeScopeTag);
 
             builder.RegisterType<ChannelHolder<IMessage>>()
