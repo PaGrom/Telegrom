@@ -38,10 +38,9 @@ namespace ShowMustNotGoOn
             
             builder.RegisterInstance(appSettings).SingleInstance();
 
-            builder.RegisterModule(new DatabaseContextModule
-            {
-                ConnectionString = appSettings.DatabaseSettings.ConnectionString
-            });
+            builder.RegisterType<DatabaseContext.DatabaseContext>()
+                .WithParameter("options", DatabaseContextOptionsFactory.Get(appSettings.DatabaseSettings.ConnectionString))
+                .InstancePerMatchingLifetimeScope(RequestLifetimeScopeTag);
 
             builder.RegisterModule<UsersServiceModule>();
 

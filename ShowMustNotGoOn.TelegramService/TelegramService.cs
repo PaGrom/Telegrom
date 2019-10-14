@@ -1,103 +1,36 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using AutoMapper;
-using Microsoft.EntityFrameworkCore;
 using Serilog;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.Model;
-using ShowMustNotGoOn.Core.Model.Callback;
 using Telegram.Bot;
-using Telegram.Bot.Args;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using User = ShowMustNotGoOn.Core.Model.User;
 
 namespace ShowMustNotGoOn.TelegramService
 {
-    public class TelegramService : ITelegramService, IDisposable
+    public class TelegramService : ITelegramService
     {
         private const string NotFoundImage = "https://user-images.githubusercontent.com/24848110/33519396-7e56363c-d79d-11e7-969b-09782f5ccbab.png";
 
         private readonly ITelegramBotClient _telegramBotClient;
-        private readonly IUsersService _usersService;
         private readonly ITvShowsService _tvShowsService;
         private readonly DatabaseContext.DatabaseContext _databaseContext;
-        private readonly IMapper _mapper;
         private readonly ILogger _logger;
-        private Action<UserMessage> _messageReceivedHandler;
-        private Action<CallbackButton> _callbackButtonReceivedHandler;
 
         public TelegramService(ITelegramBotClient telegramBotClient,
-            IUsersService usersService,
             ITvShowsService tvShowsService,
             DatabaseContext.DatabaseContext databaseContext,
-            IMapper mapper,
             ILogger logger)
         {
             _telegramBotClient = telegramBotClient;
-            _usersService = usersService;
             _tvShowsService = tvShowsService;
             _databaseContext = databaseContext;
-            _mapper = mapper;
             _logger = logger;
 
             var me = _telegramBotClient.GetMeAsync().GetAwaiter().GetResult();
             _logger.Information($"Hello, World! I am user {me.Id} and my name is {me.FirstName}.");
-        }
-
-        public void Start()
-        {
-            RegisterHandlers();
-            _telegramBotClient.StartReceiving();
-        }
-
-        private void RegisterHandlers()
-        {
-            _telegramBotClient.OnMessage += BotOnMessageReceived;
-            _telegramBotClient.OnCallbackQuery += BotOnCallbackQueryReceived;
-        }
-
-        private async void BotOnMessageReceived(object sender, MessageEventArgs e)
-        {
-            var telegramMessage = e.Message;
-            _logger.Information("Get message {@message}", telegramMessage);
-            var message = _mapper.Map<UserMessage>(telegramMessage);
-
-            message.User = await _usersService.AddOrUpdateUserAsync(message.User);
-
-            _messageReceivedHandler?.Invoke(message);
-        }
-
-        private async void BotOnCallbackQueryReceived(object sender, CallbackQueryEventArgs e)
-        {
-            var callback = e.CallbackQuery;
-            _logger.Information("Get callback query {@callback}", callback);
-            
-            var botMessage = await _databaseContext.BotMessages
-                .Include(m => m.User)
-                .ThenInclude(u => u.Subscriptions)
-                .ThenInclude(s => s.TvShow)
-                .SingleAsync(m => m.User.TelegramId == callback.From.Id
-                             && m.MessageId == callback.Message.MessageId);
-            var callbackButton = new CallbackButton
-            {
-                Message = botMessage,
-                CallbackId = callback.Id,
-                CallbackData = callback.Data
-            };
-            _callbackButtonReceivedHandler?.Invoke(callbackButton);
-        }
-
-        public void SetMessageReceivedHandler(Action<UserMessage> handler)
-        {
-            _messageReceivedHandler = handler;
-        }
-
-        public void SetCallbackButtonReceivedHandler(Action<CallbackButton> handler)
-        {
-            _callbackButtonReceivedHandler = handler;
         }
 
         public async Task SendTextMessageToUserAsync(User user, string text)
@@ -196,11 +129,6 @@ namespace ShowMustNotGoOn.TelegramService
             }
 
             return buttons;
-        }
-
-        public void Dispose()
-        {
-            _telegramBotClient.StopReceiving();
         }
     }
 }

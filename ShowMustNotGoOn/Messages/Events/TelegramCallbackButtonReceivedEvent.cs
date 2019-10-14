@@ -1,17 +1,17 @@
 ﻿using ShowMustNotGoOn.Core.MessageBus;
-using ShowMustNotGoOn.Core.Model.Callback;
+using ShowMustNotGoOn.Core.Model;
 
 namespace ShowMustNotGoOn.Messages.Events
 {
     public class TelegramCallbackButtonReceivedEvent : IMessage
     {
-        public CallbackButton CallbackButton { get; }
+        public UserCallback UserCallback { get; }
 
-        public int UserId => CallbackButton.Message.User.TelegramId;
+        public int UserId => UserCallback.User.TelegramId;
 
-        public TelegramCallbackButtonReceivedEvent(CallbackButton callbackButton)
+        public TelegramCallbackButtonReceivedEvent(UserCallback userCallback)
         {
-            CallbackButton = callbackButton;
+            UserCallback = userCallback;
         }
     }
 }

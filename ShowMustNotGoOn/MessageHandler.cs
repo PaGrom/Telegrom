@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.MessageBus;
@@ -40,16 +41,28 @@ namespace ShowMustNotGoOn
                     await HandleMessageAsync(e.UserMessage);
                     break;
                 case TelegramCallbackButtonReceivedEvent e:
-                    await HandleCallbackButtonAsync(e.CallbackButton);
+                    await HandleCallbackButtonAsync(e.UserCallback);
                     break;
             }
 
             await transaction.CommitAsync();
         }
 
-        private async Task HandleCallbackButtonAsync(CallbackButton callbackButton)
+        private async Task HandleCallbackButtonAsync(UserCallback userCallback)
         {
-            var botMessage = callbackButton.Message;
+            var botMessage = await _databaseContext.BotMessages
+                .Include(m => m.User)
+                .ThenInclude(u => u.Subscriptions)
+                .ThenInclude(s => s.TvShow)
+                .SingleAsync(m => m.User.TelegramId == userCallback.User.TelegramId
+                                  && m.MessageId == userCallback.MessageId);
+
+            var callbackButton = new CallbackButton
+            {
+                Message = botMessage,
+                CallbackId = userCallback.CallbackId,
+                CallbackData = userCallback.CallbackData
+            };
 
             if (botMessage.BotCommandType == BotCommandType.Subscriptions)
             {
@@ -167,6 +180,8 @@ namespace ShowMustNotGoOn
         private async Task HandleMessageAsync(UserMessage userMessage)
         {
             _logger.Information($"Received message from user {userMessage.User.Username}");
+
+            userMessage.User = await _usersService.AddOrUpdateUserAsync(userMessage.User);
 
             if (userMessage.BotCommand != null)
             {

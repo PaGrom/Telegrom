@@ -2,7 +2,6 @@
 using Serilog;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.Model;
-using ShowMustNotGoOn.Core.Model.Callback;
 using ShowMustNotGoOn.Messages.Events;
 
 namespace ShowMustNotGoOn
@@ -13,15 +12,15 @@ namespace ShowMustNotGoOn
         private readonly ILogger _logger;
 
         public Application(Dispatcher dispatcher,
-            ITelegramService telegramService,
+            ITelegramMessageReceiver telegramMessageReceiver,
             ILogger logger)
         {
             _dispatcher = dispatcher;
             _logger = logger;
 
-            telegramService.SetMessageReceivedHandler(HandleTelegramMessageReceived);
-            telegramService.SetCallbackButtonReceivedHandler(HandleCallbackButtonReceived);
-            telegramService.Start();
+            telegramMessageReceiver.SetMessageReceivedHandler(HandleTelegramMessageReceived);
+            telegramMessageReceiver.SetCallbackButtonReceivedHandler(HandleCallbackButtonReceived);
+            telegramMessageReceiver.Start();
 
             Task.Factory.StartNew(async () => { await RunAsync(); },
                 TaskCreationOptions.LongRunning);
@@ -41,9 +40,9 @@ namespace ShowMustNotGoOn
             await _dispatcher.WriteAsync(new TelegramMessageReceivedEvent(userMessage));
         }
 
-        private async void HandleCallbackButtonReceived(CallbackButton callbackButton)
+        private async void HandleCallbackButtonReceived(UserCallback userCallback)
         {
-            await _dispatcher.WriteAsync(new TelegramCallbackButtonReceivedEvent(callbackButton));
+            await _dispatcher.WriteAsync(new TelegramCallbackButtonReceivedEvent(userCallback));
         }
     }
 }

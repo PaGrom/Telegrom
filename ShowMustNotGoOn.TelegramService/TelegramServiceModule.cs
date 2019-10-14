@@ -24,7 +24,8 @@ namespace ShowMustNotGoOn.TelegramService
                     {
                         UseDefaultCredentials = true
                     }))
-                    .AsImplementedInterfaces();
+                    .AsImplementedInterfaces()
+                    .SingleInstance();
             }
             else if (!string.IsNullOrEmpty(Socks5HostName)
                 && Socks5Port.HasValue)
@@ -41,16 +42,15 @@ namespace ShowMustNotGoOn.TelegramService
                 }
 
                 builder.RegisterInstance(new TelegramBotClient(TelegramApiToken, proxy))
-                    .AsImplementedInterfaces();
+                    .AsImplementedInterfaces()
+                    .SingleInstance();
             }
             else
             {
                 builder.RegisterInstance(new TelegramBotClient(TelegramApiToken))
-                    .AsImplementedInterfaces();
+                    .AsImplementedInterfaces()
+                    .SingleInstance();
             }
-
-            builder.RegisterType<UsersService.UsersService>()
-                .As<IUsersService>();
 
             builder.RegisterType<TvShowsService.TvShowsService>()
                 .As<ITvShowsService>();
@@ -61,8 +61,11 @@ namespace ShowMustNotGoOn.TelegramService
 
             builder.RegisterType<TelegramService>()
                 .As<ITelegramService>()
-                .SingleInstance()
-                .AutoActivate();
+                .InstancePerLifetimeScope();
+
+            builder.RegisterType<TelegramMessageReceiver>()
+                .As<ITelegramMessageReceiver>()
+                .SingleInstance();
         }
     }
 }
