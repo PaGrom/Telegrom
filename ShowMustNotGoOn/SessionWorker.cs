@@ -12,26 +12,34 @@ namespace ShowMustNotGoOn
         private readonly IChannelReaderProvider<IMessage> _channelReaderProvider;
         private readonly CancellationTokenSource _cancellationTokenSource;
 
-        public SessionWorker(ILifetimeScope lifetimeScope, IChannelReaderProvider<IMessage> channelReaderProvider)
+        public SessionWorker(ILifetimeScope lifetimeScope,
+            IChannelReaderProvider<IMessage> channelReaderProvider,
+            CancellationTokenSource cancellationTokenSource)
         {
-            _cancellationTokenSource = new CancellationTokenSource();
+            _cancellationTokenSource = cancellationTokenSource;
             _lifetimeScope = lifetimeScope;
             _channelReaderProvider = channelReaderProvider;
         }
 
         public async Task Start()
         {
-            while (!_cancellationTokenSource.IsCancellationRequested)
+            try
             {
-                var message = await _channelReaderProvider.Reader.ReadAsync(_cancellationTokenSource.Token);
-
-                if (!_cancellationTokenSource.IsCancellationRequested)
+                while (!_cancellationTokenSource.IsCancellationRequested)
                 {
-                    using var innerScope = _lifetimeScope.BeginLifetimeScope(ContainerConfiguration.RequestLifetimeScopeTag);
+                    var message = await _channelReaderProvider.Reader.ReadAsync(_cancellationTokenSource.Token);
 
-                    await innerScope.Resolve<MessageHandler>().HandleAsync(message);
+                    if (!_cancellationTokenSource.IsCancellationRequested)
+                    {
+                        using var innerScope =
+                            _lifetimeScope.BeginLifetimeScope(ContainerConfiguration.RequestLifetimeScopeTag);
+
+                        await innerScope.Resolve<MessageHandler>().HandleAsync(message);
+                    }
                 }
             }
+            catch (OperationCanceledException)
+            {}
 
             Console.WriteLine($"CommandHandler stopped");
         }

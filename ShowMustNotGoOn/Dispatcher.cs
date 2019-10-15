@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
@@ -11,9 +10,7 @@ namespace ShowMustNotGoOn
     {
         private readonly ILifetimeScope _lifetimeScope;
         private readonly object _syncRoot = new object();
-        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-        private readonly Dictionary<int, ILifetimeScope> _sessionScopes = new Dictionary<int, ILifetimeScope>();
-        private readonly Dictionary<int, Task> _sessionTasks = new Dictionary<int, Task>();
+        private readonly LruSessionScopeCollection _sessionScopes = new LruSessionScopeCollection(1);
 
         public Dispatcher(ILifetimeScope lifetimeScope)
         {
@@ -22,11 +19,11 @@ namespace ShowMustNotGoOn
 
         public async Task WriteAsync(IMessage message)
         {
-            if (!_sessionScopes.TryGetValue(message.UserId, out var scope))
+            if (!_sessionScopes.TryGetSessionScope(message.UserId, out var scope))
             {
                 lock (_syncRoot)
                 {
-                    if (!_sessionScopes.TryGetValue(message.UserId, out scope))
+                    if (!_sessionScopes.TryGetSessionScope(message.UserId, out scope))
                     {
                         scope = _lifetimeScope.BeginLifetimeScope(ContainerConfiguration.SessionLifetimeScopeTag,
                             builder =>
@@ -34,10 +31,11 @@ namespace ShowMustNotGoOn
                                 builder.RegisterInstance(message);
                             });
 
-                        _sessionScopes[message.UserId] = scope;
-                        var messageHandler = scope.Resolve<SessionWorker>();
-                        var task = Task.Run(messageHandler.Start, _cancellationTokenSource.Token);
-                        _sessionTasks[message.UserId] = task;
+                        var cancellationTokenSource = new CancellationTokenSource();
+                        var messageHandler = scope.Resolve<SessionWorker>(
+                            new TypedParameter(typeof(CancellationTokenSource), cancellationTokenSource));
+                        var task = Task.Run(messageHandler.Start, cancellationTokenSource.Token);
+                        _sessionScopes.Add(message.UserId, scope, task, cancellationTokenSource);
                     }
                 }
             }
@@ -47,16 +45,7 @@ namespace ShowMustNotGoOn
 
         public void Dispose()
         {
-            if (!_cancellationTokenSource.IsCancellationRequested)
-            {
-                _cancellationTokenSource.Cancel();
-            }
-
-            foreach (var (sessionId, scope) in _sessionScopes)
-            {
-                scope.Dispose();
-                _sessionTasks[sessionId].GetAwaiter().GetResult();
-            }
+            _sessionScopes.Dispose();
         }
     }
 }
