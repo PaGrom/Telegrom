@@ -71,7 +71,7 @@ namespace ShowMustNotGoOn.MyShowsService
 
         private async Task<T> ExecuteAsync<T>(IRestRequest request) where T : new()
         {
-            var response = await _client.ExecutePostTaskAsync<T>(request);
+            var response = await _client.ExecutePostAsync<T>(request);
 
             if (response.ErrorException == null)
             {
