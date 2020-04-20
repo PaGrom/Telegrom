@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using Autofac;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using ShowMustNotGoOn.Core.MessageBus;
@@ -38,8 +39,11 @@ namespace ShowMustNotGoOn
             
             builder.RegisterInstance(appSettings).SingleInstance();
 
+            var options = DatabaseContextOptionsFactory.Get(appSettings.DatabaseSettings.ConnectionString);
+            builder.RegisterInstance(options)
+	            .As<DbContextOptions>();
+
             builder.RegisterType<DatabaseContext.DatabaseContext>()
-                .WithParameter("options", DatabaseContextOptionsFactory.Get(appSettings.DatabaseSettings.ConnectionString))
                 .InstancePerMatchingLifetimeScope(RequestLifetimeScopeTag);
 
             builder.RegisterModule<UsersServiceModule>();
@@ -73,13 +77,13 @@ namespace ShowMustNotGoOn
                 .As<IMapper>()
                 .InstancePerLifetimeScope();
 
-            builder.RegisterType<Dispatcher>()
+            builder.RegisterType<SessionManager>()
                 .InstancePerLifetimeScope();
 
             builder.RegisterType<MessageHandler>()
                 .InstancePerMatchingLifetimeScope(RequestLifetimeScopeTag);
 
-            builder.RegisterType<SessionWorker>()
+            builder.RegisterType<SessionContext>()
                 .InstancePerMatchingLifetimeScope(SessionLifetimeScopeTag);
 
             builder.RegisterType<ChannelHolder<IMessage>>()

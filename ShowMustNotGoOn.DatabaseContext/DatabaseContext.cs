@@ -5,10 +5,6 @@ namespace ShowMustNotGoOn.DatabaseContext
 {
     public sealed class DatabaseContext : DbContext
     {
-        public DatabaseContext()
-        {
-        }
-
         public DatabaseContext(DbContextOptions options)
             : base(options)
         {
@@ -29,6 +25,9 @@ namespace ShowMustNotGoOn.DatabaseContext
 
                 entity.HasIndex(e => e.MyShowsId)
                     .IsUnique();
+
+                entity.Property(e => e.RowVersion)
+	                .IsConcurrencyToken();
 
                 entity.Property(e => e.Id)
                     .ValueGeneratedOnAdd();
@@ -53,6 +52,10 @@ namespace ShowMustNotGoOn.DatabaseContext
 
                 entity.HasIndex(e => e.MessageId)
                     .IsUnique();
+
+                entity.HasOne<User>()
+	                .WithMany()
+	                .HasForeignKey(c => c.UserId);
 
                 entity.Property(e => e.Id)
                     .ValueGeneratedOnAdd();

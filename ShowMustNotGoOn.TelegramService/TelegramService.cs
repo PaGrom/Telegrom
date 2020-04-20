@@ -16,7 +16,6 @@ namespace ShowMustNotGoOn.TelegramService
 
         private readonly ITelegramBotClient _telegramBotClient;
         private readonly ITvShowsService _tvShowsService;
-        private readonly DatabaseContext.DatabaseContext _databaseContext;
         private readonly ILogger _logger;
 
         public TelegramService(ITelegramBotClient telegramBotClient,
@@ -26,7 +25,6 @@ namespace ShowMustNotGoOn.TelegramService
         {
             _telegramBotClient = telegramBotClient;
             _tvShowsService = tvShowsService;
-            _databaseContext = databaseContext;
             _logger = logger;
 
             var me = _telegramBotClient.GetMeAsync().GetAwaiter().GetResult();
@@ -38,7 +36,7 @@ namespace ShowMustNotGoOn.TelegramService
             await _telegramBotClient.SendTextMessageAsync(user.TelegramId, text);
         }
 
-        public async Task SendMessageToUserAsync(User user, BotMessage message)
+        public async Task<BotMessage> SendMessageToUserAsync(User user, BotMessage message)
         {
             var show = await _tvShowsService.GetTvShowAsync(message.CurrentShowId);
 
@@ -47,7 +45,7 @@ namespace ShowMustNotGoOn.TelegramService
                 show.Image = NotFoundImage;
             }
 
-            var buttons = GetButtons(message, show);
+            var buttons = GetButtons(user, message, show);
             var markup = new InlineKeyboardMarkup(buttons);
 
             var sentMessage = await _telegramBotClient.SendPhotoAsync(user.TelegramId, show.Image,
@@ -55,13 +53,11 @@ namespace ShowMustNotGoOn.TelegramService
 
             message.MessageId = sentMessage.MessageId;
 
-            _databaseContext.BotMessages.Add(message);
-            await _databaseContext.SaveChangesAsync();
+            return message;
         }
 
-        public async Task UpdateMessageAsync(BotMessage message, string callbackId)
+        public async Task<BotMessage> UpdateMessageAsync(User user, BotMessage message, string callbackId)
         {
-            var user = message.User;
             var show = await _tvShowsService.GetTvShowAsync(message.CurrentShowId);
 
             if (string.IsNullOrEmpty(show.Image))
@@ -69,7 +65,7 @@ namespace ShowMustNotGoOn.TelegramService
                 show.Image = NotFoundImage;
             }
 
-            var buttons = GetButtons(message, show);
+            var buttons = GetButtons(user, message, show);
             var markup = new InlineKeyboardMarkup(buttons);
 
             await _telegramBotClient.AnswerCallbackQueryAsync(callbackId);
@@ -78,25 +74,24 @@ namespace ShowMustNotGoOn.TelegramService
             var updatedMessage = await _telegramBotClient.EditMessageCaptionAsync(user.TelegramId, message.MessageId,
                 $"{show.Title} / {show.TitleOriginal}", markup);
 
-            _databaseContext.BotMessages.Update(message);
-            await _databaseContext.SaveChangesAsync();
+            message.MessageId = updatedMessage.MessageId;
+
+            return message;
         }
 
-        public async Task RemoveMessageAsync(BotMessage message)
+        public Task RemoveMessageAsync(User user, BotMessage message)
         {
-            _databaseContext.BotMessages.Remove(message);
-            await _databaseContext.SaveChangesAsync();
-            await _telegramBotClient.DeleteMessageAsync(message.User.TelegramId, message.MessageId);
+	        return _telegramBotClient.DeleteMessageAsync(user.TelegramId, message.MessageId);
         }
 
-        private List<List<InlineKeyboardButton>> GetButtons(BotMessage message, TvShow show)
+        private List<List<InlineKeyboardButton>> GetButtons(User user, BotMessage message, TvShow show)
         {
             var buttons = new List<List<InlineKeyboardButton>>
             {
                 GetNavigateButtons(message)
             };
 
-            if (message.User.IsSubscribed(show, SubscriptionType.EndOfShow))
+            if (user.IsSubscribed(show, SubscriptionType.EndOfShow))
             {
                 buttons.Add(new List<InlineKeyboardButton>
                 {

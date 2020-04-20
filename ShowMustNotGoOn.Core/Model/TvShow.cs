@@ -10,5 +10,6 @@
         public int TotalSeasons { get; set; }
         public string Status { get; set; }
         public string Image { get; set; }
+        public byte[] RowVersion { get; set; }
     }
 }

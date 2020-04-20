@@ -1,7 +1,9 @@
-﻿namespace ShowMustNotGoOn.Core.MessageBus
+﻿using ShowMustNotGoOn.Core.Model;
+
+namespace ShowMustNotGoOn.Core.MessageBus
 {
     public interface IMessage
     {
-        int UserId { get; }
+        User User { get; }
     }
 }

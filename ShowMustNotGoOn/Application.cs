@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using Serilog;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.Model;
@@ -8,14 +9,14 @@ namespace ShowMustNotGoOn
 {
     public class Application
     {
-        private readonly Dispatcher _dispatcher;
+        private readonly SessionManager _sessionManager;
         private readonly ILogger _logger;
 
-        public Application(Dispatcher dispatcher,
+        public Application(SessionManager sessionManager,
             ITelegramMessageReceiver telegramMessageReceiver,
             ILogger logger)
         {
-            _dispatcher = dispatcher;
+            _sessionManager = sessionManager;
             _logger = logger;
 
             telegramMessageReceiver.SetMessageReceivedHandler(HandleTelegramMessageReceived);
@@ -35,14 +36,16 @@ namespace ShowMustNotGoOn
             }
         }
 
-        public async void HandleTelegramMessageReceived(UserMessage userMessage)
+        public async void HandleTelegramMessageReceived(UserMessage userMessage, CancellationToken cancellationToken)
         {
-            await _dispatcher.WriteAsync(new TelegramMessageReceivedEvent(userMessage));
+            var sessionContext = await _sessionManager.GetSessionContextAsync(userMessage.User, cancellationToken);
+            await sessionContext.PostMessageAsync(new TelegramMessageReceivedEvent(userMessage), cancellationToken);
         }
 
-        private async void HandleCallbackButtonReceived(UserCallback userCallback)
+        private async void HandleCallbackButtonReceived(UserCallback userCallback, CancellationToken cancellationToken)
         {
-            await _dispatcher.WriteAsync(new TelegramCallbackButtonReceivedEvent(userCallback));
+	        var sessionContext = await _sessionManager.GetSessionContextAsync(userCallback.User, cancellationToken);
+	        await sessionContext.PostMessageAsync(new TelegramCallbackButtonReceivedEvent(userCallback), cancellationToken);
         }
     }
 }

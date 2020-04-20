@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using AutoMapper;
 using Serilog;
 using ShowMustNotGoOn.Core;
@@ -13,8 +14,8 @@ namespace ShowMustNotGoOn.TelegramService
         private readonly ITelegramBotClient _telegramBotClient;
         private readonly IMapper _mapper;
         private readonly ILogger _logger;
-        private Action<UserMessage> _messageReceivedHandler;
-        private Action<UserCallback> _callbackButtonReceivedHandler;
+        private Action<UserMessage, CancellationToken> _messageReceivedHandler;
+        private Action<UserCallback, CancellationToken> _callbackButtonReceivedHandler;
 
         public TelegramMessageReceiver(ITelegramBotClient telegramBotClient,
             IMapper mapper,
@@ -46,7 +47,7 @@ namespace ShowMustNotGoOn.TelegramService
             _logger.Information("Get message {@message}", telegramMessage);
             var message = _mapper.Map<UserMessage>(telegramMessage);
 
-            _messageReceivedHandler?.Invoke(message);
+            _messageReceivedHandler?.Invoke(message, default);
         }
 
         private void BotOnCallbackQueryReceived(object sender, CallbackQueryEventArgs e)
@@ -56,15 +57,15 @@ namespace ShowMustNotGoOn.TelegramService
 
             var callback = _mapper.Map<UserCallback>(telegramCallback);
 
-            _callbackButtonReceivedHandler?.Invoke(callback);
+            _callbackButtonReceivedHandler?.Invoke(callback, default);
         }
 
-        public void SetMessageReceivedHandler(Action<UserMessage> handler)
+        public void SetMessageReceivedHandler(Action<UserMessage, CancellationToken> handler)
         {
             _messageReceivedHandler = handler;
         }
 
-        public void SetCallbackButtonReceivedHandler(Action<UserCallback> handler)
+        public void SetCallbackButtonReceivedHandler(Action<UserCallback, CancellationToken> handler)
         {
             _callbackButtonReceivedHandler = handler;
         }

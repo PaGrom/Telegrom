@@ -11,7 +11,6 @@ namespace ShowMustNotGoOn.Core.Model
         public string FirstName { get; set; }
         public string LastName { get; set; }
 
-        public ICollection<BotMessage> BotMessages { get; set; }
         public ICollection<Subscription> Subscriptions { get; set; }
 
         public bool IsSubscribed(TvShow show, SubscriptionType subscriptionType)

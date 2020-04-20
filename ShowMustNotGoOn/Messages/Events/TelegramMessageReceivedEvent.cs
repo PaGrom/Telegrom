@@ -7,7 +7,7 @@ namespace ShowMustNotGoOn.Messages.Events
     {
         public UserMessage UserMessage { get; }
 
-        public int UserId => UserMessage.User.TelegramId;
+        public User User => UserMessage.User;
 
         public TelegramMessageReceivedEvent(UserMessage userMessage)
         {
