@@ -38,14 +38,15 @@ namespace ShowMustNotGoOn.TelegramService
 
         public async Task<BotMessage> SendMessageToUserAsync(User user, BotMessage message)
         {
-            var show = await _tvShowsService.GetTvShowAsync(message.CurrentShowId);
+            var show = await _tvShowsService.GetTvShowByMyShowsIdAsync(message.MyShowsId)
+                       ?? await _tvShowsService.GetTvShowFromMyShowsAsync(message.MyShowsId);
 
             if (string.IsNullOrEmpty(show.Image))
             {
                 show.Image = NotFoundImage;
             }
 
-            var buttons = GetButtons(user, message, show);
+            var buttons = await GetButtonsAsync(user, message, show);
             var markup = new InlineKeyboardMarkup(buttons);
 
             var sentMessage = await _telegramBotClient.SendPhotoAsync(user.TelegramId, show.Image,
@@ -58,14 +59,15 @@ namespace ShowMustNotGoOn.TelegramService
 
         public async Task<BotMessage> UpdateMessageAsync(User user, BotMessage message, string callbackId)
         {
-            var show = await _tvShowsService.GetTvShowAsync(message.CurrentShowId);
+            var show = await _tvShowsService.GetTvShowByMyShowsIdAsync(message.MyShowsId)
+                       ?? await _tvShowsService.GetTvShowFromMyShowsAsync(message.MyShowsId);
 
             if (string.IsNullOrEmpty(show.Image))
             {
                 show.Image = NotFoundImage;
             }
 
-            var buttons = GetButtons(user, message, show);
+            var buttons = await GetButtonsAsync(user, message, show);
             var markup = new InlineKeyboardMarkup(buttons);
 
             await _telegramBotClient.AnswerCallbackQueryAsync(callbackId);
@@ -84,14 +86,16 @@ namespace ShowMustNotGoOn.TelegramService
 	        return _telegramBotClient.DeleteMessageAsync(user.TelegramId, message.MessageId);
         }
 
-        private List<List<InlineKeyboardButton>> GetButtons(User user, BotMessage message, TvShow show)
+        private async Task<List<List<InlineKeyboardButton>>> GetButtonsAsync(User user, BotMessage message, TvShow show)
         {
             var buttons = new List<List<InlineKeyboardButton>>
             {
                 GetNavigateButtons(message)
             };
 
-            if (user.IsSubscribed(show, SubscriptionType.EndOfShow))
+            var subscription = await _tvShowsService.GetUserSubscriptionToTvShowAsync(user, show, SubscriptionType.EndOfShow);
+
+            if (subscription != null)
             {
                 buttons.Add(new List<InlineKeyboardButton>
                 {

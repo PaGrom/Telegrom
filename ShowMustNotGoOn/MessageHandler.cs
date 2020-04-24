@@ -77,6 +77,9 @@ namespace ShowMustNotGoOn
                 
             var tvShows = (await _tvShowsService.SearchTvShowsAsync(botMessage.SearchPattern)).ToList();
 
+            var currentShow = await _tvShowsService.GetTvShowByMyShowsIdAsync(botMessage.MyShowsId)
+                              ?? await _tvShowsService.GetTvShowFromMyShowsAsync(botMessage.MyShowsId);
+
             switch (callbackButton.CallbackData)
             {
                 case "next":
@@ -86,20 +89,20 @@ namespace ShowMustNotGoOn
                     botMessage.CurrentPage--;
                     break;
                 case "subendofshow":
-                    await _usersService.SubscribeUserToTvShowAsync(user,
-                        tvShows[botMessage.CurrentPage],
+                    await _tvShowsService.SubscribeUserToTvShowAsync(user,
+                        currentShow,
                         SubscriptionType.EndOfShow);
                     break;
                 case "unsubendofshow":
-                    await _usersService.UnsubscribeUserFromTvShowAsync(user,
-                        tvShows[botMessage.CurrentPage],
+                    await _tvShowsService.UnsubscribeUserFromTvShowAsync(user,
+                        currentShow,
                         SubscriptionType.EndOfShow);
                     break;
                 default:
                     return;
             }
 
-            botMessage.CurrentShowId = tvShows[botMessage.CurrentPage].MyShowsId;
+            botMessage.MyShowsId = tvShows[botMessage.CurrentPage].MyShowsId;
 
             botMessage = await _telegramService.UpdateMessageAsync(user, botMessage, callbackButton.CallbackId);
 
@@ -111,15 +114,13 @@ namespace ShowMustNotGoOn
         {
             var botMessage = callbackButton.Message;
 
-            var tvShows = user.Subscriptions
-                .Select(s => s.TvShow)
-                .ToList();
+            var subscriptions = await _tvShowsService.GetUserSubscriptionsAsync(user);
 
             // handle navigate buttons
             if (callbackButton.CallbackData == "next"
                 || callbackButton.CallbackData == "prev")
             {
-                if (!tvShows.Any())
+                if (!subscriptions.Any())
                 {
                     await _telegramService.RemoveMessageAsync(user, botMessage);
                     _databaseContext.BotMessages.Remove(botMessage);
@@ -130,10 +131,9 @@ namespace ShowMustNotGoOn
                 }
 
                 var currentPage = callbackButton.Message.CurrentPage;
-                var currentShowId = callbackButton.Message.CurrentShowId;
+                var currentShowMyShowsId = callbackButton.Message.MyShowsId;
 
-                if (tvShows.Count <= currentPage
-                    || tvShows[currentPage].MyShowsId != currentShowId)
+                if (subscriptions.Count <= currentPage)
                 {
                     botMessage.CurrentPage = 0;
                     callbackButton.CallbackData = string.Empty;
@@ -143,7 +143,7 @@ namespace ShowMustNotGoOn
                 {
 	                case "next":
 	                {
-		                if (currentPage < tvShows.Count - 1)
+		                if (currentPage < subscriptions.Count - 1)
 		                {
 			                botMessage.CurrentPage++;
 		                }
@@ -161,7 +161,8 @@ namespace ShowMustNotGoOn
 	                }
                 }
 
-                botMessage.CurrentShowId = tvShows[botMessage.CurrentPage].MyShowsId;
+                var show = await _tvShowsService.GetTvShowAsync(subscriptions[botMessage.CurrentPage].TvShowId);
+                botMessage.MyShowsId = show.MyShowsId;
             }
 
             switch (callbackButton.CallbackData)
@@ -169,32 +170,20 @@ namespace ShowMustNotGoOn
 	            // handle subscribe button
 	            case "subendofshow":
 	            {
-		            var tvShow = await _tvShowsService.GetTvShowAsync(botMessage.CurrentShowId);
-		            if (!user.IsSubscribed(tvShow, SubscriptionType.EndOfShow))
-		            {
-			            await _usersService.SubscribeUserToTvShowAsync(user,
-				            tvShow,
-				            SubscriptionType.EndOfShow);
-		            }
-
-		            break;
+		            var tvShow = await _tvShowsService.GetTvShowFromMyShowsAsync(botMessage.MyShowsId);
+                    await _tvShowsService.SubscribeUserToTvShowAsync(user, tvShow, SubscriptionType.EndOfShow);
+                    break;
 	            }
 	            // handle unsubscribe button
 	            case "unsubendofshow":
 	            {
-		            var tvShow = await _tvShowsService.GetTvShowAsync(botMessage.CurrentShowId);
-		            if (user.IsSubscribed(tvShow, SubscriptionType.EndOfShow))
-		            {
-			            await _usersService.UnsubscribeUserFromTvShowAsync(user,
-				            tvShow,
-				            SubscriptionType.EndOfShow);
-		            }
-
+		            var tvShow = await _tvShowsService.GetTvShowFromMyShowsAsync(botMessage.MyShowsId);
+                    await _tvShowsService.UnsubscribeUserFromTvShowAsync(user, tvShow, SubscriptionType.EndOfShow);
 		            break;
 	            }
             }
 
-            botMessage.TotalPages = tvShows.Count;
+            botMessage.TotalPages = subscriptions.Count;
 
             botMessage = await _telegramService.UpdateMessageAsync(user, botMessage, callbackButton.CallbackId);
 
@@ -228,7 +217,7 @@ namespace ShowMustNotGoOn
                 UserId = userMessage.User.Id,
                 BotCommandType = null,
                 SearchPattern = searchPattern,
-                CurrentShowId = tvShows.First().MyShowsId,
+                MyShowsId = tvShows.First().MyShowsId,
                 CurrentPage = pageCount,
                 TotalPages = tvShows.Count
             };
@@ -248,15 +237,15 @@ namespace ShowMustNotGoOn
                     break;
                 case BotCommandType.Subscriptions:
                 {
-                    var tvShows = userMessage.User.Subscriptions
-                        .Select(s => s.TvShow)
-                        .ToList();
+                    var subscriptions = await _tvShowsService.GetUserSubscriptionsAsync(userMessage.User);
 
-                    if (!tvShows.Any())
+                    if (!subscriptions.Any())
                     {
                         await _telegramService.SendTextMessageToUserAsync(userMessage.User, "You do not have any subscriptions yet");
                         break;
                     }
+
+                    var show = await _tvShowsService.GetTvShowAsync(subscriptions.First().TvShowId);
 
                     const int pageCount = 0;
                     var botMessage = new BotMessage
@@ -264,9 +253,9 @@ namespace ShowMustNotGoOn
                         UserId = userMessage.User.Id,
                         BotCommandType = BotCommandType.Subscriptions,
                         SearchPattern = null,
-                        CurrentShowId = tvShows.First().MyShowsId,
+                        MyShowsId = show.MyShowsId,
                         CurrentPage = pageCount,
-                        TotalPages = tvShows.Count
+                        TotalPages = subscriptions.Count
                     };
 
                     botMessage = await _telegramService.SendMessageToUserAsync(userMessage.User, botMessage);

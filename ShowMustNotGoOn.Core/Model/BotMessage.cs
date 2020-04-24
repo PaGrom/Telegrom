@@ -12,7 +12,7 @@
 
         public string SearchPattern { get; set; }
 
-        public int CurrentShowId { get; set; }
+        public int MyShowsId { get; set; }
 
         public int CurrentPage { get; set; }
 

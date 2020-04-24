@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -27,9 +25,8 @@ namespace ShowMustNotGoOn.UsersService
             User newUser;
 
             var existingUser = await context.Users
-                .Include(u => u.Subscriptions)
-                .ThenInclude(s => s.TvShow)
                 .SingleOrDefaultAsync(u => u.TelegramId == user.TelegramId, cancellationToken);
+
             if (existingUser != null)
             {
                 _logger.Information($"User {user.Username} (Id: {user.TelegramId}) already exists in db");
@@ -46,53 +43,6 @@ namespace ShowMustNotGoOn.UsersService
             await context.SaveChangesAsync(cancellationToken);
 
             return newUser;
-        }
-
-        public async Task SubscribeUserToTvShowAsync(User user, TvShow tvShow, SubscriptionType subscriptionType)
-        {
-	        await using var context = new DatabaseContext.DatabaseContext(_dbContextOptions);
-
-            var savedShow = await context.TvShows
-                .SingleOrDefaultAsync(s => s.MyShowsId == tvShow.MyShowsId);
-
-            if (savedShow == null)
-            {
-                tvShow = context.TvShows.Add(tvShow).Entity;
-                await context.SaveChangesAsync();
-            }
-            else
-            {
-                tvShow = savedShow;
-            }
-
-            var existedSubscription = user.Subscriptions
-                .SingleOrDefault(s => s.SubscriptionType == subscriptionType
-                                      && s.TvShow.MyShowsId == tvShow.MyShowsId);
-
-            if (existedSubscription == null)
-            {
-                user.Subscriptions.Add(new Subscription
-                {
-                    User = user,
-                    TvShow = tvShow,
-                    SubscriptionType = subscriptionType
-                });
-
-                await context.SaveChangesAsync();
-            }
-        }
-
-        public async Task UnsubscribeUserFromTvShowAsync(User user, TvShow tvShow, SubscriptionType subscriptionType)
-        {
-	        await using var context = new DatabaseContext.DatabaseContext(_dbContextOptions);
-
-            var subscription = user.Subscriptions.SingleOrDefault(s => s.SubscriptionType == subscriptionType
-                                                                       && s.TvShow.MyShowsId == tvShow.MyShowsId);
-            if (subscription != null)
-            {
-                context.Subscriptions.Remove(subscription);
-                await context.SaveChangesAsync();
-            }
         }
     }
 }

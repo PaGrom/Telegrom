@@ -10,14 +10,5 @@ namespace ShowMustNotGoOn.Core.Model
         public string Username { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
-
-        public ICollection<Subscription> Subscriptions { get; set; }
-
-        public bool IsSubscribed(TvShow show, SubscriptionType subscriptionType)
-        {
-            return Subscriptions != null
-                   && Subscriptions.Any(s => s.SubscriptionType == subscriptionType 
-                                             && s.TvShow.MyShowsId == show.MyShowsId);
-        }
     }
 }
