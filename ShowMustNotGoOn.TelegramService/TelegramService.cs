@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Serilog;
+using Microsoft.Extensions.Logging;
 using ShowMustNotGoOn.Core;
-using ShowMustNotGoOn.Core.Model;
+using ShowMustNotGoOn.DatabaseContext.Model;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
-using User = ShowMustNotGoOn.Core.Model.User;
+using User = ShowMustNotGoOn.DatabaseContext.Model.User;
 
 namespace ShowMustNotGoOn.TelegramService
 {
@@ -16,19 +16,18 @@ namespace ShowMustNotGoOn.TelegramService
 
         private readonly ITelegramBotClient _telegramBotClient;
         private readonly ITvShowsService _tvShowsService;
-        private readonly ILogger _logger;
+        private readonly ILogger<TelegramService> _logger;
 
         public TelegramService(ITelegramBotClient telegramBotClient,
             ITvShowsService tvShowsService,
-            DatabaseContext.DatabaseContext databaseContext,
-            ILogger logger)
+            ILogger<TelegramService> logger)
         {
             _telegramBotClient = telegramBotClient;
             _tvShowsService = tvShowsService;
             _logger = logger;
 
             var me = _telegramBotClient.GetMeAsync().GetAwaiter().GetResult();
-            _logger.Information($"Hello, World! I am user {me.Id} and my name is {me.FirstName}.");
+            _logger.LogInformation($"Hello, World! I am user {me.Id} and my name is {me.FirstName}.");
         }
 
         public async Task SendTextMessageToUserAsync(User user, string text)
@@ -83,7 +82,7 @@ namespace ShowMustNotGoOn.TelegramService
 
         public Task RemoveMessageAsync(User user, BotMessage message)
         {
-	        return _telegramBotClient.DeleteMessageAsync(user.TelegramId, message.MessageId);
+            return _telegramBotClient.DeleteMessageAsync(user.TelegramId, message.MessageId);
         }
 
         private async Task<List<List<InlineKeyboardButton>>> GetButtonsAsync(User user, BotMessage message, TvShow show)

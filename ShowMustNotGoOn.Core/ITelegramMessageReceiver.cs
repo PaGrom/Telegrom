@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading;
-using ShowMustNotGoOn.Core.Model;
+using ShowMustNotGoOn.DatabaseContext.Model;
 
 namespace ShowMustNotGoOn.Core
 {

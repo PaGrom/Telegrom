@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using AutoMapper;
+using ShowMustNotGoOn.DatabaseContext.Model;
 using Telegram.Bot.Types.Enums;
 
 namespace ShowMustNotGoOn.TelegramService
@@ -8,13 +9,13 @@ namespace ShowMustNotGoOn.TelegramService
     {
         public TelegramServiceMappingProfile()
         {
-            CreateMap<Telegram.Bot.Types.User, ShowMustNotGoOn.Core.Model.User>()
+            CreateMap<Telegram.Bot.Types.User, User>()
                 .ForMember(dest => dest.TelegramId,
                     opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.Id,
                     opt => opt.Ignore());
 
-            CreateMap<Telegram.Bot.Types.Message, ShowMustNotGoOn.Core.Model.UserMessage>()
+            CreateMap<Telegram.Bot.Types.Message, UserMessage>()
                 .ForMember(dest => dest.User,
                     opt => opt.MapFrom(src => src.From))
                 .ForMember(dest => dest.BotCommand,
@@ -24,7 +25,7 @@ namespace ShowMustNotGoOn.TelegramService
                         opt.MapFrom(src => MapBotCommand(src.EntityValues.FirstOrDefault()));
                     });
 
-            CreateMap<Telegram.Bot.Types.CallbackQuery, ShowMustNotGoOn.Core.Model.UserCallback>()
+            CreateMap<Telegram.Bot.Types.CallbackQuery, UserCallback>()
                 .ForMember(dest => dest.User,
                     opt => opt.MapFrom(src => src.From))
                 .ForMember(dest => dest.MessageId,
@@ -35,13 +36,13 @@ namespace ShowMustNotGoOn.TelegramService
                     opt => opt.MapFrom(src => src.Data));
         }
 
-        public static ShowMustNotGoOn.Core.Model.BotCommandType? MapBotCommand(string botCommand)
+        public static BotCommandType? MapBotCommand(string botCommand)
         {
             return botCommand switch
             {
-                "/start" => ShowMustNotGoOn.Core.Model.BotCommandType.Start,
-                "/subscriptions" => ShowMustNotGoOn.Core.Model.BotCommandType.Subscriptions,
-                _ => (ShowMustNotGoOn.Core.Model.BotCommandType?)null
+                "/start" => BotCommandType.Start,
+                "/subscriptions" => BotCommandType.Subscriptions,
+                _ => (BotCommandType?)null
             };
         }
     }

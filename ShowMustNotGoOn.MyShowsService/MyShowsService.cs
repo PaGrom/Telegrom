@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.Extensions.Logging;
 using RestSharp;
-using Serilog;
 using ShowMustNotGoOn.Core;
-using ShowMustNotGoOn.Core.Model;
+using ShowMustNotGoOn.DatabaseContext.Model;
 using ShowMustNotGoOn.MyShowsService.Model;
 
 namespace ShowMustNotGoOn.MyShowsService
@@ -15,9 +15,9 @@ namespace ShowMustNotGoOn.MyShowsService
     {
         private readonly IRestClient _client;
         private readonly IMapper _mapper;
-        private readonly ILogger _logger;
+        private readonly ILogger<MyShowsService> _logger;
 
-        public MyShowsService(IRestClient client, IMapper mapper, ILogger logger)
+        public MyShowsService(IRestClient client, IMapper mapper, ILogger<MyShowsService> logger)
         {
             _client = client;
             _mapper = mapper;

@@ -1,4 +1,4 @@
-﻿namespace ShowMustNotGoOn.Core.Model
+﻿namespace ShowMustNotGoOn.DatabaseContext.Model
 {
     public sealed class BotMessage
     {

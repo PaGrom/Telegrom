@@ -1,19 +1,19 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Serilog;
+using Microsoft.Extensions.Logging;
 using ShowMustNotGoOn.Core;
-using ShowMustNotGoOn.Core.Model;
+using ShowMustNotGoOn.DatabaseContext.Model;
 
 namespace ShowMustNotGoOn.UsersService
 {
     public class UsersService : IUsersService
     {
         private readonly DbContextOptions _dbContextOptions;
-        private readonly ILogger _logger;
+        private readonly ILogger<UsersService> _logger;
 
         public UsersService(DbContextOptions dbContextOptions,
-            ILogger logger)
+            ILogger<UsersService> logger)
         {
             _dbContextOptions = dbContextOptions;
             _logger = logger;
@@ -21,7 +21,7 @@ namespace ShowMustNotGoOn.UsersService
 
         public async Task<User> AddOrUpdateUserAsync(User user, CancellationToken cancellationToken)
         {
-	        await using var context = new DatabaseContext.DatabaseContext(_dbContextOptions);
+            await using var context = new DatabaseContext.DatabaseContext(_dbContextOptions);
             User newUser;
 
             var existingUser = await context.Users
@@ -29,14 +29,14 @@ namespace ShowMustNotGoOn.UsersService
 
             if (existingUser != null)
             {
-                _logger.Information($"User {user.Username} (Id: {user.TelegramId}) already exists in db");
+                _logger.LogInformation($"User {user.Username} (Id: {user.TelegramId}) already exists in db");
                 user.Id = existingUser.Id;
                 context.Entry(existingUser).CurrentValues.SetValues(user);
                 newUser = existingUser;
             }
             else
             {
-                _logger.Information($"Adding user {user.Username} (Id: {user.TelegramId}) to db");
+                _logger.LogInformation($"Adding user {user.Username} (Id: {user.TelegramId}) to db");
                 newUser = (await context.Users.AddAsync(user, cancellationToken)).Entity;
             }
 

@@ -1,6 +1,6 @@
 ﻿using System.Threading.Channels;
 
-namespace ShowMustNotGoOn
+namespace ShowMustNotGoOn.Core.MessageBus
 {
     public class ChannelHolder<T> : IChannelReaderProvider<T>, IChannelWriterProvider<T>
     {

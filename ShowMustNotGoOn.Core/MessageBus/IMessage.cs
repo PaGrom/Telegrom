@@ -1,4 +1,4 @@
-﻿using ShowMustNotGoOn.Core.Model;
+﻿using ShowMustNotGoOn.DatabaseContext.Model;
 
 namespace ShowMustNotGoOn.Core.MessageBus
 {

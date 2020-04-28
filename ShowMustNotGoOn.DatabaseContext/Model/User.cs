@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-namespace ShowMustNotGoOn.Core.Model
+﻿namespace ShowMustNotGoOn.DatabaseContext.Model
 {
     public sealed class User
     {

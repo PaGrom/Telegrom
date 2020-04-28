@@ -1,13 +1,14 @@
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Autofac;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Serilog;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
+using ShowMustNotGoOn.Core.Extensions;
 using ShowMustNotGoOn.Core.MessageBus;
-using ShowMustNotGoOn.DatabaseContext;
+using ShowMustNotGoOn.Core.Session;
 using ShowMustNotGoOn.Settings;
 using ShowMustNotGoOn.TelegramService;
 using ShowMustNotGoOn.TvShowsService;
@@ -17,17 +18,21 @@ namespace ShowMustNotGoOn
 {
     public class ContainerConfiguration
     {
-        public const string RequestLifetimeScopeTag = "REQUEST";
-        public const string SessionLifetimeScopeTag = "SESSION";
-
         internal static void Init(IConfiguration configuration, ContainerBuilder builder)
         {
-            builder.Register<ILogger>((c, p) => new LoggerConfiguration()
-                    .MinimumLevel.Information()
-                    .WriteTo.Console()
-                    .WriteTo.RollingFile(
-                        Path.Combine(configuration.GetSection("LogFolder").Value, "Log-{Date}.txt"))
-                    .CreateLogger())
+            var loggerFactory = LoggerFactory.Create(loggingBuilder =>
+            {
+                loggingBuilder.ClearProviders();
+                loggingBuilder.AddConsole(consoleOptions =>
+                {
+                    consoleOptions.Format = ConsoleLoggerFormat.Default;
+                    consoleOptions.TimestampFormat = "[HH:mm:ss] ";
+                });
+                loggingBuilder.SetMinimumLevel(LogLevel.Trace);
+            });
+            builder.RegisterInstance(loggerFactory);
+            builder.RegisterGeneric(typeof(Logger<>))
+                .As(typeof(ILogger<>))
                 .SingleInstance();
 
             var appSettings = new AppSettings
@@ -39,12 +44,17 @@ namespace ShowMustNotGoOn
             
             builder.RegisterInstance(appSettings).SingleInstance();
 
-            var options = DatabaseContextOptionsFactory.Get(appSettings.DatabaseSettings.ConnectionString);
+            var options = new DbContextOptionsBuilder<DatabaseContext.DatabaseContext>()
+                .UseSqlite(appSettings.DatabaseSettings.ConnectionString)
+                .EnableSensitiveDataLogging()
+                .UseLoggerFactory(loggerFactory)
+                .Options;
+
             builder.RegisterInstance(options)
-	            .As<DbContextOptions>();
+                .As<DbContextOptions>();
 
             builder.RegisterType<DatabaseContext.DatabaseContext>()
-                .InstancePerMatchingLifetimeScope(RequestLifetimeScopeTag);
+                .InstancePerRequest();
 
             builder.RegisterModule<UsersServiceModule>();
 
@@ -81,15 +91,15 @@ namespace ShowMustNotGoOn
                 .InstancePerLifetimeScope();
 
             builder.RegisterType<MessageHandler>()
-                .InstancePerMatchingLifetimeScope(RequestLifetimeScopeTag);
+                .InstancePerRequest();
 
             builder.RegisterType<SessionContext>()
-                .InstancePerMatchingLifetimeScope(SessionLifetimeScopeTag);
+                .InstancePerSession();
 
             builder.RegisterType<ChannelHolder<IMessage>>()
                 .As<IChannelReaderProvider<IMessage>>()
                 .As<IChannelWriterProvider<IMessage>>()
-                .InstancePerMatchingLifetimeScope(SessionLifetimeScopeTag);
+                .InstancePerSession();
 
             builder.RegisterType<Application>()
                 .AsSelf()

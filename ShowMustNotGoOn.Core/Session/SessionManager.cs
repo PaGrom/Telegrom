@@ -4,10 +4,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
-using ShowMustNotGoOn.Core;
-using ShowMustNotGoOn.Core.Model;
+using ShowMustNotGoOn.DatabaseContext.Model;
 
-namespace ShowMustNotGoOn
+namespace ShowMustNotGoOn.Core.Session
 {
     public sealed class SessionManager : IAsyncDisposable
     {
@@ -20,15 +19,15 @@ namespace ShowMustNotGoOn
 
         public SessionManager(ILifetimeScope lifetimeScope, IUsersService usersService)
         {
-	        _lifetimeScope = lifetimeScope;
-	        _usersService = usersService;
+            _lifetimeScope = lifetimeScope;
+            _usersService = usersService;
         }
 
         public async Task<SessionContext> GetSessionContextAsync(User user, CancellationToken cancellationToken)
         {
-	        user = await _usersService.AddOrUpdateUserAsync(user, cancellationToken);
+            user = await _usersService.AddOrUpdateUserAsync(user, cancellationToken);
 
-	        SessionContext removedSession = null;
+            SessionContext removedSession = null;
 
             if (!_sessionContexts.TryGetValue(user.Id, out var sessionContext))
             {
@@ -36,7 +35,8 @@ namespace ShowMustNotGoOn
                 {
                     if (!_sessionContexts.TryGetValue(user.Id, out sessionContext))
                     {
-                        var scope = _lifetimeScope.BeginLifetimeScope(ContainerConfiguration.SessionLifetimeScopeTag,
+                        var scope = _lifetimeScope.BeginLifetimeScope(
+                            typeof(SessionContext),
                             builder =>
                             {
                                 builder.RegisterInstance(user);
@@ -51,9 +51,9 @@ namespace ShowMustNotGoOn
                         _recentSessionContextsQueue.AddFirst(user.Id);
                         while (_recentSessionContextsQueue.Count > MaxActiveSessions)
                         {
-	                        var sessionId = _recentSessionContextsQueue.Last.Value;
-	                        _recentSessionContextsQueue.RemoveLast();
-	                        _sessionContexts.Remove(sessionId, out removedSession);
+                            var sessionId = _recentSessionContextsQueue.Last.Value;
+                            _recentSessionContextsQueue.RemoveLast();
+                            _sessionContexts.Remove(sessionId, out removedSession);
                         }
                     }
                 }
@@ -61,7 +61,7 @@ namespace ShowMustNotGoOn
 
             if (removedSession != null)
             {
-	            await removedSession.Complete();
+                await removedSession.Complete();
             }
 
             return sessionContext;
@@ -69,12 +69,12 @@ namespace ShowMustNotGoOn
 
         public async Task CompleteAllAsync()
         {
-	        await Task.WhenAll(_sessionContexts.Values.Select(sessionContext => sessionContext.Complete()));
+            await Task.WhenAll(_sessionContexts.Values.Select(sessionContext => sessionContext.Complete()));
         }
 
         public async ValueTask DisposeAsync()
         {
-	        await CompleteAllAsync();
+            await CompleteAllAsync();
         }
     }
 }

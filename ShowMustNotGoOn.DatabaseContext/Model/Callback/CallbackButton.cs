@@ -1,4 +1,4 @@
-﻿namespace ShowMustNotGoOn.Core.Model.Callback
+﻿namespace ShowMustNotGoOn.DatabaseContext.Model.Callback
 {
     public sealed class CallbackButton
     {

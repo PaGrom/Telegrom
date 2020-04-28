@@ -1,7 +1,6 @@
 ﻿using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Serilog;
 
 namespace ShowMustNotGoOn
 {
@@ -15,7 +14,6 @@ namespace ShowMustNotGoOn
         public static IWebHostBuilder CreateHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .ConfigureServices(services => services.AddAutofac())
-                .UseStartup<Startup>()
-                .UseSerilog();
+                .UseStartup<Startup>();
     }
 }
