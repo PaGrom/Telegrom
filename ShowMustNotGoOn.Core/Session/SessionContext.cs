@@ -45,7 +45,7 @@ namespace ShowMustNotGoOn.Core.Session
                             builder.RegisterInstance(requestContext);
                         });
 
-                    await innerScope.Resolve<MessageHandler>().HandleAsync();
+                    await innerScope.Resolve<MessageHandler>().HandleAsync(cancellationToken);
                 }
             }
 

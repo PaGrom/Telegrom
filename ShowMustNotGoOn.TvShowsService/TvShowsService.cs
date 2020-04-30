@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -23,10 +24,11 @@ namespace ShowMustNotGoOn.TvShowsService
             _logger = logger;
         }
 
-        public async Task<TvShow> AddNewTvShowAsync(TvShow tvShow)
+        public async Task<TvShow> AddNewTvShowAsync(TvShow tvShow, CancellationToken cancellationToken)
         {
             TvShow show;
-            var existingShow = await _dbContext.TvShows.SingleOrDefaultAsync(s => s.MyShowsId == tvShow.MyShowsId);
+            var existingShow = await _dbContext.TvShows
+                .SingleOrDefaultAsync(s => s.MyShowsId == tvShow.MyShowsId, cancellationToken: cancellationToken);
             if (existingShow != null)
             {
                 _logger.LogInformation($"TV Show '{existingShow.Title}' (Id: {existingShow.MyShowsId}) already exists in db");
@@ -35,46 +37,47 @@ namespace ShowMustNotGoOn.TvShowsService
             else
             {
                 _logger.LogInformation($"Adding TV Show '{tvShow.Title}' (Id: {tvShow.MyShowsId}) to db");
-                show = (await _dbContext.TvShows.AddAsync(tvShow)).Entity;
-                await _dbContext.SaveChangesAsync();
+                show = (await _dbContext.TvShows.AddAsync(tvShow, cancellationToken)).Entity;
+                await _dbContext.SaveChangesAsync(cancellationToken);
             }
 
             return show;
         }
 
-        public Task<IEnumerable<TvShow>> SearchTvShowsAsync(string name)
+        public Task<IEnumerable<TvShow>> SearchTvShowsAsync(string name, CancellationToken cancellationToken)
         {
             return _myShowsService.SearchTvShowsAsync(name);
         }
 
-        public Task<TvShow> GetTvShowFromMyShowsAsync(int myShowsId)
+        public Task<TvShow> GetTvShowFromMyShowsAsync(int myShowsId, CancellationToken cancellationToken)
         {
             return _myShowsService.GetTvShowAsync(myShowsId);
         }
 
-        public Task<TvShow> GetTvShowAsync(int tvShowId)
+        public Task<TvShow> GetTvShowAsync(int tvShowId, CancellationToken cancellationToken)
         {
-            return _dbContext.TvShows.SingleOrDefaultAsync(s => s.Id == tvShowId);
+            return _dbContext.TvShows.SingleOrDefaultAsync(s => s.Id == tvShowId, cancellationToken: cancellationToken);
         }
 
-        public Task<TvShow> GetTvShowByMyShowsIdAsync(int myShowsId)
+        public Task<TvShow> GetTvShowByMyShowsIdAsync(int myShowsId, CancellationToken cancellationToken)
         {
-            return _dbContext.TvShows.SingleOrDefaultAsync(s => s.MyShowsId == myShowsId);
+            return _dbContext.TvShows.SingleOrDefaultAsync(s => s.MyShowsId == myShowsId, cancellationToken: cancellationToken);
         }
 
-        public Task<Subscription> GetUserSubscriptionToTvShowAsync(User user, TvShow show, SubscriptionType subscriptionType)
+        public Task<Subscription> GetUserSubscriptionToTvShowAsync(User user, TvShow show, SubscriptionType subscriptionType, CancellationToken cancellationToken)
         {
             return _dbContext.Subscriptions
                 .SingleOrDefaultAsync(s => s.UserId == user.Id
                                && s.TvShowId == show.Id
-                               && s.SubscriptionType == subscriptionType);
+                               && s.SubscriptionType == subscriptionType,
+                    cancellationToken: cancellationToken);
         }
 
-        public async Task<Subscription> SubscribeUserToTvShowAsync(User user, TvShow tvShow, SubscriptionType subscriptionType)
+        public async Task<Subscription> SubscribeUserToTvShowAsync(User user, TvShow tvShow, SubscriptionType subscriptionType, CancellationToken cancellationToken)
         {
-            tvShow = await AddNewTvShowAsync(tvShow);
+            tvShow = await AddNewTvShowAsync(tvShow, cancellationToken);
 
-            var existedSubscription = await GetUserSubscriptionToTvShowAsync(user, tvShow, subscriptionType);
+            var existedSubscription = await GetUserSubscriptionToTvShowAsync(user, tvShow, subscriptionType, cancellationToken);
 
             if (existedSubscription != null)
             {
@@ -88,18 +91,18 @@ namespace ShowMustNotGoOn.TvShowsService
                     UserId = user.Id,
                     TvShowId = tvShow.Id,
                     SubscriptionType = subscriptionType
-                })).Entity;
+                }, cancellationToken)).Entity;
 
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation($"User {user.Id} successfully subscribed to show {tvShow.Id} with subscription type {subscriptionType}");
 
             return subscription;
         }
 
-        public async Task UnsubscribeUserFromTvShowAsync(User user, TvShow tvShow, SubscriptionType subscriptionType)
+        public async Task UnsubscribeUserFromTvShowAsync(User user, TvShow tvShow, SubscriptionType subscriptionType, CancellationToken cancellationToken)
         {
-            var existedSubscription = await GetUserSubscriptionToTvShowAsync(user, tvShow, subscriptionType);
+            var existedSubscription = await GetUserSubscriptionToTvShowAsync(user, tvShow, subscriptionType, cancellationToken);
 
             if (existedSubscription == null)
             {
@@ -109,14 +112,14 @@ namespace ShowMustNotGoOn.TvShowsService
 
             _dbContext.Subscriptions.Remove(existedSubscription);
 
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync(cancellationToken);
 
             _logger.LogInformation($"User {user.Id} successfully unsubscribed to show {tvShow.Id} with subscription type {subscriptionType}");
         }
 
-        public Task<List<Subscription>> GetUserSubscriptionsAsync(User user)
+        public Task<List<Subscription>> GetUserSubscriptionsAsync(User user, CancellationToken cancellationToken)
         {
-            return _dbContext.Subscriptions.Where(s => s.UserId == user.Id).ToListAsync();
+            return _dbContext.Subscriptions.Where(s => s.UserId == user.Id).ToListAsync(cancellationToken: cancellationToken);
         }
     }
 }
