@@ -12,7 +12,7 @@ namespace ShowMustNotGoOn.DatabaseContext
         }
 
         public DbSet<TvShow> TvShows { get; set; }
-        public DbSet<User> Users { get; set; }
+        public DbSet<IdentityUser> IdentityUsers { get; set; }
         public DbSet<BotMessage> BotMessages { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
 
@@ -33,16 +33,12 @@ namespace ShowMustNotGoOn.DatabaseContext
                     .ValueGeneratedOnAdd();
             });
 
-            modelBuilder.Entity<User>(entity =>
+            modelBuilder.Entity<IdentityUser>(entity =>
             {
-                entity.HasIndex(e => e.Id)
-                    .IsUnique();
+	            entity.HasKey(e => e.Id);
 
-                entity.HasIndex(e => e.TelegramId)
-                    .IsUnique();
-
-                entity.Property(e => e.Id)
-                    .ValueGeneratedOnAdd();
+                entity.Property(identity => identity.RowVersion)
+	                .IsConcurrencyToken();
             });
 
             modelBuilder.Entity<BotMessage>(entity =>
@@ -53,7 +49,7 @@ namespace ShowMustNotGoOn.DatabaseContext
                 entity.HasIndex(e => e.MessageId)
                     .IsUnique();
 
-                entity.HasOne<User>()
+                entity.HasOne<IdentityUser>()
 	                .WithMany()
 	                .HasForeignKey(c => c.UserId);
 

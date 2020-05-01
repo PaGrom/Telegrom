@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
-using ShowMustNotGoOn.DatabaseContext.Model;
+using Telegram.Bot.Types;
 
 namespace ShowMustNotGoOn.Core.Session
 {
@@ -25,7 +25,7 @@ namespace ShowMustNotGoOn.Core.Session
 
         public async Task<SessionContext> GetSessionContextAsync(User user, CancellationToken cancellationToken)
         {
-            user = await _usersService.AddOrUpdateUserAsync(user, cancellationToken);
+            await _usersService.AddOrUpdateUserAsync(user, cancellationToken);
 
             SessionContext removedSession = null;
 

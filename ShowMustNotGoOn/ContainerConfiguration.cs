@@ -13,6 +13,7 @@ using ShowMustNotGoOn.Settings;
 using ShowMustNotGoOn.TelegramService;
 using ShowMustNotGoOn.TvShowsService;
 using ShowMustNotGoOn.UsersService;
+using Telegram.Bot.Types;
 
 namespace ShowMustNotGoOn
 {
@@ -96,9 +97,9 @@ namespace ShowMustNotGoOn
             builder.RegisterType<SessionContext>()
                 .InstancePerSession();
 
-            builder.RegisterType<ChannelHolder<IMessage>>()
-                .As<IChannelReaderProvider<IMessage>>()
-                .As<IChannelWriterProvider<IMessage>>()
+            builder.RegisterType<ChannelHolder<Update>>()
+                .As<IChannelReaderProvider<Update>>()
+                .As<IChannelWriterProvider<Update>>()
                 .InstancePerSession();
 
             builder.RegisterType<Application>()

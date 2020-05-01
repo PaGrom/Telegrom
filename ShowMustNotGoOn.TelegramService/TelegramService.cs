@@ -9,13 +9,12 @@ using Telegram.Bot.Requests;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.InputFiles;
 using Telegram.Bot.Types.ReplyMarkups;
-using User = ShowMustNotGoOn.DatabaseContext.Model.User;
 
 namespace ShowMustNotGoOn.TelegramService
 {
     public class TelegramService : ITelegramService
     {
-        private const string NotFoundImage = "https://user-images.githubusercontent.com/24848110/33519396-7e56363c-d79d-11e7-969b-09782f5ccbab.png";
+        private const string NotFoundImage = "https://identityUser-images.githubusercontent.com/24848110/33519396-7e56363c-d79d-11e7-969b-09782f5ccbab.png";
 
         private readonly ITelegramBotClient _telegramBotClient;
         private readonly ITvShowsService _tvShowsService;
@@ -30,7 +29,7 @@ namespace ShowMustNotGoOn.TelegramService
             _logger = logger;
 
             var me = _telegramBotClient.GetMeAsync().GetAwaiter().GetResult();
-            _logger.LogInformation($"Hello, World! I am user {me.Id} and my name is {me.FirstName}.");
+            _logger.LogInformation($"Hello, World! I am identityUser {me.Id} and my name is {me.FirstName}.");
         }
 
         public Task<T> MakeRequestAsync<T>(RequestBase<T> request, CancellationToken cancellationToken)
@@ -40,7 +39,7 @@ namespace ShowMustNotGoOn.TelegramService
 
         public Task SendTextMessageToUserAsync(User user, string text, CancellationToken cancellationToken)
         {
-            return MakeRequestAsync(new SendMessageRequest(new ChatId(user.TelegramId), text), cancellationToken);
+            return MakeRequestAsync(new SendMessageRequest(new ChatId(user.Id), text), cancellationToken);
         }
 
         public async Task<BotMessage> SendMessageToUserAsync(User user, BotMessage message, CancellationToken cancellationToken)
@@ -57,7 +56,7 @@ namespace ShowMustNotGoOn.TelegramService
             var markup = new InlineKeyboardMarkup(buttons);
 
             var sentMessage = await MakeRequestAsync(
-                new SendPhotoRequest(new ChatId(user.TelegramId), new InputOnlineFile(show.Image))
+                new SendPhotoRequest(new ChatId(user.Id), new InputOnlineFile(show.Image))
                 {
                     Caption = $"{show.Title} / {show.TitleOriginal}",
                     ReplyMarkup = markup
@@ -85,13 +84,13 @@ namespace ShowMustNotGoOn.TelegramService
             await MakeRequestAsync(new AnswerCallbackQueryRequest(callbackId), cancellationToken);
 
             await MakeRequestAsync(new EditMessageMediaRequest(
-                new ChatId(user.TelegramId),
+                new ChatId(user.Id),
                 message.MessageId,
                 new InputMediaPhoto(new InputMedia(show.Image))), cancellationToken);
 
             var updatedMessage = await MakeRequestAsync(
                 new EditMessageCaptionRequest(
-                    new ChatId(user.TelegramId),
+                    new ChatId(user.Id),
                     message.MessageId,
                     $"{show.Title} / {show.TitleOriginal}")
                 {
@@ -107,7 +106,7 @@ namespace ShowMustNotGoOn.TelegramService
         public Task RemoveMessageAsync(User user, BotMessage message, CancellationToken cancellationToken)
         {
             return MakeRequestAsync(new DeleteMessageRequest(
-                    new ChatId(user.TelegramId),
+                    new ChatId(user.Id),
                     message.MessageId),
                 cancellationToken);
         }

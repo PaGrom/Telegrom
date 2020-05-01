@@ -4,15 +4,15 @@ using Autofac;
 using Microsoft.Extensions.Logging;
 using ShowMustNotGoOn.Core.MessageBus;
 using ShowMustNotGoOn.Core.Request;
-using ShowMustNotGoOn.DatabaseContext.Model;
+using Telegram.Bot.Types;
 
 namespace ShowMustNotGoOn.Core.Session
 {
     public sealed class SessionContext
     {
         private readonly ILifetimeScope _lifetimeScope;
-        private readonly IChannelReaderProvider<IMessage> _channelReaderProvider;
-        private readonly IChannelWriterProvider<IMessage> _channelWriterProvider;
+        private readonly IChannelReaderProvider<Update> _channelReaderProvider;
+        private readonly IChannelWriterProvider<Update> _channelWriterProvider;
         private readonly ILogger<SessionContext> _logger;
         private Task _handleTask;
 
@@ -20,8 +20,8 @@ namespace ShowMustNotGoOn.Core.Session
 
         public SessionContext(ILifetimeScope lifetimeScope,
             User user,
-            IChannelReaderProvider<IMessage> channelReaderProvider,
-            IChannelWriterProvider<IMessage> channelWriterProvider,
+            IChannelReaderProvider<Update> channelReaderProvider,
+            IChannelWriterProvider<Update> channelWriterProvider,
             ILogger<SessionContext> logger)
         {
             _lifetimeScope = lifetimeScope;
@@ -49,14 +49,14 @@ namespace ShowMustNotGoOn.Core.Session
                 }
             }
 
-            _logger.LogInformation($"Session for user {User.Id} started");
+            _logger.LogInformation($"Session for identityUser {User.Id} started");
 
             _handleTask = Task.Run(Handle, cancellationToken);
         }
 
-        public async Task PostMessageAsync(IMessage message, CancellationToken cancellationToken)
+        public async Task PostUpdateAsync(Update update, CancellationToken cancellationToken)
         {
-            await _channelWriterProvider.Writer.WriteAsync(message, cancellationToken);
+            await _channelWriterProvider.Writer.WriteAsync(update, cancellationToken);
         }
 
         public async Task Complete()
@@ -66,7 +66,7 @@ namespace ShowMustNotGoOn.Core.Session
             {
                 await _handleTask;
             }
-            _logger.LogInformation($"Session for user {User.Id} stopped");
+            _logger.LogInformation($"Session for identityUser {User.Id} stopped");
         }
     }
 }

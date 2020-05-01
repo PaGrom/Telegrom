@@ -1,14 +1,14 @@
-﻿using ShowMustNotGoOn.Core.MessageBus;
+﻿using Telegram.Bot.Types;
 
 namespace ShowMustNotGoOn.Core.Request
 {
     public class RequestContext
     {
-        public IMessage Message { get; }
+        public Update Update { get; }
 
-        public RequestContext(IMessage message)
+        public RequestContext(Update update)
         {
-            Message = message;
+            Update = update;
         }
     }
 }

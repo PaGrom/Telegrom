@@ -2,9 +2,9 @@
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ShowMustNotGoOn.Core;
-using ShowMustNotGoOn.Core.MessageBus.Events;
+using ShowMustNotGoOn.Core.Extensions;
 using ShowMustNotGoOn.Core.Session;
-using ShowMustNotGoOn.DatabaseContext.Model;
+using Telegram.Bot.Types;
 
 namespace ShowMustNotGoOn
 {
@@ -14,15 +14,14 @@ namespace ShowMustNotGoOn
         private readonly ILogger<Application> _logger;
 
         public Application(SessionManager sessionManager,
-            ITelegramMessageReceiver telegramMessageReceiver,
+            ITelegramUpdateReceiver telegramUpdateReceiver,
             ILogger<Application> logger)
         {
             _sessionManager = sessionManager;
             _logger = logger;
 
-            telegramMessageReceiver.SetMessageReceivedHandler(HandleTelegramMessageReceived);
-            telegramMessageReceiver.SetCallbackButtonReceivedHandler(HandleCallbackButtonReceived);
-            telegramMessageReceiver.Start();
+            telegramUpdateReceiver.SetUpdateReceivedHandler(HandleTelegramMessageReceived);
+            telegramUpdateReceiver.Start();
 
             Task.Factory.StartNew(async () => { await RunAsync(); },
                 TaskCreationOptions.LongRunning);
@@ -37,16 +36,10 @@ namespace ShowMustNotGoOn
             }
         }
 
-        public async void HandleTelegramMessageReceived(UserMessage userMessage, CancellationToken cancellationToken)
+        public async void HandleTelegramMessageReceived(Update update, CancellationToken cancellationToken)
         {
-            var sessionContext = await _sessionManager.GetSessionContextAsync(userMessage.User, cancellationToken);
-            await sessionContext.PostMessageAsync(new TelegramMessageReceivedEvent(userMessage), cancellationToken);
-        }
-
-        private async void HandleCallbackButtonReceived(UserCallback userCallback, CancellationToken cancellationToken)
-        {
-            var sessionContext = await _sessionManager.GetSessionContextAsync(userCallback.User, cancellationToken);
-            await sessionContext.PostMessageAsync(new TelegramCallbackButtonReceivedEvent(userCallback), cancellationToken);
+            var sessionContext = await _sessionManager.GetSessionContextAsync(update.GetUser(), cancellationToken);
+            await sessionContext.PostUpdateAsync(update, cancellationToken);
         }
     }
 }

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.DatabaseContext.Model;
+using Telegram.Bot.Types;
 
 namespace ShowMustNotGoOn.TvShowsService
 {
@@ -119,7 +120,7 @@ namespace ShowMustNotGoOn.TvShowsService
 
         public Task<List<Subscription>> GetUserSubscriptionsAsync(User user, CancellationToken cancellationToken)
         {
-            return _dbContext.Subscriptions.Where(s => s.UserId == user.Id).ToListAsync(cancellationToken: cancellationToken);
+            return _dbContext.Subscriptions.Where(s => s.UserId == user.Id).ToListAsync(cancellationToken);
         }
     }
 }

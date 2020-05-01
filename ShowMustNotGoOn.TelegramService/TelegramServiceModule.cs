@@ -1,6 +1,5 @@
 ﻿using System.Net;
 using Autofac;
-using AutoMapper;
 using MihaZupan;
 using ShowMustNotGoOn.Core;
 using Telegram.Bot;
@@ -55,16 +54,12 @@ namespace ShowMustNotGoOn.TelegramService
             builder.RegisterType<TvShowsService.TvShowsService>()
                 .As<ITvShowsService>();
 
-            builder.RegisterType<TelegramServiceMappingProfile>()
-                .As<Profile>()
-                .InstancePerLifetimeScope();
-
             builder.RegisterType<TelegramService>()
                 .As<ITelegramService>()
                 .InstancePerLifetimeScope();
 
-            builder.RegisterType<TelegramMessageReceiver>()
-                .As<ITelegramMessageReceiver>()
+            builder.RegisterType<TelegramUpdateReceiver>()
+                .As<ITelegramUpdateReceiver>()
                 .SingleInstance();
         }
     }

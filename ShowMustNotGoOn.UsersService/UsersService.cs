@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.DatabaseContext.Model;
+using Telegram.Bot.Types;
 
 namespace ShowMustNotGoOn.UsersService
 {
@@ -19,30 +20,33 @@ namespace ShowMustNotGoOn.UsersService
             _logger = logger;
         }
 
-        public async Task<User> AddOrUpdateUserAsync(User user, CancellationToken cancellationToken)
+        public async Task<IdentityUser> AddOrUpdateUserAsync(User user, CancellationToken cancellationToken)
         {
             await using var context = new DatabaseContext.DatabaseContext(_dbContextOptions);
-            User newUser;
 
-            var existingUser = await context.Users
-                .SingleOrDefaultAsync(u => u.TelegramId == user.TelegramId, cancellationToken);
+            var identityUser = await context.IdentityUsers
+                .FindAsync(new object[] { user.Id }, cancellationToken);
 
-            if (existingUser != null)
+            if (identityUser != null)
             {
-                _logger.LogInformation($"User {user.Username} (Id: {user.TelegramId}) already exists in db");
-                user.Id = existingUser.Id;
-                context.Entry(existingUser).CurrentValues.SetValues(user);
-                newUser = existingUser;
+                _logger.LogInformation($"IdentityUser {user.Username} (Id: {user.Id}) already exists in db");
             }
             else
             {
-                _logger.LogInformation($"Adding user {user.Username} (Id: {user.TelegramId}) to db");
-                newUser = (await context.Users.AddAsync(user, cancellationToken)).Entity;
+                _logger.LogInformation($"Adding identityUser {user.Username} (Id: {user.Id}) to db");
+                identityUser = (await context.IdentityUsers.AddAsync(new IdentityUser
+                {
+                    Id = user.Id
+                }, cancellationToken)).Entity;
             }
+
+            identityUser.Username = user.Username;
+            identityUser.FirstName = user.FirstName;
+            identityUser.LastName = user.LastName;
 
             await context.SaveChangesAsync(cancellationToken);
 
-            return newUser;
+            return identityUser;
         }
     }
 }

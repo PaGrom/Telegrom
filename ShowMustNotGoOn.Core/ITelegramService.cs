@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using ShowMustNotGoOn.DatabaseContext.Model;
 using Telegram.Bot.Requests;
 using Telegram.Bot.Types;
-using User = ShowMustNotGoOn.DatabaseContext.Model.User;
 
 namespace ShowMustNotGoOn.Core
 {
