@@ -101,7 +101,7 @@ namespace ShowMustNotGoOn.Core.MessageBus
                     return;
             }
 
-            botMessage.MyShowsId = tvShows[botMessage.CurrentPage].MyShowsId;
+            botMessage.MyShowsId = tvShows[botMessage.CurrentPage].Id;
 
             botMessage = await _telegramService.UpdateMessageAsync(_sessionContext.User, botMessage, _requestContext.Update.CallbackQuery.Id, cancellationToken);
 
@@ -158,7 +158,7 @@ namespace ShowMustNotGoOn.Core.MessageBus
                 }
 
                 var show = await _tvShowsService.GetTvShowAsync(subscriptions[botMessage.CurrentPage].TvShowId, cancellationToken);
-                botMessage.MyShowsId = show.MyShowsId;
+                botMessage.MyShowsId = show.Id;
             }
 
             switch (_requestContext.Update.CallbackQuery.Data)
@@ -215,7 +215,7 @@ namespace ShowMustNotGoOn.Core.MessageBus
                 UserId = _sessionContext.User.Id,
                 BotCommandType = null,
                 SearchPattern = searchPattern,
-                MyShowsId = tvShows.First().MyShowsId,
+                MyShowsId = tvShows.First().Id,
                 CurrentPage = pageCount,
                 TotalPages = tvShows.Count
             };
@@ -251,7 +251,7 @@ namespace ShowMustNotGoOn.Core.MessageBus
                         UserId = _sessionContext.User.Id,
                         BotCommandType = BotCommandType.Subscriptions,
                         SearchPattern = null,
-                        MyShowsId = show.MyShowsId,
+                        MyShowsId = show.Id,
                         CurrentPage = pageCount,
                         TotalPages = subscriptions.Count
                     };

@@ -29,15 +29,15 @@ namespace ShowMustNotGoOn.TvShowsService
         {
             TvShow show;
             var existingShow = await _dbContext.TvShows
-                .SingleOrDefaultAsync(s => s.MyShowsId == tvShow.MyShowsId, cancellationToken: cancellationToken);
+                .FindAsync(new object[] { tvShow.Id }, cancellationToken);
             if (existingShow != null)
             {
-                _logger.LogInformation($"TV Show '{existingShow.Title}' (Id: {existingShow.MyShowsId}) already exists in db");
+                _logger.LogInformation($"TV Show '{existingShow.Title}' (Id: {existingShow.Id}) already exists in db");
                 show = existingShow;
             }
             else
             {
-                _logger.LogInformation($"Adding TV Show '{tvShow.Title}' (Id: {tvShow.MyShowsId}) to db");
+                _logger.LogInformation($"Adding TV Show '{tvShow.Title}' (Id: {tvShow.Id}) to db");
                 show = (await _dbContext.TvShows.AddAsync(tvShow, cancellationToken)).Entity;
                 await _dbContext.SaveChangesAsync(cancellationToken);
             }
@@ -55,14 +55,14 @@ namespace ShowMustNotGoOn.TvShowsService
             return _myShowsService.GetTvShowAsync(myShowsId);
         }
 
-        public Task<TvShow> GetTvShowAsync(int tvShowId, CancellationToken cancellationToken)
+        public async Task<TvShow> GetTvShowAsync(int tvShowId, CancellationToken cancellationToken)
         {
-            return _dbContext.TvShows.SingleOrDefaultAsync(s => s.Id == tvShowId, cancellationToken: cancellationToken);
+            return await _dbContext.TvShows.FindAsync(new object[] { tvShowId }, cancellationToken);
         }
 
-        public Task<TvShow> GetTvShowByMyShowsIdAsync(int myShowsId, CancellationToken cancellationToken)
+        public async Task<TvShow> GetTvShowByMyShowsIdAsync(int myShowsId, CancellationToken cancellationToken)
         {
-            return _dbContext.TvShows.SingleOrDefaultAsync(s => s.MyShowsId == myShowsId, cancellationToken: cancellationToken);
+            return await _dbContext.TvShows.FindAsync(new object[] { myShowsId }, cancellationToken);
         }
 
         public Task<Subscription> GetUserSubscriptionToTvShowAsync(User user, TvShow show, SubscriptionType subscriptionType, CancellationToken cancellationToken)

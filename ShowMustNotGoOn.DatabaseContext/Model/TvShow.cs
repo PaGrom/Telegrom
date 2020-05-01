@@ -1,9 +1,11 @@
-﻿namespace ShowMustNotGoOn.DatabaseContext.Model
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace ShowMustNotGoOn.DatabaseContext.Model
 {
     public sealed class TvShow
     {
+	    [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public int Id { get; set; }
-        public int MyShowsId { get; set; }
         public string Title { get; set; }
         public string TitleOriginal { get; set; }
         public string Description { get; set; }

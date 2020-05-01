@@ -20,11 +20,7 @@ namespace ShowMustNotGoOn.DatabaseContext
         {
             modelBuilder.Entity<TvShow>(entity =>
             {
-                entity.HasIndex(e => e.Id)
-                    .IsUnique();
-
-                entity.HasIndex(e => e.MyShowsId)
-                    .IsUnique();
+                entity.HasKey(e => e.Id);
 
                 entity.Property(e => e.RowVersion)
 	                .IsConcurrencyToken();
@@ -37,7 +33,7 @@ namespace ShowMustNotGoOn.DatabaseContext
             {
 	            entity.HasKey(e => e.Id);
 
-                entity.Property(identity => identity.RowVersion)
+                entity.Property(e => e.RowVersion)
 	                .IsConcurrencyToken();
             });
 
@@ -61,6 +57,14 @@ namespace ShowMustNotGoOn.DatabaseContext
             {
                 entity.HasIndex(e => e.Id)
                     .IsUnique();
+
+                entity.HasOne<IdentityUser>()
+	                .WithMany()
+	                .HasForeignKey(c => c.UserId);
+
+                entity.HasOne<TvShow>()
+	                .WithMany()
+	                .HasForeignKey(c => c.TvShowId);
 
                 entity.Property(e => e.Id)
                     .ValueGeneratedOnAdd();
