@@ -15,6 +15,7 @@ namespace ShowMustNotGoOn.DatabaseContext
         public DbSet<IdentityUser> IdentityUsers { get; set; }
         public DbSet<MessageText> MessageTexts { get; set; }
         public DbSet<BotMessage> BotMessages { get; set; }
+        public DbSet<Callback> Callbacks { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -57,6 +58,18 @@ namespace ShowMustNotGoOn.DatabaseContext
                 entity.HasOne<MessageText>()
                     .WithMany()
                     .HasForeignKey(c => c.MessageTextId);
+            });
+
+            modelBuilder.Entity<Callback>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne<BotMessage>()
+                    .WithMany()
+                    .HasForeignKey(c => c.BotMessageId);
+
+                entity.Property(e => e.RowVersion)
+                    .IsConcurrencyToken();
             });
 
             modelBuilder.Entity<Subscription>(entity =>

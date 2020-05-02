@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.DatabaseContext.Model;
@@ -18,18 +20,18 @@ namespace ShowMustNotGoOn.TelegramService
 
         private readonly ITelegramBotClient _telegramBotClient;
         private readonly ITvShowsService _tvShowsService;
+        private readonly DatabaseContext.DatabaseContext _databaseContext;
         private readonly ILogger<TelegramService> _logger;
 
         public TelegramService(ITelegramBotClient telegramBotClient,
             ITvShowsService tvShowsService,
+            DatabaseContext.DatabaseContext databaseContext,
             ILogger<TelegramService> logger)
         {
             _telegramBotClient = telegramBotClient;
             _tvShowsService = tvShowsService;
+            _databaseContext = databaseContext;
             _logger = logger;
-
-            var me = _telegramBotClient.GetMeAsync().GetAwaiter().GetResult();
-            _logger.LogInformation($"Hello, World! I am identityUser {me.Id} and my name is {me.FirstName}.");
         }
 
         public Task<T> MakeRequestAsync<T>(RequestBase<T> request, CancellationToken cancellationToken)
@@ -42,7 +44,7 @@ namespace ShowMustNotGoOn.TelegramService
             return MakeRequestAsync(new SendMessageRequest(new ChatId(user.Id), text), cancellationToken);
         }
 
-        public async Task<BotMessage> SendMessageToUserAsync(User user, BotMessage message, CancellationToken cancellationToken)
+        public async Task<Message> SendMessageToUserAsync(User user, BotMessage message, CancellationToken cancellationToken)
         {
             var show = await _tvShowsService.GetTvShowByMyShowsIdAsync(message.MyShowsId, cancellationToken)
                        ?? await _tvShowsService.GetTvShowFromMyShowsAsync(message.MyShowsId, cancellationToken);
@@ -63,13 +65,17 @@ namespace ShowMustNotGoOn.TelegramService
                 },
                 cancellationToken);
 
-            message.MessageId = sentMessage.MessageId;
-
-            return message;
+            return sentMessage;
         }
 
-        public async Task<BotMessage> UpdateMessageAsync(User user, BotMessage message, string callbackId, CancellationToken cancellationToken)
+        public async Task<Message> UpdateMessageAsync(User user, BotMessage message, int telegramMessageId, string callbackId, CancellationToken cancellationToken)
         {
+            var oldCallbacks = await _databaseContext.Callbacks
+                .Where(c => c.BotMessageId == message.Id)
+                .ToListAsync(cancellationToken);
+
+            _databaseContext.Callbacks.RemoveRange(oldCallbacks);
+
             var show = await _tvShowsService.GetTvShowByMyShowsIdAsync(message.MyShowsId, cancellationToken)
                        ?? await _tvShowsService.GetTvShowFromMyShowsAsync(message.MyShowsId, cancellationToken);
 
@@ -85,25 +91,23 @@ namespace ShowMustNotGoOn.TelegramService
 
             await MakeRequestAsync(new EditMessageMediaRequest(
                 new ChatId(user.Id),
-                message.MessageId,
+                telegramMessageId,
                 new InputMediaPhoto(new InputMedia(show.Image))), cancellationToken);
 
             var updatedMessage = await MakeRequestAsync(
                 new EditMessageCaptionRequest(
                     new ChatId(user.Id),
-                    message.MessageId,
+                    telegramMessageId,
                     $"{show.Title} / {show.TitleOriginal}")
                 {
                     ReplyMarkup = markup
                 },
                 cancellationToken);
 
-            message.MessageId = updatedMessage.MessageId;
-
-            return message;
+            return updatedMessage;
         }
 
-        public Task RemoveMessageAsync(User user, BotMessage message, CancellationToken cancellationToken)
+        public Task RemoveMessageAsync(User user, Message message, CancellationToken cancellationToken)
         {
             return MakeRequestAsync(new DeleteMessageRequest(
                     new ChatId(user.Id),
@@ -115,44 +119,61 @@ namespace ShowMustNotGoOn.TelegramService
         {
             var buttons = new List<List<InlineKeyboardButton>>
             {
-                GetNavigateButtons(message)
+                await GetNavigateButtonsAsync(message, cancellationToken)
             };
 
             var subscription = await _tvShowsService.GetUserSubscriptionToTvShowAsync(user, show, SubscriptionType.EndOfShow, cancellationToken);
 
             if (subscription != null)
             {
+                var callback = await CreateCallbackAsync(message.Id, CallbackType.UnsubscribeToEndOfShow, cancellationToken);
                 buttons.Add(new List<InlineKeyboardButton>
                 {
-                    InlineKeyboardButton.WithCallbackData("Unsubscribe from end of show", "unsubendofshow")
+                    InlineKeyboardButton.WithCallbackData("Unsubscribe from end of show", callback.Id.ToString())
                 });
             }
             else
             {
+                var callback = await CreateCallbackAsync(message.Id, CallbackType.SubscribeToEndOfShow, cancellationToken);
                 buttons.Add(new List<InlineKeyboardButton>
                 {
-                    InlineKeyboardButton.WithCallbackData("Subscribe to end of show", "subendofshow")
+                    InlineKeyboardButton.WithCallbackData("Subscribe to end of show", callback.Id.ToString())
                 });
             }
 
             return buttons;
         }
 
-        private List<InlineKeyboardButton> GetNavigateButtons(BotMessage message)
+        private async Task<List<InlineKeyboardButton>> GetNavigateButtonsAsync(BotMessage message, CancellationToken cancellationToken)
         {
             var buttons = new List<InlineKeyboardButton>();
 
             if (message.CurrentPage > 0)
             {
-                buttons.Add(InlineKeyboardButton.WithCallbackData("Prev", "prev"));
+                var callback = await CreateCallbackAsync(message.Id, CallbackType.Prev, cancellationToken);
+                buttons.Add(InlineKeyboardButton.WithCallbackData("Prev", callback.Id.ToString()));
             }
 
             if (message.CurrentPage < message.TotalPages - 1)
             {
-                buttons.Add(InlineKeyboardButton.WithCallbackData("Next", "next"));
+                var callback = await CreateCallbackAsync(message.Id, CallbackType.Next, cancellationToken);
+                buttons.Add(InlineKeyboardButton.WithCallbackData("Next", callback.Id.ToString()));
             }
 
             return buttons;
+        }
+
+        private async Task<Callback> CreateCallbackAsync(int botMessageId, CallbackType callbackType, CancellationToken cancellationToken)
+        {
+            var callback = (await _databaseContext.Callbacks
+                .AddAsync(new Callback
+                {
+                    BotMessageId = botMessageId,
+                    CallbackType = callbackType
+                }, cancellationToken)).Entity;
+            await _databaseContext.SaveChangesAsync(cancellationToken);
+
+            return callback;
         }
     }
 }

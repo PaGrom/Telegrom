@@ -10,8 +10,8 @@ namespace ShowMustNotGoOn.Core
     {
 	    Task<T> MakeRequestAsync<T>(RequestBase<T> request, CancellationToken cancellationToken);
         Task SendTextMessageToUserAsync(User user, string text, CancellationToken cancellationToken);
-        Task<BotMessage> SendMessageToUserAsync(User user, BotMessage message, CancellationToken cancellationToken);
-        Task<BotMessage> UpdateMessageAsync(User user, BotMessage message, string callbackId, CancellationToken cancellationToken);
-        Task RemoveMessageAsync(User user, BotMessage message, CancellationToken cancellationToken);
+        Task<Message> SendMessageToUserAsync(User user, BotMessage message, CancellationToken cancellationToken);
+        Task<Message> UpdateMessageAsync(User user, BotMessage message, int telegramMessageId, string callbackId, CancellationToken cancellationToken);
+        Task RemoveMessageAsync(User user, Message message, CancellationToken cancellationToken);
     }
 }

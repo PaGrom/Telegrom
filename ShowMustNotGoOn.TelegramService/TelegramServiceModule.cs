@@ -2,6 +2,7 @@
 using Autofac;
 using MihaZupan;
 using ShowMustNotGoOn.Core;
+using ShowMustNotGoOn.Core.Extensions;
 using Telegram.Bot;
 
 namespace ShowMustNotGoOn.TelegramService
@@ -56,7 +57,7 @@ namespace ShowMustNotGoOn.TelegramService
 
             builder.RegisterType<TelegramService>()
                 .As<ITelegramService>()
-                .InstancePerLifetimeScope();
+                .InstancePerRequest();
 
             builder.RegisterType<TelegramUpdateReceiver>()
                 .As<ITelegramUpdateReceiver>()
