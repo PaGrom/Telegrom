@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ShowMustNotGoOn.Core.Request;
 using ShowMustNotGoOn.Core.Session;
+using ShowMustNotGoOn.DatabaseContext.Extensions;
 using ShowMustNotGoOn.DatabaseContext.Model;
 using Telegram.Bot.Types.Enums;
 
@@ -71,8 +72,11 @@ namespace ShowMustNotGoOn.Core.MessageBus
                 await HandleSubscriptionsCallbackButtonAsync(botMessage, cancellationToken);
                 return;
             }
-                
-            var tvShows = (await _tvShowsService.SearchTvShowsAsync(botMessage.SearchPattern, cancellationToken)).ToList();
+            
+            var searchPattern = await _databaseContext.MessageTexts
+                .FindAsync(new object[] {botMessage.MessageTextId}, cancellationToken);
+
+            var tvShows = (await _tvShowsService.SearchTvShowsAsync(searchPattern.Text, cancellationToken)).ToList();
 
             var currentShow = await _tvShowsService.GetTvShowByMyShowsIdAsync(botMessage.MyShowsId, cancellationToken)
                               ?? await _tvShowsService.GetTvShowFromMyShowsAsync(botMessage.MyShowsId, cancellationToken);
@@ -199,10 +203,10 @@ namespace ShowMustNotGoOn.Core.MessageBus
                 return;
             }
 
-            var searchPattern = _requestContext.Update.Message.Text.Trim();
+            var messageTextString = _requestContext.Update.Message.Text.Trim();
             const int pageCount = 0;
 
-            var tvShows = (await _tvShowsService.SearchTvShowsAsync(searchPattern, cancellationToken)).ToList();
+            var tvShows = (await _tvShowsService.SearchTvShowsAsync(messageTextString, cancellationToken)).ToList();
 
             if (!tvShows.Any())
             {
@@ -210,25 +214,41 @@ namespace ShowMustNotGoOn.Core.MessageBus
                 return;
             }
 
+            var messageText = await _databaseContext.MessageTexts
+                .AddIfNotExistsAsync(new MessageText
+                    {
+                        Text = messageTextString
+                    }, s => s.Text == messageTextString, cancellationToken);
+
+            await _databaseContext.SaveChangesAsync(cancellationToken);
+
             var botMessage = new BotMessage
             {
                 UserId = _sessionContext.User.Id,
                 BotCommandType = null,
-                SearchPattern = searchPattern,
+                MessageTextId = messageText.Id,
                 MyShowsId = tvShows.First().Id,
                 CurrentPage = pageCount,
                 TotalPages = tvShows.Count
             };
 
-            botMessage = await _telegramService.SendMessageToUserAsync(_sessionContext.User, botMessage, cancellationToken);
-
             await _databaseContext.BotMessages.AddAsync(botMessage, cancellationToken);
             await _databaseContext.SaveChangesAsync(cancellationToken);
+
+            await _telegramService.SendMessageToUserAsync(_sessionContext.User, botMessage, cancellationToken);
         }
 
         private async Task HandleBotCommandAsync(CancellationToken cancellationToken)
         {
-            switch (_requestContext.Update.Message.Text.Trim())
+            var messageTextString = _requestContext.Update.Message.Text.Trim();
+
+            var messageText = await _databaseContext.MessageTexts
+                .AddIfNotExistsAsync(new MessageText
+                    {
+                        Text = messageTextString
+                    }, s => s.Text == messageTextString, cancellationToken);
+
+            switch (messageTextString)
             {
                 case "/start":
                     await _telegramService.SendTextMessageToUserAsync(_sessionContext.User, "Welcome", cancellationToken);
@@ -250,7 +270,7 @@ namespace ShowMustNotGoOn.Core.MessageBus
                     {
                         UserId = _sessionContext.User.Id,
                         BotCommandType = BotCommandType.Subscriptions,
-                        SearchPattern = null,
+                        MessageTextId = messageText.Id,
                         MyShowsId = show.Id,
                         CurrentPage = pageCount,
                         TotalPages = subscriptions.Count

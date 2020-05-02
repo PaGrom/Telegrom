@@ -14,7 +14,7 @@ namespace ShowMustNotGoOn.TelegramService
 {
     public class TelegramService : ITelegramService
     {
-        private const string NotFoundImage = "https://identityUser-images.githubusercontent.com/24848110/33519396-7e56363c-d79d-11e7-969b-09782f5ccbab.png";
+        private const string NotFoundImage = "https://images-na.ssl-images-amazon.com/images/I/312yeogBelL._SX466_.jpg";
 
         private readonly ITelegramBotClient _telegramBotClient;
         private readonly ITvShowsService _tvShowsService;

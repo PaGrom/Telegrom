@@ -13,6 +13,7 @@ namespace ShowMustNotGoOn.DatabaseContext
 
         public DbSet<TvShow> TvShows { get; set; }
         public DbSet<IdentityUser> IdentityUsers { get; set; }
+        public DbSet<MessageText> MessageTexts { get; set; }
         public DbSet<BotMessage> BotMessages { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
 
@@ -23,7 +24,7 @@ namespace ShowMustNotGoOn.DatabaseContext
                 entity.HasKey(e => e.Id);
 
                 entity.Property(e => e.RowVersion)
-	                .IsConcurrencyToken();
+                    .IsConcurrencyToken();
 
                 entity.Property(e => e.Id)
                     .ValueGeneratedOnAdd();
@@ -31,26 +32,31 @@ namespace ShowMustNotGoOn.DatabaseContext
 
             modelBuilder.Entity<IdentityUser>(entity =>
             {
-	            entity.HasKey(e => e.Id);
+                entity.HasKey(e => e.Id);
 
                 entity.Property(e => e.RowVersion)
-	                .IsConcurrencyToken();
+                    .IsConcurrencyToken();
+            });
+
+            modelBuilder.Entity<MessageText>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.RowVersion)
+                    .IsConcurrencyToken();
             });
 
             modelBuilder.Entity<BotMessage>(entity =>
             {
-                entity.HasIndex(e => e.Id)
-                    .IsUnique();
-
-                entity.HasIndex(e => e.MessageId)
-                    .IsUnique();
+                entity.HasKey(e => e.Id);
 
                 entity.HasOne<IdentityUser>()
-	                .WithMany()
-	                .HasForeignKey(c => c.UserId);
+                    .WithMany()
+                    .HasForeignKey(c => c.UserId);
 
-                entity.Property(e => e.Id)
-                    .ValueGeneratedOnAdd();
+                entity.HasOne<MessageText>()
+                    .WithMany()
+                    .HasForeignKey(c => c.MessageTextId);
             });
 
             modelBuilder.Entity<Subscription>(entity =>
@@ -59,12 +65,12 @@ namespace ShowMustNotGoOn.DatabaseContext
                     .IsUnique();
 
                 entity.HasOne<IdentityUser>()
-	                .WithMany()
-	                .HasForeignKey(c => c.UserId);
+                    .WithMany()
+                    .HasForeignKey(c => c.UserId);
 
                 entity.HasOne<TvShow>()
-	                .WithMany()
-	                .HasForeignKey(c => c.TvShowId);
+                    .WithMany()
+                    .HasForeignKey(c => c.TvShowId);
 
                 entity.Property(e => e.Id)
                     .ValueGeneratedOnAdd();

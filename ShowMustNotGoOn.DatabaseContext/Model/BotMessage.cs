@@ -1,8 +1,12 @@
-﻿namespace ShowMustNotGoOn.DatabaseContext.Model
+﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace ShowMustNotGoOn.DatabaseContext.Model
 {
     public sealed class BotMessage
     {
-        public int Id { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public Guid Id { get; set; }
 
         public int UserId { get; set; }
 
@@ -10,7 +14,7 @@
 
         public BotCommandType? BotCommandType { get; set; }
 
-        public string SearchPattern { get; set; }
+        public int MessageTextId { get; set; }
 
         public int MyShowsId { get; set; }
 
