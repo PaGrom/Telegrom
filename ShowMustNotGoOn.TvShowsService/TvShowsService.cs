@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ShowMustNotGoOn.Core;
+using ShowMustNotGoOn.Core.TelegramModel;
 using ShowMustNotGoOn.DatabaseContext.Model;
-using Telegram.Bot.Types;
 
 namespace ShowMustNotGoOn.TvShowsService
 {

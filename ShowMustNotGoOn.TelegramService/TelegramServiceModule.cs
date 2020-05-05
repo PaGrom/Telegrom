@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using Autofac;
+using AutoMapper;
 using MihaZupan;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.Extensions;
@@ -54,6 +55,10 @@ namespace ShowMustNotGoOn.TelegramService
 
             builder.RegisterType<TvShowsService.TvShowsService>()
                 .As<ITvShowsService>();
+
+            builder.RegisterType<TelegramMappingProfile>()
+                .As<Profile>()
+                .InstancePerLifetimeScope();
 
             builder.RegisterType<TelegramService>()
                 .As<ITelegramService>()

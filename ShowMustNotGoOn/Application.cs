@@ -2,9 +2,8 @@
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ShowMustNotGoOn.Core;
-using ShowMustNotGoOn.Core.Extensions;
 using ShowMustNotGoOn.Core.Session;
-using Telegram.Bot.Types;
+using ShowMustNotGoOn.Core.TelegramModel;
 
 namespace ShowMustNotGoOn
 {
@@ -38,7 +37,7 @@ namespace ShowMustNotGoOn
 
         public async void HandleTelegramMessageReceived(Update update, CancellationToken cancellationToken)
         {
-            var sessionContext = await _sessionManager.GetSessionContextAsync(update.GetUser(), cancellationToken);
+            var sessionContext = await _sessionManager.GetSessionContextAsync(update.From, cancellationToken);
             await sessionContext.PostUpdateAsync(update, cancellationToken);
         }
     }

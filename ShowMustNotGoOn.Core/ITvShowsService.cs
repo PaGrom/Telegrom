@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using ShowMustNotGoOn.Core.TelegramModel;
 using ShowMustNotGoOn.DatabaseContext.Model;
-using Telegram.Bot.Types;
 
 namespace ShowMustNotGoOn.Core
 {

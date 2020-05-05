@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading;
-using Telegram.Bot.Types;
+using ShowMustNotGoOn.Core.TelegramModel;
 
 namespace ShowMustNotGoOn.Core
 {

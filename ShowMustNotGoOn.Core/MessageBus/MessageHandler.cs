@@ -4,30 +4,26 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ShowMustNotGoOn.Core.Request;
-using ShowMustNotGoOn.Core.Session;
+using ShowMustNotGoOn.Core.TelegramModel;
 using ShowMustNotGoOn.DatabaseContext.Extensions;
 using ShowMustNotGoOn.DatabaseContext.Model;
-using Telegram.Bot.Types.Enums;
 
 namespace ShowMustNotGoOn.Core.MessageBus
 {
     public sealed class MessageHandler
     {
-        private readonly SessionContext _sessionContext;
         private readonly RequestContext _requestContext;
         private readonly ITelegramService _telegramService;
         private readonly ITvShowsService _tvShowsService;
         private readonly DatabaseContext.DatabaseContext _databaseContext;
         private readonly ILogger<MessageHandler> _logger;
 
-        public MessageHandler(SessionContext sessionContext,
-            RequestContext requestContext,
+        public MessageHandler(RequestContext requestContext,
             ITelegramService telegramService,
             ITvShowsService tvShowsService,
             DatabaseContext.DatabaseContext databaseContext,
             ILogger<MessageHandler> logger)
         {
-            _sessionContext = sessionContext;
             _requestContext = requestContext;
             _telegramService = telegramService;
             _tvShowsService = tvShowsService;
@@ -41,13 +37,13 @@ namespace ShowMustNotGoOn.Core.MessageBus
             {
                 await using var transaction = await _databaseContext.Database.BeginTransactionAsync(cancellationToken);
 
-                switch (_requestContext.Update.Type)
+                switch (_requestContext.Update)
                 {
-                    case UpdateType.Message:
-                        await HandleMessageAsync(cancellationToken);
+                    case Message message:
+                        await HandleMessageAsync(message, cancellationToken);
                         break;
-                    case UpdateType.CallbackQuery:
-                        await HandleCallbackAsync(cancellationToken);
+                    case CallbackQuery callbackQuery:
+                        await HandleCallbackAsync(callbackQuery, cancellationToken);
                         break;
                 }
 
@@ -59,9 +55,9 @@ namespace ShowMustNotGoOn.Core.MessageBus
             }
         }
 
-        private async Task HandleCallbackAsync(CancellationToken cancellationToken)
+        private async Task HandleCallbackAsync(CallbackQuery callbackQuery, CancellationToken cancellationToken)
         {
-            var callbackId = Guid.Parse(_requestContext.Update.CallbackQuery.Data);
+            var callbackId = Guid.Parse(callbackQuery.Data);
 
             var callback = await _databaseContext.Callbacks.FindAsync(new object[] {callbackId}, cancellationToken);
 
@@ -70,7 +66,7 @@ namespace ShowMustNotGoOn.Core.MessageBus
 
             if (botMessage.BotCommandType == BotCommandType.Subscriptions)
             {
-                await HandleSubscriptionsCommandAsync(callback, botMessage, cancellationToken);
+                await HandleSubscriptionsCommandAsync(callbackQuery, callback, botMessage, cancellationToken);
                 return;
             }
             
@@ -91,13 +87,13 @@ namespace ShowMustNotGoOn.Core.MessageBus
                     botMessage.CurrentPage--;
                     break;
                 case CallbackType.SubscribeToEndOfShow:
-                    await _tvShowsService.SubscribeUserToTvShowAsync(_sessionContext.User,
+                    await _tvShowsService.SubscribeUserToTvShowAsync(_requestContext.SessionContext.User,
                         currentShow,
                         SubscriptionType.EndOfShow,
                         cancellationToken);
                     break;
                 case CallbackType.UnsubscribeToEndOfShow:
-                    await _tvShowsService.UnsubscribeUserFromTvShowAsync(_sessionContext.User,
+                    await _tvShowsService.UnsubscribeUserFromTvShowAsync(_requestContext.SessionContext.User,
                         currentShow,
                         SubscriptionType.EndOfShow,
                         cancellationToken);
@@ -111,16 +107,16 @@ namespace ShowMustNotGoOn.Core.MessageBus
             _databaseContext.BotMessages.Update(botMessage);
             await _databaseContext.SaveChangesAsync(cancellationToken);
 
-            await _telegramService.UpdateMessageAsync(_sessionContext.User,
+            await _telegramService.UpdateMessageAsync(_requestContext.SessionContext.User,
                 botMessage,
-                _requestContext.Update.CallbackQuery.Message.MessageId,
-                _requestContext.Update.CallbackQuery.Id,
+                callbackQuery.MessageId,
+                callbackQuery.Id,
                 cancellationToken);
         }
 
-        private async Task HandleSubscriptionsCommandAsync(Callback callback, BotMessage botMessage, CancellationToken cancellationToken)
+        private async Task HandleSubscriptionsCommandAsync(CallbackQuery callbackQuery, Callback callback, BotMessage botMessage, CancellationToken cancellationToken)
         {
-            var subscriptions = await _tvShowsService.GetUserSubscriptionsAsync(_sessionContext.User, cancellationToken);
+            var subscriptions = await _tvShowsService.GetUserSubscriptionsAsync(_requestContext.SessionContext.User, cancellationToken);
 
             // handle navigate buttons
             if (callback.CallbackType == CallbackType.Next
@@ -128,10 +124,11 @@ namespace ShowMustNotGoOn.Core.MessageBus
             {
                 if (!subscriptions.Any())
                 {
-                    await _telegramService.RemoveMessageAsync(_sessionContext.User, _requestContext.Update.Message, cancellationToken);
+                    // TODO: Do not remove message
+                    await _telegramService.RemoveMessageAsync(_requestContext.SessionContext.User, callbackQuery.MessageId, cancellationToken);
                     _databaseContext.BotMessages.Remove(botMessage);
                     await _databaseContext.SaveChangesAsync(cancellationToken);
-                    await _telegramService.SendTextMessageToUserAsync(_sessionContext.User,
+                    await _telegramService.SendTextMessageToUserAsync(_requestContext.SessionContext.User,
                         "You do not have any subscriptions yet", cancellationToken);
                     return;
                 }
@@ -141,7 +138,7 @@ namespace ShowMustNotGoOn.Core.MessageBus
                 if (subscriptions.Count <= currentPage)
                 {
                     botMessage.CurrentPage = 0;
-                    _requestContext.Update.CallbackQuery.Data = string.Empty;
+                    callbackQuery.Data = string.Empty;
                 }
 
                 switch (callback.CallbackType)
@@ -177,7 +174,7 @@ namespace ShowMustNotGoOn.Core.MessageBus
                 {
                     var tvShow = await _tvShowsService.GetTvShowByMyShowsIdAsync(botMessage.MyShowsId, cancellationToken)
                                  ?? await _tvShowsService.GetTvShowFromMyShowsAsync(botMessage.MyShowsId, cancellationToken);
-                    await _tvShowsService.SubscribeUserToTvShowAsync(_sessionContext.User, tvShow, SubscriptionType.EndOfShow, cancellationToken);
+                    await _tvShowsService.SubscribeUserToTvShowAsync(_requestContext.SessionContext.User, tvShow, SubscriptionType.EndOfShow, cancellationToken);
                     break;
                 }
                 // handle unsubscribe button
@@ -185,7 +182,7 @@ namespace ShowMustNotGoOn.Core.MessageBus
                 {
                     var tvShow = await _tvShowsService.GetTvShowByMyShowsIdAsync(botMessage.MyShowsId, cancellationToken)
                                  ?? await _tvShowsService.GetTvShowFromMyShowsAsync(botMessage.MyShowsId, cancellationToken);
-                    await _tvShowsService.UnsubscribeUserFromTvShowAsync(_sessionContext.User, tvShow, SubscriptionType.EndOfShow, cancellationToken);
+                    await _tvShowsService.UnsubscribeUserFromTvShowAsync(_requestContext.SessionContext.User, tvShow, SubscriptionType.EndOfShow, cancellationToken);
                     break;
                 }
             }
@@ -195,31 +192,32 @@ namespace ShowMustNotGoOn.Core.MessageBus
             _databaseContext.BotMessages.Update(botMessage);
             await _databaseContext.SaveChangesAsync(cancellationToken);
 
-            await _telegramService.UpdateMessageAsync(_sessionContext.User,
+            await _telegramService.UpdateMessageAsync(_requestContext.SessionContext.User,
                 botMessage,
-                _requestContext.Update.CallbackQuery.Message.MessageId,
-                _requestContext.Update.CallbackQuery.Id,
+                callbackQuery.MessageId,
+                callbackQuery.Id,
                 cancellationToken);
         }
 
-        private async Task HandleMessageAsync(CancellationToken cancellationToken)
+        private async Task HandleMessageAsync(Message message, CancellationToken cancellationToken)
         {
-            _logger.LogInformation($"Received message from identityUser {_sessionContext.User.Username}");
+            _logger.LogInformation($"Received message from identityUser {_requestContext.SessionContext.User.Username}");
 
-            if (_requestContext.Update.Message.Text.Trim().StartsWith("/"))
+            var messageTextString = message.Text.Trim();
+
+            if (messageTextString.StartsWith("/"))
             {
-                await HandleBotCommandAsync(cancellationToken);
+                await HandleBotCommandAsync(message, cancellationToken);
                 return;
             }
 
-            var messageTextString = _requestContext.Update.Message.Text.Trim();
             const int pageCount = 0;
 
             var tvShows = (await _tvShowsService.SearchTvShowsAsync(messageTextString, cancellationToken)).ToList();
 
             if (!tvShows.Any())
             {
-                await _telegramService.SendTextMessageToUserAsync(_sessionContext.User, "Can't find tv show for you", cancellationToken);
+                await _telegramService.SendTextMessageToUserAsync(_requestContext.SessionContext.User, "Can't find tv show for you", cancellationToken);
                 return;
             }
 
@@ -233,7 +231,7 @@ namespace ShowMustNotGoOn.Core.MessageBus
 
             var botMessage = new BotMessage
             {
-                UserId = _sessionContext.User.Id,
+                UserId = _requestContext.SessionContext.User.Id,
                 BotCommandType = null,
                 MessageTextId = messageText.Id,
                 MyShowsId = tvShows.First().Id,
@@ -244,12 +242,12 @@ namespace ShowMustNotGoOn.Core.MessageBus
             await _databaseContext.BotMessages.AddAsync(botMessage, cancellationToken);
             await _databaseContext.SaveChangesAsync(cancellationToken);
 
-            await _telegramService.SendMessageToUserAsync(_sessionContext.User, botMessage, cancellationToken);
+            await _telegramService.SendMessageToUserAsync(_requestContext.SessionContext.User, botMessage, cancellationToken);
         }
 
-        private async Task HandleBotCommandAsync(CancellationToken cancellationToken)
+        private async Task HandleBotCommandAsync(Message message, CancellationToken cancellationToken)
         {
-            var messageTextString = _requestContext.Update.Message.Text.Trim();
+            var messageTextString = message.Text.Trim();
 
             var messageText = await _databaseContext.MessageTexts
                 .AddIfNotExistsAsync(new MessageText
@@ -260,15 +258,15 @@ namespace ShowMustNotGoOn.Core.MessageBus
             switch (messageTextString)
             {
                 case "/start":
-                    await _telegramService.SendTextMessageToUserAsync(_sessionContext.User, "Welcome", cancellationToken);
+                    await _telegramService.SendTextMessageToUserAsync(_requestContext.SessionContext.User, "Welcome", cancellationToken);
                     break;
                 case "/subscriptions":
                 {
-                    var subscriptions = await _tvShowsService.GetUserSubscriptionsAsync(_sessionContext.User, cancellationToken);
+                    var subscriptions = await _tvShowsService.GetUserSubscriptionsAsync(_requestContext.SessionContext.User, cancellationToken);
 
                     if (!subscriptions.Any())
                     {
-                        await _telegramService.SendTextMessageToUserAsync(_sessionContext.User, "You do not have any subscriptions yet", cancellationToken);
+                        await _telegramService.SendTextMessageToUserAsync(_requestContext.SessionContext.User, "You do not have any subscriptions yet", cancellationToken);
                         break;
                     }
 
@@ -277,7 +275,7 @@ namespace ShowMustNotGoOn.Core.MessageBus
                     const int pageCount = 0;
                     var botMessage = new BotMessage
                     {
-                        UserId = _sessionContext.User.Id,
+                        UserId = _requestContext.SessionContext.User.Id,
                         BotCommandType = BotCommandType.Subscriptions,
                         MessageTextId = messageText.Id,
                         MyShowsId = show.Id,
@@ -288,7 +286,7 @@ namespace ShowMustNotGoOn.Core.MessageBus
                     await _databaseContext.BotMessages.AddAsync(botMessage, cancellationToken);
                     await _databaseContext.SaveChangesAsync(cancellationToken);
 
-                    await _telegramService.SendMessageToUserAsync(_sessionContext.User, botMessage, cancellationToken);
+                    await _telegramService.SendMessageToUserAsync(_requestContext.SessionContext.User, botMessage, cancellationToken);
 
                     break;
                 }
