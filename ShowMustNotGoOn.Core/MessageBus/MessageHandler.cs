@@ -255,6 +255,8 @@ namespace ShowMustNotGoOn.Core.MessageBus
                         Text = messageTextString
                     }, s => s.Text == messageTextString, cancellationToken);
 
+            await _databaseContext.SaveChangesAsync(cancellationToken);
+
             switch (messageTextString)
             {
                 case "/start":

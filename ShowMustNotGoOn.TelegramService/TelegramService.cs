@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,15 +40,26 @@ namespace ShowMustNotGoOn.TelegramService
             _logger = logger;
         }
 
-        public Task MakeRequestAsync<T>(Telegram.Bot.Requests.RequestBase<T> request, CancellationToken cancellationToken)
+        public Task MakeRequestAsync(Request request, CancellationToken cancellationToken)
         {
-            return _telegramBotClient.MakeRequestAsync(request, cancellationToken);
+            Task task = request switch
+            {
+                AnswerCallbackQueryRequest answerCallbackQueryRequest => _telegramBotClient.MakeRequestAsync(_mapper.Map<Telegram.Bot.Requests.AnswerCallbackQueryRequest>(answerCallbackQueryRequest), cancellationToken),
+                DeleteMessageRequest deleteMessageRequest => _telegramBotClient.MakeRequestAsync(_mapper.Map<Telegram.Bot.Requests.DeleteMessageRequest>(deleteMessageRequest), cancellationToken),
+                EditMessageCaptionRequest editMessageCaptionRequest => _telegramBotClient.MakeRequestAsync(_mapper.Map<Telegram.Bot.Requests.EditMessageCaptionRequest>(editMessageCaptionRequest), cancellationToken),
+                EditMessageMediaRequest editMessageMediaRequest => _telegramBotClient.MakeRequestAsync(_mapper.Map<Telegram.Bot.Requests.EditMessageMediaRequest>(editMessageMediaRequest), cancellationToken),
+                SendMessageRequest sendMessageRequest => _telegramBotClient.MakeRequestAsync(_mapper.Map<Telegram.Bot.Requests.SendMessageRequest>(sendMessageRequest), cancellationToken),
+                SendPhotoRequest sendPhotoRequest => _telegramBotClient.MakeRequestAsync(_mapper.Map<Telegram.Bot.Requests.SendPhotoRequest>(sendPhotoRequest), cancellationToken),
+                _ => throw new NotImplementedException()
+            };
+
+            return task;
         }
 
         public Task SendTextMessageToUserAsync(User user, string text, CancellationToken cancellationToken)
         {
             var request = new SendMessageRequest(user.Id, text);
-            return MakeRequestAsync(_mapper.Map<Telegram.Bot.Requests.SendMessageRequest>(request), cancellationToken);
+            return MakeRequestAsync(request, cancellationToken);
         }
 
         public async Task SendMessageToUserAsync(User user, BotMessage message, CancellationToken cancellationToken)
@@ -69,9 +81,7 @@ namespace ShowMustNotGoOn.TelegramService
                 ReplyMarkup = markup
             };
 
-            await MakeRequestAsync(
-                _mapper.Map<Telegram.Bot.Requests.SendPhotoRequest>(request),
-                cancellationToken);
+            await MakeRequestAsync(request, cancellationToken);
         }
 
         public async Task UpdateMessageAsync(User user, BotMessage message, int telegramMessageId, string callbackId, CancellationToken cancellationToken)
@@ -93,30 +103,26 @@ namespace ShowMustNotGoOn.TelegramService
             var buttons = await GetButtonsAsync(user, message, show, cancellationToken);
             var markup = new InlineKeyboardMarkup(buttons);
 
-            await MakeRequestAsync(new AnswerCallbackQueryRequest(callbackId), cancellationToken);
+            var answerCallbackQueryRequest = new AnswerCallbackQueryRequest(callbackId);
 
-            await MakeRequestAsync(new EditMessageMediaRequest(
-                new ChatId(user.Id),
-                telegramMessageId,
-                new InputMediaPhoto(new InputMedia(show.Image))), cancellationToken);
+            await MakeRequestAsync(answerCallbackQueryRequest, cancellationToken);
 
-            await MakeRequestAsync(
-                new EditMessageCaptionRequest(
-                    new ChatId(user.Id),
-                    telegramMessageId,
-                    $"{show.Title} / {show.TitleOriginal}")
-                {
-                    ReplyMarkup = markup
-                },
-                cancellationToken);
+            var editMessageMediaRequest = new EditMessageMediaRequest(user.Id, telegramMessageId, show.Image);
+
+            await MakeRequestAsync(editMessageMediaRequest, cancellationToken);
+
+            var editCaptionRequest = new EditMessageCaptionRequest(user.Id, telegramMessageId, $"{ show.Title } / { show.TitleOriginal}")
+            {
+                ReplyMarkup = markup
+            };
+
+            await MakeRequestAsync(editCaptionRequest, cancellationToken);
         }
 
         public Task RemoveMessageAsync(User user, int messageId, CancellationToken cancellationToken)
         {
-            return MakeRequestAsync(new DeleteMessageRequest(
-                    new ChatId(user.Id),
-                    messageId),
-                cancellationToken);
+            var deleteMessageRequest = new DeleteMessageRequest(user.Id, messageId);
+            return MakeRequestAsync(deleteMessageRequest, cancellationToken);
         }
 
         private async Task<List<List<InlineKeyboardButton>>> GetButtonsAsync(User user, BotMessage message, TvShow show, CancellationToken cancellationToken)

@@ -9,11 +9,11 @@ using Microsoft.Extensions.Logging.Console;
 using ShowMustNotGoOn.Core.Extensions;
 using ShowMustNotGoOn.Core.MessageBus;
 using ShowMustNotGoOn.Core.Session;
+using ShowMustNotGoOn.Core.TelegramModel;
 using ShowMustNotGoOn.Settings;
 using ShowMustNotGoOn.TelegramService;
 using ShowMustNotGoOn.TvShowsService;
 using ShowMustNotGoOn.UsersService;
-using Telegram.Bot.Types;
 
 namespace ShowMustNotGoOn
 {

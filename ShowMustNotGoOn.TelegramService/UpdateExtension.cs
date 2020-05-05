@@ -2,7 +2,7 @@
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
-namespace ShowMustNotGoOn.Core.Extensions
+namespace ShowMustNotGoOn.TelegramService
 {
 	public static class UpdateExtensions
 	{
