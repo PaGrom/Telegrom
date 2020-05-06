@@ -4,6 +4,8 @@ using AutoMapper;
 using MihaZupan;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.Extensions;
+using ShowMustNotGoOn.Core.MessageBus;
+using ShowMustNotGoOn.Core.TelegramModel;
 using Telegram.Bot;
 
 namespace ShowMustNotGoOn.TelegramService
@@ -60,13 +62,13 @@ namespace ShowMustNotGoOn.TelegramService
                 .As<Profile>()
                 .InstancePerLifetimeScope();
 
-            builder.RegisterType<TelegramService>()
-                .As<ITelegramService>()
-                .InstancePerRequest();
-
             builder.RegisterType<TelegramUpdateReceiver>()
                 .As<ITelegramUpdateReceiver>()
                 .SingleInstance();
+
+            builder.RegisterType<TelegramRequestDispatcher>()
+	            .As<ITelegramRequestDispatcher>()
+	            .SingleInstance();
         }
     }
 }

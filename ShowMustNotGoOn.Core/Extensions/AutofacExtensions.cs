@@ -1,6 +1,5 @@
 ﻿using Autofac.Builder;
-using ShowMustNotGoOn.Core.Request;
-using ShowMustNotGoOn.Core.Session;
+using ShowMustNotGoOn.Core.Contexts;
 
 namespace ShowMustNotGoOn.Core.Extensions
 {
@@ -13,11 +12,11 @@ namespace ShowMustNotGoOn.Core.Extensions
             return builder.InstancePerMatchingLifetimeScope(typeof(SessionContext));
         }
 
-        public static IRegistrationBuilder<TLimit, TActivatorData, TRegistrationStyle> InstancePerRequest<TLimit,
+        public static IRegistrationBuilder<TLimit, TActivatorData, TRegistrationStyle> InstancePerUpdate<TLimit,
             TActivatorData, TRegistrationStyle>(
             this IRegistrationBuilder<TLimit, TActivatorData, TRegistrationStyle> builder)
         {
-            return builder.InstancePerMatchingLifetimeScope(typeof(RequestContext));
+            return builder.InstancePerMatchingLifetimeScope(typeof(UpdateContext));
         }
     }
 }

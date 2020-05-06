@@ -6,9 +6,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
+using ShowMustNotGoOn.Core.Contexts;
 using ShowMustNotGoOn.Core.Extensions;
 using ShowMustNotGoOn.Core.MessageBus;
-using ShowMustNotGoOn.Core.Session;
 using ShowMustNotGoOn.Core.TelegramModel;
 using ShowMustNotGoOn.Settings;
 using ShowMustNotGoOn.TelegramService;
@@ -55,7 +55,7 @@ namespace ShowMustNotGoOn
                 .As<DbContextOptions>();
 
             builder.RegisterType<DatabaseContext.DatabaseContext>()
-                .InstancePerRequest();
+                .InstancePerUpdate();
 
             builder.RegisterModule<UsersServiceModule>();
 
@@ -92,7 +92,7 @@ namespace ShowMustNotGoOn
                 .InstancePerLifetimeScope();
 
             builder.RegisterType<MessageHandler>()
-                .InstancePerRequest();
+                .InstancePerUpdate();
 
             builder.RegisterType<SessionContext>()
                 .InstancePerSession();
@@ -101,6 +101,11 @@ namespace ShowMustNotGoOn
                 .As<IChannelReaderProvider<Update>>()
                 .As<IChannelWriterProvider<Update>>()
                 .InstancePerSession();
+
+            builder.RegisterType<ChannelHolder<Request>>()
+	            .As<IChannelReaderProvider<Request>>()
+	            .As<IChannelWriterProvider<Request>>()
+	            .InstancePerSession();
 
             builder.RegisterType<Application>()
                 .AsSelf()

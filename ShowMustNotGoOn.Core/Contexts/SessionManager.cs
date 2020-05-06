@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Autofac;
 using ShowMustNotGoOn.Core.TelegramModel;
 
-namespace ShowMustNotGoOn.Core.Session
+namespace ShowMustNotGoOn.Core.Contexts
 {
     public sealed class SessionManager : IAsyncDisposable
     {
