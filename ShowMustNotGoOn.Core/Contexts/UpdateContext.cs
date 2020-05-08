@@ -2,7 +2,7 @@
 
 namespace ShowMustNotGoOn.Core.Contexts
 {
-    public class UpdateContext
+    public class UpdateContext : IUpdateContext
     {
         public SessionContext SessionContext { get; }
         public Update Update { get; }

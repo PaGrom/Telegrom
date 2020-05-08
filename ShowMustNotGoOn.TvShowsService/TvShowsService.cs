@@ -47,12 +47,12 @@ namespace ShowMustNotGoOn.TvShowsService
 
         public Task<IEnumerable<TvShow>> SearchTvShowsAsync(string name, CancellationToken cancellationToken)
         {
-            return _myShowsService.SearchTvShowsAsync(name);
+            return _myShowsService.SearchTvShowsAsync(name, cancellationToken);
         }
 
         public Task<TvShow> GetTvShowFromMyShowsAsync(int myShowsId, CancellationToken cancellationToken)
         {
-            return _myShowsService.GetTvShowAsync(myShowsId);
+            return _myShowsService.GetTvShowAsync(myShowsId, cancellationToken);
         }
 
         public async Task<TvShow> GetTvShowAsync(int tvShowId, CancellationToken cancellationToken)
@@ -71,7 +71,7 @@ namespace ShowMustNotGoOn.TvShowsService
                 .SingleOrDefaultAsync(s => s.UserId == user.Id
                                && s.TvShowId == show.Id
                                && s.SubscriptionType == subscriptionType,
-                    cancellationToken: cancellationToken);
+                    cancellationToken);
         }
 
         public async Task<Subscription> SubscribeUserToTvShowAsync(User user, TvShow tvShow, SubscriptionType subscriptionType, CancellationToken cancellationToken)

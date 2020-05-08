@@ -10,7 +10,7 @@ using Telegram.Bot.Exceptions;
 
 namespace ShowMustNotGoOn.TelegramService
 {
-	internal sealed class TelegramRequestDispatcher : ITelegramRequestDispatcher
+    internal sealed class TelegramRequestDispatcher : ITelegramRequestDispatcher
     {
         private readonly ILogger<TelegramRequestDispatcher> _logger;
         private readonly ITelegramBotClient _telegramBotClient;
@@ -19,16 +19,16 @@ namespace ShowMustNotGoOn.TelegramService
         private readonly IMapper _mapper;
 
         public TelegramRequestDispatcher(
-	        ITelegramBotClient telegramBotClient,
+            ITelegramBotClient telegramBotClient,
             IMapper mapper,
             ILogger<TelegramRequestDispatcher> logger)
         {
-	        _telegramBotClient = telegramBotClient;
+            _telegramBotClient = telegramBotClient;
             var channelHolder = new ChannelHolder<Request>();
             _outgoingRequestsChannelReader = channelHolder;
-	        _outgoingRequestsChannelWriter = channelHolder;
-	        _mapper = mapper;
-	        _logger = logger;
+            _outgoingRequestsChannelWriter = channelHolder;
+            _mapper = mapper;
+            _logger = logger;
         }
 
         public async Task DispatchAsync(Request request, CancellationToken cancellationToken)
@@ -79,18 +79,18 @@ namespace ShowMustNotGoOn.TelegramService
 
         private Task MakeRequestAsync(Request request, CancellationToken cancellationToken)
         {
-	        Task task = request switch
-	        {
-		        AnswerCallbackQueryRequest answerCallbackQueryRequest => _telegramBotClient.MakeRequestAsync(_mapper.Map<Telegram.Bot.Requests.AnswerCallbackQueryRequest>(answerCallbackQueryRequest), cancellationToken),
-		        DeleteMessageRequest deleteMessageRequest => _telegramBotClient.MakeRequestAsync(_mapper.Map<Telegram.Bot.Requests.DeleteMessageRequest>(deleteMessageRequest), cancellationToken),
-		        EditMessageCaptionRequest editMessageCaptionRequest => _telegramBotClient.MakeRequestAsync(_mapper.Map<Telegram.Bot.Requests.EditMessageCaptionRequest>(editMessageCaptionRequest), cancellationToken),
-		        EditMessageMediaRequest editMessageMediaRequest => _telegramBotClient.MakeRequestAsync(_mapper.Map<Telegram.Bot.Requests.EditMessageMediaRequest>(editMessageMediaRequest), cancellationToken),
-		        SendMessageRequest sendMessageRequest => _telegramBotClient.MakeRequestAsync(_mapper.Map<Telegram.Bot.Requests.SendMessageRequest>(sendMessageRequest), cancellationToken),
-		        SendPhotoRequest sendPhotoRequest => _telegramBotClient.MakeRequestAsync(_mapper.Map<Telegram.Bot.Requests.SendPhotoRequest>(sendPhotoRequest), cancellationToken),
-		        _ => throw new NotImplementedException()
-	        };
+            Task task = request switch
+            {
+                AnswerCallbackQueryRequest answerCallbackQueryRequest => _telegramBotClient.MakeRequestAsync(_mapper.Map<Telegram.Bot.Requests.AnswerCallbackQueryRequest>(answerCallbackQueryRequest), cancellationToken),
+                DeleteMessageRequest deleteMessageRequest => _telegramBotClient.MakeRequestAsync(_mapper.Map<Telegram.Bot.Requests.DeleteMessageRequest>(deleteMessageRequest), cancellationToken),
+                EditMessageCaptionRequest editMessageCaptionRequest => _telegramBotClient.MakeRequestAsync(_mapper.Map<Telegram.Bot.Requests.EditMessageCaptionRequest>(editMessageCaptionRequest), cancellationToken),
+                EditMessageMediaRequest editMessageMediaRequest => _telegramBotClient.MakeRequestAsync(_mapper.Map<Telegram.Bot.Requests.EditMessageMediaRequest>(editMessageMediaRequest), cancellationToken),
+                SendMessageRequest sendMessageRequest => _telegramBotClient.MakeRequestAsync(_mapper.Map<Telegram.Bot.Requests.SendMessageRequest>(sendMessageRequest), cancellationToken),
+                SendPhotoRequest sendPhotoRequest => _telegramBotClient.MakeRequestAsync(_mapper.Map<Telegram.Bot.Requests.SendPhotoRequest>(sendPhotoRequest), cancellationToken),
+                _ => throw new NotImplementedException()
+            };
 
-	        return task;
+            return task;
         }
     }
 }

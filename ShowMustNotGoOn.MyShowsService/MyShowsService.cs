@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
@@ -24,7 +25,7 @@ namespace ShowMustNotGoOn.MyShowsService
             _logger = logger;
         }
 
-        public async Task<IEnumerable<TvShow>> SearchTvShowsAsync(string name)
+        public async Task<IEnumerable<TvShow>> SearchTvShowsAsync(string name, CancellationToken cancellationToken)
         {
             var request = new RestRequest(Method.POST)
             {
@@ -41,12 +42,12 @@ namespace ShowMustNotGoOn.MyShowsService
                 id = 1
             });
 
-            var responseResult = await ExecuteAsync<ResponseResult>(request);
+            var responseResult = await ExecuteAsync<ResponseResult>(request, cancellationToken);
 
             return _mapper.Map<List<Result>, IEnumerable<TvShow>>(responseResult.Result);
         }
 
-        public async Task<TvShow> GetTvShowAsync(int tvShowId)
+        public async Task<TvShow> GetTvShowAsync(int tvShowId, CancellationToken cancellationToken)
         {
             var request = new RestRequest(Method.POST)
             {
@@ -64,14 +65,14 @@ namespace ShowMustNotGoOn.MyShowsService
                 id = 1
             });
 
-            var responseResult = await ExecuteAsync<ResponseResult>(request);
+            var responseResult = await ExecuteAsync<ResponseResult>(request, cancellationToken);
 
             return _mapper.Map<Result, TvShow>(responseResult.Result.First());
         }
 
-        private async Task<T> ExecuteAsync<T>(IRestRequest request) where T : new()
+        private async Task<T> ExecuteAsync<T>(IRestRequest request, CancellationToken cancellationToken) where T : new()
         {
-            var response = await _client.ExecutePostAsync<T>(request);
+            var response = await _client.ExecutePostAsync<T>(request, cancellationToken);
 
             if (response.ErrorException == null)
             {

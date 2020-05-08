@@ -46,15 +46,16 @@ namespace ShowMustNotGoOn.Core.Contexts
             {
                 await foreach (var update in _incomingChannelReaderProvider.Reader.ReadAllAsync(cancellationToken))
                 {
-                    var requestContext = new UpdateContext(this, update);
+                    var updateContext = new UpdateContext(this, update);
                     await using var innerScope = _lifetimeScope.BeginLifetimeScope(
                         typeof(UpdateContext),
                         builder =>
                         {
-                            builder.RegisterInstance(requestContext);
+                            builder.RegisterInstance(updateContext).As<IUpdateContext>();
                         });
 
-                    await innerScope.Resolve<MessageHandler>().UpdateHandleAsync(cancellationToken);
+                    //await innerScope.Resolve<MessageHandler>().UpdateHandleAsync(cancellationToken);
+                    await innerScope.Resolve<IUpdateHandler>().Execute(cancellationToken);
                 }
             }
 

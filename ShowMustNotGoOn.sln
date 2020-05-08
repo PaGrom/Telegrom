@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShowMustNotGoOn.UsersServic
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShowMustNotGoOn.TvShowsService", "ShowMustNotGoOn.TvShowsService\ShowMustNotGoOn.TvShowsService.csproj", "{EA7B8576-111C-4111-AB38-94C7499D4BE9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShowMustNotGoOn.StateMachine", "ShowMustNotGoOn.StateMachine\ShowMustNotGoOn.StateMachine.csproj", "{CCC945E6-A5B7-44CD-A1FC-4FF6C06058B5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{EA7B8576-111C-4111-AB38-94C7499D4BE9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EA7B8576-111C-4111-AB38-94C7499D4BE9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EA7B8576-111C-4111-AB38-94C7499D4BE9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CCC945E6-A5B7-44CD-A1FC-4FF6C06058B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CCC945E6-A5B7-44CD-A1FC-4FF6C06058B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CCC945E6-A5B7-44CD-A1FC-4FF6C06058B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CCC945E6-A5B7-44CD-A1FC-4FF6C06058B5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

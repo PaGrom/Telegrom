@@ -48,5 +48,36 @@ namespace ShowMustNotGoOn.UsersService
 
             return identityUser;
         }
+
+        public async Task<string> GetOrSetDefaultCurrentStateAsync(User user, string defaultStateName, CancellationToken cancellationToken)
+        {
+            await using var context = new DatabaseContext.DatabaseContext(_dbContextOptions);
+
+            var identityUser = await context.IdentityUsers
+                .FindAsync(new object[] { user.Id }, cancellationToken);
+
+            if (identityUser.CurrentStateName == null)
+            {
+                identityUser.CurrentStateName = defaultStateName;
+
+                await context.SaveChangesAsync(cancellationToken);
+            }
+
+            user.CurrentStateName = identityUser.CurrentStateName;
+
+            return identityUser.CurrentStateName;
+        }
+
+        public async Task UpdateCurrentStateAsync(User user, string stateName, CancellationToken cancellationToken)
+        {
+            await using var context = new DatabaseContext.DatabaseContext(_dbContextOptions);
+
+            var identityUser = await context.IdentityUsers
+                .FindAsync(new object[] { user.Id }, cancellationToken);
+
+            identityUser.CurrentStateName = stateName;
+
+            await context.SaveChangesAsync(cancellationToken);
+        }
     }
 }

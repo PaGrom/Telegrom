@@ -9,6 +9,7 @@ namespace ShowMustNotGoOn.DatabaseContext.Model
         public string Username { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
+        public string CurrentStateName { get; set; }
         public byte[] RowVersion { get; set; }
     }
 }

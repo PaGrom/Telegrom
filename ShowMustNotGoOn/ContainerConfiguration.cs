@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Autofac;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,8 @@ using ShowMustNotGoOn.Core.Extensions;
 using ShowMustNotGoOn.Core.MessageBus;
 using ShowMustNotGoOn.Core.TelegramModel;
 using ShowMustNotGoOn.Settings;
+using ShowMustNotGoOn.StateMachine;
+using ShowMustNotGoOn.States;
 using ShowMustNotGoOn.TelegramService;
 using ShowMustNotGoOn.TvShowsService;
 using ShowMustNotGoOn.UsersService;
@@ -106,6 +109,20 @@ namespace ShowMustNotGoOn
 	            .As<IChannelReaderProvider<Request>>()
 	            .As<IChannelWriterProvider<Request>>()
 	            .InstancePerSession();
+
+            builder.RegisterModule<StateMachineModule>();
+
+            builder.RegisterType<StateMachineConfigurationProvider>()
+                .As<IStateMachineConfigurationProvider>()
+                .SingleInstance();
+
+            var states = Assembly.GetCallingAssembly().GetTypes()
+                .Where(type => !type.IsAbstract && typeof(IState).IsAssignableFrom(type));
+
+            foreach (var state in states)
+            {
+                builder.RegisterState(state);
+            }
 
             builder.RegisterType<Application>()
                 .AsSelf()

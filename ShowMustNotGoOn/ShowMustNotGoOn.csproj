@@ -18,6 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ShowMustNotGoOn.Core\ShowMustNotGoOn.Core.csproj" />
     <ProjectReference Include="..\ShowMustNotGoOn.DatabaseContext\ShowMustNotGoOn.DatabaseContext.csproj" />
+    <ProjectReference Include="..\ShowMustNotGoOn.StateMachine\ShowMustNotGoOn.StateMachine.csproj" />
     <ProjectReference Include="..\ShowMustNotGoOn.TelegramService\ShowMustNotGoOn.TelegramService.csproj" />
     <ProjectReference Include="..\ShowMustNotGoOn.TvShowsService\ShowMustNotGoOn.TvShowsService.csproj" />
     <ProjectReference Include="..\ShowMustNotGoOn.UsersService\ShowMustNotGoOn.UsersService.csproj" />

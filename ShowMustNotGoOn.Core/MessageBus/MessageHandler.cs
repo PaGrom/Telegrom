@@ -16,12 +16,12 @@ namespace ShowMustNotGoOn.Core.MessageBus
     {
 	    private const string NotFoundImage = "https://images-na.ssl-images-amazon.com/images/I/312yeogBelL._SX466_.jpg";
 
-        private readonly UpdateContext _updateContext;
+        private readonly IUpdateContext _updateContext;
         private readonly ITvShowsService _tvShowsService;
         private readonly DatabaseContext.DatabaseContext _databaseContext;
         private readonly ILogger<MessageHandler> _logger;
 
-        public MessageHandler(UpdateContext updateContext,
+        public MessageHandler(IUpdateContext updateContext,
             ITvShowsService tvShowsService,
             DatabaseContext.DatabaseContext databaseContext,
             ILogger<MessageHandler> logger)
@@ -36,8 +36,6 @@ namespace ShowMustNotGoOn.Core.MessageBus
         {
             try
             {
-                await using var transaction = await _databaseContext.Database.BeginTransactionAsync(cancellationToken);
-
                 switch (_updateContext.Update)
                 {
                     case Message message:
@@ -47,8 +45,6 @@ namespace ShowMustNotGoOn.Core.MessageBus
                         await HandleCallbackAsync(callbackQuery, cancellationToken);
                         break;
                 }
-
-                await transaction.CommitAsync(cancellationToken);
             }
             catch (Exception ex)
             {
