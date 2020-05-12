@@ -10,14 +10,14 @@ namespace ShowMustNotGoOn.Core.TelegramModel
         /// <summary>
         /// Array of <see cref="T:ShowMustNotGoOn.Core.TelegramModel.InlineKeyboardButton" /> rows, each represented by an Array of <see cref="T:ShowMustNotGoOn.Core.TelegramModel.InlineKeyboardButton" />.
         /// </summary>
-        public IEnumerable<IEnumerable<InlineKeyboardButton>> InlineKeyboard { get; }
+        public List<List<InlineKeyboardButton>> InlineKeyboard { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="T:ShowMustNotGoOn.Core.TelegramModel.InlineKeyboardMarkup" /> class with only one keyboard button
         /// </summary>
         /// <param name="inlineKeyboardButton">Keyboard button</param>
         public InlineKeyboardMarkup(InlineKeyboardButton inlineKeyboardButton)
-            : this(new InlineKeyboardButton[1]
+            : this(new List<InlineKeyboardButton>
             {
                 inlineKeyboardButton
             })
@@ -29,10 +29,10 @@ namespace ShowMustNotGoOn.Core.TelegramModel
         /// </summary>
         /// <param name="inlineKeyboardRow">The inline keyboard row</param>
         public InlineKeyboardMarkup(
-            IEnumerable<InlineKeyboardButton> inlineKeyboardRow)
+            List<InlineKeyboardButton> inlineKeyboardRow)
         {
-            this.InlineKeyboard =
-                new IEnumerable<InlineKeyboardButton>[1]
+            InlineKeyboard =
+                new List<List<InlineKeyboardButton>>
                 {
                     inlineKeyboardRow
                 };
@@ -43,16 +43,25 @@ namespace ShowMustNotGoOn.Core.TelegramModel
         /// </summary>
         /// <param name="inlineKeyboard">The inline keyboard.</param>
         public InlineKeyboardMarkup(
-            IEnumerable<IEnumerable<InlineKeyboardButton>> inlineKeyboard)
+            List<List<InlineKeyboardButton>> inlineKeyboard)
         {
-            this.InlineKeyboard = inlineKeyboard;
+            InlineKeyboard = inlineKeyboard;
         }
 
         /// <summary>Generate an empty inline keyboard markup</summary>
         /// <returns>Empty inline keyboard markup</returns>
         public static InlineKeyboardMarkup Empty()
         {
-            return new InlineKeyboardMarkup(new InlineKeyboardButton[0][]);
+            return new InlineKeyboardMarkup(new List<List<InlineKeyboardButton>>());
+        }
+
+        /// <summary>
+        /// Add new buttons row to the end of keyboard
+        /// </summary>
+        /// <param name="buttonsRow"></param>
+        public void AddRow(List<InlineKeyboardButton> buttonsRow)
+        {
+            InlineKeyboard.Add(buttonsRow);
         }
     }
 }

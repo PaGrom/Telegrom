@@ -1,4 +1,6 @@
-﻿using ShowMustNotGoOn.Core.Contexts;
+﻿using System;
+using System.Collections.Generic;
+using ShowMustNotGoOn.Core.Contexts;
 
 namespace ShowMustNotGoOn.StateMachine
 {
@@ -6,8 +8,10 @@ namespace ShowMustNotGoOn.StateMachine
     {
         public IUpdateContext UpdateContext { get; }
         public IStateMachineContext StateMachineContext { get; }
+        public Dictionary<Type, object> Objects { get; } = new Dictionary<Type, object>();
 
-        public StateContext(IUpdateContext updateContext, IStateMachineContext stateMachineContext)
+        public StateContext(IUpdateContext updateContext,
+            IStateMachineContext stateMachineContext)
         {
             UpdateContext = updateContext;
             StateMachineContext = stateMachineContext;

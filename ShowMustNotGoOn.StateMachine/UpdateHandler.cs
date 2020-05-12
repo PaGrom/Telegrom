@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
+using Microsoft.Extensions.Logging;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.Contexts;
 
@@ -13,25 +14,30 @@ namespace ShowMustNotGoOn.StateMachine
         private readonly IStateMachineConfigurationProvider _configurationProvider;
         private readonly IUsersService _usersService;
         private readonly IStateMachineContext _stateMachineContext;
+        private readonly ILogger<UpdateHandler> _logger;
 
         public UpdateHandler(
             ILifetimeScope lifetimeScope,
             IUpdateContext updateContext,
             IStateMachineConfigurationProvider configurationProvider,
             IUsersService usersService,
-            IStateMachineContext stateMachineContext)
+            IStateMachineContext stateMachineContext,
+            ILogger<UpdateHandler> logger)
         {
             _lifetimeScope = lifetimeScope;
             _updateContext = updateContext;
             _configurationProvider = configurationProvider;
             _usersService = usersService;
             _stateMachineContext = stateMachineContext;
+            _logger = logger;
         }
 
         public async Task Execute(CancellationToken cancellationToken)
         {
             var stateName = await _usersService.GetOrSetDefaultCurrentStateAsync(_updateContext.SessionContext.User,
                 _configurationProvider.InitialState.Name, cancellationToken);
+
+            _logger.LogInformation($"Current state {stateName}");
 
             var state = _lifetimeScope.ResolveNamed<IState>(stateName);
             await state.Handle(cancellationToken);
@@ -45,6 +51,7 @@ namespace ShowMustNotGoOn.StateMachine
             {
                 await state.OnExit(cancellationToken);
                 stateName = _stateMachineContext.NextState.Name;
+                _logger.LogInformation($"Next state is {stateName}");
                 await _usersService.UpdateCurrentStateAsync(_updateContext.SessionContext.User, stateName, cancellationToken);
                 state = _lifetimeScope.ResolveNamed<IState>(stateName);
                 _stateMachineContext.Reset();
