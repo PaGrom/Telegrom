@@ -1,29 +1,22 @@
-﻿using System;
-
-namespace ShowMustNotGoOn.StateMachine
+﻿namespace ShowMustNotGoOn.StateMachine
 {
     internal class StateMachineContext : IStateMachineContext
     {
         public StateMachineContext()
         {
-            NextState = null;
+            NextStateName = null;
         }
 
-        public Type NextState { get; private set; }
+        public string NextStateName { get; private set; }
 
-        public void MoveTo<T>() where T : IState
+        public void MoveTo(string stateName)
         {
-            NextState = typeof(T);
-        }
-
-        public void MoveTo(Type type)
-        {
-            NextState = type;
+            NextStateName = stateName;
         }
 
         public void Reset()
         {
-            NextState = null;
+            NextStateName = null;
         }
     }
 }

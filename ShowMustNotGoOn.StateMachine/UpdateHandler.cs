@@ -35,22 +35,22 @@ namespace ShowMustNotGoOn.StateMachine
         public async Task Execute(CancellationToken cancellationToken)
         {
             var stateName = await _usersService.GetOrSetDefaultCurrentStateAsync(_updateContext.SessionContext.User,
-                _configurationProvider.InitialState.Name, cancellationToken);
+                _configurationProvider.InitialStateName, cancellationToken);
 
             _logger.LogInformation($"Current state {stateName}");
 
             var state = _lifetimeScope.ResolveNamed<IState>(stateName);
             await state.Handle(cancellationToken);
 
-            if (_stateMachineContext.NextState == null)
+            if (_stateMachineContext.NextStateName == null)
             {
                 return;
             }
 
-            while (_stateMachineContext.NextState != null)
+            while (_stateMachineContext.NextStateName != null)
             {
                 await state.OnExit(cancellationToken);
-                stateName = _stateMachineContext.NextState.Name;
+                stateName = _stateMachineContext.NextStateName;
                 _logger.LogInformation($"Next state is {stateName}");
                 await _usersService.UpdateCurrentStateAsync(_updateContext.SessionContext.User, stateName, cancellationToken);
                 state = _lifetimeScope.ResolveNamed<IState>(stateName);

@@ -2,7 +2,7 @@ using ShowMustNotGoOn.StateMachine;
 
 namespace ShowMustNotGoOn.States
 {
-    internal class SendWelcomeMessage : SendMessageAndThen<HandleUpdate>
+    internal class SendWelcomeMessage : SendMessage
     {
         public SendWelcomeMessage(IStateContext stateContext) : base(stateContext, "Привет!") { }
     }

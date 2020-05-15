@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -112,10 +113,6 @@ namespace ShowMustNotGoOn
 
             builder.RegisterModule<StateMachineModule>();
 
-            builder.RegisterType<StateMachineConfigurationProvider>()
-                .As<IStateMachineConfigurationProvider>()
-                .SingleInstance();
-
             var states = Assembly.GetCallingAssembly().GetTypes()
                 .Where(type => !type.IsAbstract && typeof(IState).IsAssignableFrom(type));
 
@@ -123,6 +120,18 @@ namespace ShowMustNotGoOn
             {
                 builder.RegisterState(state);
             }
+
+            var stateMachineBuilder = new StateMachineBuilder(builder);
+
+            stateMachineBuilder.AddInit<Start>()
+                .AddNextAfterHandle<SendWelcomeMessage>();
+
+            stateMachineBuilder.Build();
+
+            builder.RegisterType<StateMachineConfigurationProvider>()
+                .As<IStateMachineConfigurationProvider>()
+                .WithParameter(new TypedParameter(typeof(string), stateMachineBuilder.InitStateName))
+                .SingleInstance();
 
             builder.RegisterType<Application>()
                 .AsSelf()

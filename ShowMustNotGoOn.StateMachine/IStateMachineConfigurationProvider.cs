@@ -4,6 +4,6 @@ namespace ShowMustNotGoOn.StateMachine
 {
     public interface IStateMachineConfigurationProvider
     {
-        Type InitialState { get; }
+        string InitialStateName { get; }
     }
 }

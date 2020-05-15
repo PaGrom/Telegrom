@@ -10,9 +10,9 @@ namespace ShowMustNotGoOn.StateMachine
             return Task.CompletedTask;
         }
 
-        Task Handle(CancellationToken cancellationToken)
+        Task<bool> Handle(CancellationToken cancellationToken)
         {
-            return Task.CompletedTask;
+            return Task.FromResult(true);
         }
 
         Task OnExit(CancellationToken cancellationToken)

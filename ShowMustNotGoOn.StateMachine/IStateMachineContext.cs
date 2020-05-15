@@ -4,9 +4,8 @@ namespace ShowMustNotGoOn.StateMachine
 {
     public interface IStateMachineContext
     {
-        Type NextState { get; }
-        void MoveTo<T>() where T : IState;
-        void MoveTo(Type type);
+        string NextStateName { get; }
+        void MoveTo(string stateName);
         void Reset();
     }
 }

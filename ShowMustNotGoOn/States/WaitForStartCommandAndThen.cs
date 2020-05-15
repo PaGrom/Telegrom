@@ -32,7 +32,7 @@ namespace ShowMustNotGoOn.States
                 return Task.CompletedTask;
             }
 
-            _stateContext.StateMachineContext.MoveTo<TNext>();
+            //_stateContext.StateMachineContext.MoveTo<TNext>();
             return Task.CompletedTask;
         }
     }

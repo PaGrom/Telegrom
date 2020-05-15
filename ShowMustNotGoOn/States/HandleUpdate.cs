@@ -41,7 +41,7 @@ namespace ShowMustNotGoOn.States
             {
                 if (condition.Invoke())
                 {
-                    _stateContext.StateMachineContext.MoveTo(type);
+                    //_stateContext.StateMachineContext.MoveTo(type);
                     break;
                 }
             }
@@ -67,7 +67,7 @@ namespace ShowMustNotGoOn.States
             {
                 if (await condition.Invoke(cancellationToken))
                 {
-                    _stateContext.StateMachineContext.MoveTo(type);
+                    //_stateContext.StateMachineContext.MoveTo(type);
                     break;
                 }
             }
@@ -89,7 +89,7 @@ namespace ShowMustNotGoOn.States
         public async Task OnEnter(CancellationToken cancellationToken)
         {
             await _action(cancellationToken);
-            _stateContext.StateMachineContext.MoveTo<TNext>();
+            //_stateContext.StateMachineContext.MoveTo<TNext>();
         }
     }
 
@@ -106,7 +106,7 @@ namespace ShowMustNotGoOn.States
         }
     }
 
-    internal sealed class SendCantFindTvShowMessage : SendMessageAndThen<HandleUpdate>
+    internal sealed class SendCantFindTvShowMessage : SendMessage
     {
         public SendCantFindTvShowMessage(IStateContext stateContext) : base(stateContext, "Can't find tv show for you")
         {
@@ -201,7 +201,7 @@ namespace ShowMustNotGoOn.States
 
     internal sealed class GenerateKeyboardMarkup : DoActionAndThen<GenerateNavigationButtons>
     {
-        public GenerateKeyboardMarkup(StateContext stateContext) : base(stateContext,
+        public GenerateKeyboardMarkup(IStateContext stateContext) : base(stateContext,
             ct => Task.CompletedTask)
         {
         }
@@ -209,7 +209,7 @@ namespace ShowMustNotGoOn.States
 
     internal sealed class GenerateNavigationButtons : DoActionAndThen<GenerateSubscriptionsButtons>
     {
-        public GenerateNavigationButtons(StateContext stateContext, DatabaseContext.DatabaseContext databaseContext) : base(stateContext,
+        public GenerateNavigationButtons(IStateContext stateContext, DatabaseContext.DatabaseContext databaseContext) : base(stateContext,
             async ct =>
             {
                 var message = (BotMessage)stateContext.Objects[typeof(BotMessage)];
@@ -251,7 +251,7 @@ namespace ShowMustNotGoOn.States
 
     internal sealed class GenerateSubscriptionsButtons : DoActionAndThen<SendSendPhotoRequest>
     {
-        public GenerateSubscriptionsButtons(StateContext stateContext, DatabaseContext.DatabaseContext databaseContext, ITvShowsService tvShowsService) : base(stateContext,
+        public GenerateSubscriptionsButtons(IStateContext stateContext, DatabaseContext.DatabaseContext databaseContext, ITvShowsService tvShowsService) : base(stateContext,
             async ct =>
             {
                 var message = (BotMessage)stateContext.Objects[typeof(BotMessage)];
@@ -296,7 +296,7 @@ namespace ShowMustNotGoOn.States
 
     internal sealed class SendSendPhotoRequest : DoActionAndThen<HandleUpdate>
     {
-        public SendSendPhotoRequest(StateContext stateContext) : base(stateContext,
+        public SendSendPhotoRequest(IStateContext stateContext) : base(stateContext,
             async ct =>
             {
                 var request = (SendPhotoRequest)stateContext.Objects[typeof(SendPhotoRequest)];

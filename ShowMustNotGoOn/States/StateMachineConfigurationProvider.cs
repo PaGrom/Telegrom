@@ -5,6 +5,11 @@ namespace ShowMustNotGoOn.States
 {
     internal class StateMachineConfigurationProvider : IStateMachineConfigurationProvider
     {
-        public Type InitialState => typeof(Start);
+        public string InitialStateName { get; }
+
+        public StateMachineConfigurationProvider(string initialStateName)
+        {
+            InitialStateName = initialStateName;
+        }
     }
 }
