@@ -39,7 +39,19 @@ namespace ShowMustNotGoOn.StateMachine
 
             _logger.LogInformation($"Current state {stateName}");
 
-            var state = _lifetimeScope.ResolveNamed<IState>(stateName);
+            IState state;
+
+            try
+            {
+                state = _lifetimeScope.ResolveNamed<IState>(stateName);
+            }
+            catch
+            {
+                _logger.LogError($"State {stateName} doesn't exists. Set default state: {_configurationProvider.DefaultStateName}");
+                stateName = _configurationProvider.DefaultStateName;
+                state = _lifetimeScope.ResolveNamed<IState>(stateName);
+            }
+
             await state.Handle(cancellationToken);
 
             if (_stateMachineContext.NextStateName == null)

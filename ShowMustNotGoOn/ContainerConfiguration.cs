@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -14,6 +13,7 @@ using ShowMustNotGoOn.Core.MessageBus;
 using ShowMustNotGoOn.Core.TelegramModel;
 using ShowMustNotGoOn.Settings;
 using ShowMustNotGoOn.StateMachine;
+using ShowMustNotGoOn.StateMachine.Builder;
 using ShowMustNotGoOn.States;
 using ShowMustNotGoOn.TelegramService;
 using ShowMustNotGoOn.TvShowsService;
@@ -123,15 +123,16 @@ namespace ShowMustNotGoOn
 
             var stateMachineBuilder = new StateMachineBuilder(builder);
 
-            stateMachineBuilder.AddInit<Start>()
-                .AddNextAfterHandle<SendWelcomeMessage>();
+            var initStateNode = stateMachineBuilder.AddInit<Start>();
+            initStateNode.AddNext<SendWelcomeMessage>(NextStateType.AfterHandle)
+                .AddNext(initStateNode, NextStateType.AfterOnEnter);
+
+            stateMachineBuilder.SetDefaultStateNode(initStateNode);
 
             stateMachineBuilder.Build();
 
-            builder.RegisterType<StateMachineConfigurationProvider>()
-                .As<IStateMachineConfigurationProvider>()
-                .WithParameter(new TypedParameter(typeof(string), stateMachineBuilder.InitStateName))
-                .SingleInstance();
+            builder.RegisterInstance(new StateMachineConfigurationProvider(stateMachineBuilder.InitStateName, stateMachineBuilder.DefaultStateName))
+                .As<IStateMachineConfigurationProvider>();
 
             builder.RegisterType<Application>()
                 .AsSelf()
