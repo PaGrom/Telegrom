@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
 using Autofac.Core;
+using ShowMustNotGoOn.Core.Extensions;
 
 namespace ShowMustNotGoOn.StateMachine
 {
@@ -18,7 +19,7 @@ namespace ShowMustNotGoOn.StateMachine
             _builder = builder;
         }
 
-        public IStateNode AddInit<TInit>() where TInit: IState
+        public IStateNode AddInit<TInit>() where TInit: StateBase
         {
             _initStateNode = new StateNode(typeof(TInit));
 
@@ -35,13 +36,20 @@ namespace ShowMustNotGoOn.StateMachine
     {
         string GeneratedTypeName { get; }
 
-        IStateNode AddNextAfterOnEnter<TOnEnter>() where TOnEnter : IState;
-        IStateNode AddNextAfterHandle<THandle>() where THandle : IState;
-        IStateNode AddNextAfterOnExit<TOnExit>() where TOnExit : IState;
+        IStateNode AddNextAfterOnEnter<TOnEnter>() where TOnEnter : StateBase;
+        IStateNode AddNextAfterHandle<THandle>() where THandle : StateBase;
+        IStateNode AddNextAfterOnExit<TOnExit>() where TOnExit : StateBase;
 
         IStateNode AddNextAfterOnEnter(IStateNode stateNode);
         IStateNode AddNextAfterHandle(IStateNode stateNode);
         IStateNode AddNextAfterOnExit(IStateNode stateNode);
+    }
+
+    public enum NextStateType
+    {
+        AfterOnEnter,
+        AfterHandle,
+        AfterOnExit
     }
 
     public sealed class StateNode: IStateNode
@@ -49,40 +57,50 @@ namespace ShowMustNotGoOn.StateMachine
         public Type StateType { get; }
         public string GeneratedTypeName { get; private set; }
 
-        public StateNode NextAfterOnEnter { get; private set; }
-        public StateNode NextAfterHandle { get; private set; }
-        public StateNode NextAfterOnExit { get; private set; }
+        public StateNode NextStateNode { get; private set; }
+
+        public NextStateType? NextStateType { get; private set; }
 
         public StateNode(Type stateType)
         {
             StateType = stateType;
         }
 
-        public IStateNode AddNextAfterOnEnter<TOnEnter>() where TOnEnter : IState
-            => NextAfterOnEnter = new StateNode(typeof(TOnEnter));
+        public IStateNode AddNextAfterOnEnter<TOnEnter>() where TOnEnter : StateBase
+        {
+            NextStateType = StateMachine.NextStateType.AfterOnEnter;
+            return NextStateNode = new StateNode(typeof(TOnEnter));
+        }
 
-        public IStateNode AddNextAfterHandle<THandle>() where THandle : IState
-            => NextAfterOnEnter == null
-                ? NextAfterHandle = new StateNode(typeof(THandle))
-                : null;
+        public IStateNode AddNextAfterHandle<THandle>() where THandle : StateBase
+        {
+            NextStateType = StateMachine.NextStateType.AfterHandle;
+            return NextStateNode = new StateNode(typeof(THandle));
+        }
 
-        public IStateNode AddNextAfterOnExit<TOnExit>() where TOnExit : IState
-            => NextAfterOnEnter == null && NextAfterHandle == null
-                ? NextAfterOnExit = new StateNode(typeof(TOnExit))
-                : null;
+        public IStateNode AddNextAfterOnExit<TOnExit>() where TOnExit : StateBase
+        {
+            NextStateType = StateMachine.NextStateType.AfterOnExit;
+            return NextStateNode = new StateNode(typeof(TOnExit));
+        }
 
         public IStateNode AddNextAfterOnEnter(IStateNode stateNode)
-            => NextAfterOnEnter = (StateNode)stateNode;
+        {
+            NextStateType = StateMachine.NextStateType.AfterOnEnter;
+            return NextStateNode = (StateNode)stateNode;
+        }
 
         public IStateNode AddNextAfterHandle(IStateNode stateNode)
-            => NextAfterOnEnter == null
-                ? NextAfterHandle = (StateNode)stateNode
-                : null;
+        {
+            NextStateType = StateMachine.NextStateType.AfterHandle;
+            return NextStateNode = (StateNode)stateNode;
+        }
 
         public IStateNode AddNextAfterOnExit(IStateNode stateNode)
-            => NextAfterOnEnter == null && NextAfterHandle == null
-                ? NextAfterOnExit = (StateNode)stateNode
-                : null;
+        {
+            NextStateType = StateMachine.NextStateType.AfterOnExit;
+            return NextStateNode = (StateNode)stateNode;
+        }
 
         public void RegisterChildren(ContainerBuilder containerBuilder)
         {
@@ -91,28 +109,20 @@ namespace ShowMustNotGoOn.StateMachine
                 return;
             }
 
-            if (NextAfterOnEnter != null)
+            var typeToGenerate = NextStateType switch
             {
-                RegisterType(containerBuilder, typeof(GeneratedStateOnEnter), NextAfterOnEnter.StateType.Name);
-                NextAfterOnEnter.RegisterChildren(containerBuilder);
-                return;
-            }
+                StateMachine.NextStateType.AfterOnEnter => typeof(GeneratedStateOnEnter),
+                StateMachine.NextStateType.AfterHandle => typeof(GeneratedStateHandle),
+                StateMachine.NextStateType.AfterOnExit => typeof(GeneratedStateOnExit),
+                null => typeof(GeneratedStateOnEnter),
+                _ => throw new ArgumentOutOfRangeException()
+            };
 
-            if (NextAfterHandle != null)
-            {
-                RegisterType(containerBuilder, typeof(GeneratedStateHandle), NextAfterHandle.StateType.Name);
-                NextAfterHandle.RegisterChildren(containerBuilder);
-                return;
-            }
+            var nextStateTypeName = NextStateNode?.StateType?.Name ?? "null";
 
-            if (NextAfterOnExit != null)
-            {
-                RegisterType(containerBuilder, typeof(GeneratedStateOnExit), NextAfterOnExit.StateType.Name);
-                NextAfterOnExit.RegisterChildren(containerBuilder);
-                return;
-            }
+            RegisterType(containerBuilder, typeToGenerate, nextStateTypeName);
 
-            RegisterType(containerBuilder, typeof(GeneratedStateOnEnter), "null");
+            NextStateNode?.RegisterChildren(containerBuilder);
         }
 
         private void RegisterType(ContainerBuilder containerBuilder, Type generatedType, string nextTypeName)
@@ -124,93 +134,97 @@ namespace ShowMustNotGoOn.StateMachine
                         (pi, ctx) => pi.ParameterType.IsAssignableFrom(typeof(IState)),
                         (pi, ctx) => ctx.ResolveNamed<IState>(StateType.Name)))
                 .WithParameter(new TypedParameter(typeof(StateNode), this))
-                .Named<IState>(GeneratedTypeName);
+                .Named<IState>(GeneratedTypeName)
+                .InstancePerUpdate();
         }
 
         //public IStateNode AddNextAfterOnEnter<TOnEnterIfTrue, TOnEnterIfFalse>(Func<CancellationToken, Task<bool>> condition)
-        //    where TOnEnterIfTrue : IState
-        //    where TOnEnterIfFalse: IState
+        //    where TOnEnterIfTrue : StateBase
+        //    where TOnEnterIfFalse: StateBase
         //    => NextAfterOnEnter = new StateNode(typeof(TOnEnter));
     }
 
-    public sealed class GeneratedStateOnEnter: IState
+    public abstract class GeneratedState : StateBase
     {
-        private readonly IState _current;
-        private readonly StateNode _stateNode;
-        private readonly IStateContext _stateContext;
+        protected readonly IState Current;
+        protected readonly StateNode StateNode;
+        protected readonly IStateContext StateContext;
 
-        public GeneratedStateOnEnter(IState current, StateNode stateNode, IStateContext stateContext)
+        protected GeneratedState(IState current, StateNode stateNode, IStateContext stateContext)
         {
-            _current = current;
-            _stateNode = stateNode;
-            _stateContext = stateContext;
+            Current = current;
+            StateNode = stateNode;
+            StateContext = stateContext;
         }
 
-        public async Task OnEnter(CancellationToken cancellationToken)
+        protected void MoveNext()
         {
-            await _current.OnEnter(cancellationToken);
-
-            if (_stateNode.NextAfterOnEnter != null)
+            if (StateNode.NextStateNode != null)
             {
-                var nextStateName = _stateNode.NextAfterOnEnter.GeneratedTypeName;
-                _stateContext.StateMachineContext.MoveTo(nextStateName);
+                var nextStateName = StateNode.NextStateNode.GeneratedTypeName;
+                StateContext.StateMachineContext.MoveTo(nextStateName);
+            }
+            else
+            {
+                StateContext.StateMachineContext.Reset();
             }
         }
     }
 
-    public sealed class GeneratedStateHandle : IState
+    public sealed class GeneratedStateOnEnter: GeneratedState
     {
-        private readonly IState _current;
-        private readonly StateNode _stateNode;
-        private readonly IStateContext _stateContext;
-
-        public GeneratedStateHandle(IState current, StateNode stateNode, IStateContext stateContext)
+        public GeneratedStateOnEnter(IState current, StateNode stateNode, IStateContext stateContext)
+            : base(current, stateNode, stateContext)
         {
-            _current = current;
-            _stateNode = stateNode;
-            _stateContext = stateContext;
         }
 
-        public async Task<bool> Handle(CancellationToken cancellationToken)
+        public override async Task<bool> OnEnter(CancellationToken cancellationToken)
         {
-            var handled = await _current.Handle(cancellationToken);
-            if (!handled)
+            if (!await Current.OnEnter(cancellationToken))
             {
                 return false;
             }
 
-            if (_stateNode.NextAfterHandle != null)
-            {
-                var nextStateName = _stateNode.NextAfterHandle.GeneratedTypeName;
-                _stateContext.StateMachineContext.MoveTo(nextStateName);
-            }
-
+            MoveNext();
             return true;
         }
     }
 
-    public sealed class GeneratedStateOnExit : IState
+    public sealed class GeneratedStateHandle : GeneratedState
     {
-        private readonly IState _current;
-        private readonly StateNode _stateNode;
-        private readonly IStateContext _stateContext;
-
-        public GeneratedStateOnExit(IState current, StateNode stateNode, IStateContext stateContext)
+        public GeneratedStateHandle(IState current, StateNode stateNode, IStateContext stateContext)
+            : base(current, stateNode, stateContext)
         {
-            _current = current;
-            _stateNode = stateNode;
-            _stateContext = stateContext;
         }
 
-        public async Task OnExit(CancellationToken cancellationToken)
+        public override async Task<bool> Handle(CancellationToken cancellationToken)
         {
-            await _current.OnExit(cancellationToken);
-
-            if (_stateNode.NextAfterOnExit != null)
+            if (!await Current.Handle(cancellationToken))
             {
-                var nextStateName = _stateNode.NextAfterOnExit.GeneratedTypeName;
-                _stateContext.StateMachineContext.MoveTo(nextStateName);
+                return false;
             }
+
+            MoveNext();
+            return true;
+        }
+    }
+
+    public sealed class GeneratedStateOnExit : GeneratedState
+    {
+        public GeneratedStateOnExit(IState current, StateNode stateNode, IStateContext stateContext)
+            : base(current, stateNode, stateContext)
+        {
+        }
+
+        public override async Task<bool> OnExit(CancellationToken cancellationToken)
+        {
+            if (!await Current.OnExit(cancellationToken))
+            {
+                return false;
+            }
+
+            MoveNext();
+            return true;
         }
     }
 }

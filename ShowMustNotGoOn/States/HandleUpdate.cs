@@ -24,7 +24,7 @@ namespace ShowMustNotGoOn.States
         }
     }
 
-    internal abstract class ChooseHandleState : IState
+    internal abstract class ChooseHandleState : StateBase
     {
         private readonly IStateContext _stateContext;
         private readonly IEnumerable<(Func<bool> condition, Type type)> _conditions;
@@ -50,7 +50,7 @@ namespace ShowMustNotGoOn.States
         }
     }
 
-    internal abstract class ChooseState : IState
+    internal abstract class ChooseState : StateBase
     {
         private readonly IStateContext _stateContext;
         private readonly IEnumerable<(Func<CancellationToken, Task<bool>> condition, Type type)> _conditions;
@@ -74,8 +74,8 @@ namespace ShowMustNotGoOn.States
         }
     }
 
-    public abstract class DoActionAndThen<TNext> : IState
-        where TNext : IState
+    public abstract class DoActionAndThen<TNext> : StateBase
+        where TNext : StateBase
     {
         private readonly IStateContext _stateContext;
         private readonly Func<CancellationToken, Task> _action;
@@ -307,5 +307,5 @@ namespace ShowMustNotGoOn.States
         }
     }
 
-    internal sealed class Finish : IState {}
+    internal sealed class Finish : StateBase {}
 }

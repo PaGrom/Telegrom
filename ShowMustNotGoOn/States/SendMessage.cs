@@ -5,7 +5,7 @@ using ShowMustNotGoOn.StateMachine;
 
 namespace ShowMustNotGoOn.States
 {
-    public abstract class SendMessage : IState
+    public abstract class SendMessage : StateBase
     {
         private readonly IStateContext _stateContext;
         private readonly string _message;
@@ -16,10 +16,11 @@ namespace ShowMustNotGoOn.States
             _message = message;
         }
 
-        public async Task OnEnter(CancellationToken cancellationToken)
+        public override async Task<bool> OnEnter(CancellationToken cancellationToken)
         {
             var request = new SendMessageRequest(_stateContext.UpdateContext.SessionContext.User.Id, _message);
             await _stateContext.UpdateContext.SessionContext.PostRequestAsync(request, cancellationToken);
+            return true;
         }
     }
 }

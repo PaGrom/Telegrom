@@ -6,7 +6,7 @@ using ShowMustNotGoOn.StateMachine;
 
 namespace ShowMustNotGoOn.States
 {
-    internal class Start : IState
+    internal class Start : StateBase
     {
         private const string Command = "/start";
 
@@ -17,7 +17,7 @@ namespace ShowMustNotGoOn.States
             _stateContext = stateContext;
         }
 
-        public Task<bool> Handle(CancellationToken cancellationToken)
+        public override Task<bool> Handle(CancellationToken cancellationToken)
         {
             if (!(_stateContext.UpdateContext.Update is Message message))
             {

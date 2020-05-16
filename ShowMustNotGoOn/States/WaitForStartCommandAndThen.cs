@@ -6,8 +6,8 @@ using ShowMustNotGoOn.StateMachine;
 
 namespace ShowMustNotGoOn.States
 {
-    public abstract class WaitForStartCommandAndThen<TNext> : IState
-        where TNext : IState
+    public abstract class WaitForStartCommandAndThen<TNext> : StateBase
+        where TNext : StateBase
     {
         private const string Command = "/start";
 
