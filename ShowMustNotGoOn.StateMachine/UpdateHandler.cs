@@ -52,6 +52,7 @@ namespace ShowMustNotGoOn.StateMachine
                 state = _lifetimeScope.ResolveNamed<IState>(stateName);
             }
 
+            await state.OnEnter(cancellationToken);
             await state.Handle(cancellationToken);
 
             if (_stateMachineContext.NextStateName == null)

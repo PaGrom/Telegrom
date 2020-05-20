@@ -1,4 +1,5 @@
-﻿using Autofac;
+﻿using System;
+using Autofac;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.Extensions;
 

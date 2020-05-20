@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Autofac;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,7 @@ using ShowMustNotGoOn.Core.Contexts;
 using ShowMustNotGoOn.Core.Extensions;
 using ShowMustNotGoOn.Core.MessageBus;
 using ShowMustNotGoOn.Core.TelegramModel;
+using ShowMustNotGoOn.DatabaseContext.Model;
 using ShowMustNotGoOn.Settings;
 using ShowMustNotGoOn.StateMachine;
 using ShowMustNotGoOn.StateMachine.Builder;
@@ -124,10 +126,52 @@ namespace ShowMustNotGoOn
             var stateMachineBuilder = new StateMachineBuilder(builder);
 
             var initStateNode = stateMachineBuilder.AddInit<Start>();
-            initStateNode.AddNext<SendWelcomeMessage>(NextStateType.AfterHandle)
-                .AddNext(initStateNode, NextStateType.AfterOnEnter);
+            
+            var defaultHandleState = initStateNode
+                .AddNext<SendWelcomeMessage>(NextStateType.AfterHandle)
+                .AddNext<HandleUpdate>(NextStateType.AfterOnEnter);
 
-            stateMachineBuilder.SetDefaultStateNode(initStateNode);
+            var handleMessageState = defaultHandleState
+                .AddNext(
+                    new ConditionalNextState(
+                        typeof(HandleMessage),
+                        NextStateType.AfterHandle,
+                        ctx => Task.FromResult(ctx.UpdateContext.Update is Message)),
+                    new ConditionalNextState(
+                        defaultHandleState,
+                        NextStateType.AfterHandle,
+                        ctx => Task.FromResult(true)))
+                .First();
+
+            var findTvShowsState = handleMessageState
+                .AddNext(
+                    new ConditionalNextState(
+                        typeof(HandleCommand),
+                        NextStateType.AfterOnEnter,
+                        ctx => Task.FromResult(((Message)ctx.UpdateContext.Update).IsCommand())),
+                    new ConditionalNextState(
+                        typeof(FindTvShows),
+                        NextStateType.AfterOnEnter,
+                        ctx => Task.FromResult(true)))
+                .Last();
+
+            findTvShowsState
+                .AddNext(
+                    new ConditionalNextState(
+                        defaultHandleState,
+                        NextStateType.AfterOnEnter,
+                        ctx =>
+                        {
+                            var (_, value) = ctx.Attributes[nameof(FindTvShows.TvShows)];
+                            var tvShows = (List<TvShow>)value;
+                            return Task.FromResult(tvShows.Any());
+                        }),
+                    new ConditionalNextState(
+                        defaultHandleState,
+                        NextStateType.AfterOnEnter,
+                        ctx => Task.FromResult(true)));
+
+            stateMachineBuilder.SetDefaultStateNode(defaultHandleState);
 
             stateMachineBuilder.Build();
 

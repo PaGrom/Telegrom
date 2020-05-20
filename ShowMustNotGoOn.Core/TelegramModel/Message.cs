@@ -14,5 +14,10 @@
         /// Optional. For text messages, the actual UTF-8 text of the message
         /// </summary>
         public string Text { get; set; }
+
+        /// <summary>
+        /// Is message is command
+        /// </summary>
+        public bool IsCommand() => Text.Trim().StartsWith("/");
     }
 }

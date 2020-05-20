@@ -17,6 +17,7 @@ namespace ShowMustNotGoOn.DatabaseContext
         public DbSet<BotMessage> BotMessages { get; set; }
         public DbSet<Callback> Callbacks { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
+        public DbSet<StateAttribute> StateAttributes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -87,6 +88,15 @@ namespace ShowMustNotGoOn.DatabaseContext
 
                 entity.Property(e => e.Id)
                     .ValueGeneratedOnAdd();
+            });
+
+            modelBuilder.Entity<StateAttribute>(entity =>
+            {
+                entity.HasKey(e => new { e.Id });
+
+                entity.HasOne<IdentityUser>()
+                    .WithMany()
+                    .HasForeignKey(c => c.UserId);
             });
         }
     }

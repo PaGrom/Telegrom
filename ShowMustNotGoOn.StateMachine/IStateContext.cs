@@ -8,6 +8,6 @@ namespace ShowMustNotGoOn.StateMachine
     {
         IUpdateContext UpdateContext { get; }
         IStateMachineContext StateMachineContext { get; }
-        Dictionary<Type, object> Objects { get; }
+        Dictionary<string, (Type type, object value)> Attributes { get; }
     }
 }
