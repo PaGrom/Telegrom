@@ -16,11 +16,10 @@ namespace ShowMustNotGoOn.States
             _message = message;
         }
 
-        public override async Task<bool> OnEnter(CancellationToken cancellationToken)
+        public override Task OnEnter(CancellationToken cancellationToken)
         {
             var request = new SendMessageRequest(_stateContext.UpdateContext.SessionContext.User.Id, _message);
-            await _stateContext.UpdateContext.SessionContext.PostRequestAsync(request, cancellationToken);
-            return true;
+            return _stateContext.UpdateContext.SessionContext.PostRequestAsync(request, cancellationToken);
         }
     }
 }

@@ -28,49 +28,33 @@ namespace ShowMustNotGoOn.StateMachine.Builder
             _databaseContext = databaseContext;
         }
 
-        public async Task<bool> OnEnter(CancellationToken cancellationToken)
+        public async Task OnEnter(CancellationToken cancellationToken)
         {
             await FillInputAttributesAsync(cancellationToken);
 
-            if (!await _current.OnEnter(cancellationToken))
-            {
-                return false;
-            }
+            await _current.OnEnter(cancellationToken);
 
             await PersistOutputStateAttributesAsync(cancellationToken);
 
             await MoveNextAsync(NextStateType.AfterOnEnter);
-            return true;
         }
 
-        public async Task<bool> Handle(CancellationToken cancellationToken)
+        public async Task Handle(CancellationToken cancellationToken)
         {
-            await FillInputAttributesAsync(cancellationToken);
-
-            if (!await _current.Handle(cancellationToken))
-            {
-                return false;
-            }
+            await _current.Handle(cancellationToken);
 
             await PersistOutputStateAttributesAsync(cancellationToken);
 
             await MoveNextAsync(NextStateType.AfterHandle);
-            return true;
         }
 
-        public async Task<bool> OnExit(CancellationToken cancellationToken)
+        public async Task OnExit(CancellationToken cancellationToken)
         {
-            await FillInputAttributesAsync(cancellationToken);
-
-            if (!await _current.OnExit(cancellationToken))
-            {
-                return false;
-            }
+            await _current.OnExit(cancellationToken);
 
             await PersistOutputStateAttributesAsync(cancellationToken);
 
             await MoveNextAsync(NextStateType.AfterOnExit);
-            return true;
         }
 
         private async Task MoveNextAsync(NextStateType nextStateType)

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -126,19 +127,32 @@ namespace ShowMustNotGoOn
             var stateMachineBuilder = new StateMachineBuilder(builder);
 
             var initStateNode = stateMachineBuilder.AddInit<Start>();
-            
-            var defaultHandleState = initStateNode
-                .AddNext<SendWelcomeMessage>(NextStateType.AfterHandle)
+
+            var sendWelcomeMessageState = initStateNode
+                .AddNext(
+                    new ConditionalNextState(
+                        typeof(SendWelcomeMessage),
+                        NextStateType.AfterHandle,
+                        ctx => Task.FromResult(ctx.UpdateContext.Update is Message message 
+                                               && message.IsCommand() 
+                                               && string.Equals(message.Text, "/start", StringComparison.InvariantCultureIgnoreCase))),
+                    new ConditionalNextState(
+                        initStateNode,
+                        NextStateType.AfterHandle,
+                        ctx => Task.FromResult(true)))
+                .First();
+
+            var defaultHandleUpdateState = sendWelcomeMessageState
                 .AddNext<HandleUpdate>(NextStateType.AfterOnEnter);
 
-            var handleMessageState = defaultHandleState
+            var handleMessageState = defaultHandleUpdateState
                 .AddNext(
                     new ConditionalNextState(
                         typeof(HandleMessage),
                         NextStateType.AfterHandle,
                         ctx => Task.FromResult(ctx.UpdateContext.Update is Message)),
                     new ConditionalNextState(
-                        defaultHandleState,
+                        defaultHandleUpdateState,
                         NextStateType.AfterHandle,
                         ctx => Task.FromResult(true)))
                 .First();
@@ -158,7 +172,7 @@ namespace ShowMustNotGoOn
             findTvShowsState
                 .AddNext(
                     new ConditionalNextState(
-                        defaultHandleState,
+                        defaultHandleUpdateState,
                         NextStateType.AfterOnEnter,
                         ctx =>
                         {
@@ -167,11 +181,11 @@ namespace ShowMustNotGoOn
                             return Task.FromResult(tvShows.Any());
                         }),
                     new ConditionalNextState(
-                        defaultHandleState,
+                        defaultHandleUpdateState,
                         NextStateType.AfterOnEnter,
                         ctx => Task.FromResult(true)));
 
-            stateMachineBuilder.SetDefaultStateNode(defaultHandleState);
+            stateMachineBuilder.SetDefaultStateNode(defaultHandleUpdateState);
 
             stateMachineBuilder.Build();
 

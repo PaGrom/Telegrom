@@ -24,11 +24,9 @@ namespace ShowMustNotGoOn.States
             _tvShowsService = tvShowsService;
         }
 
-        public override async Task<bool> OnEnter(CancellationToken cancellationToken)
+        public override async Task OnEnter(CancellationToken cancellationToken)
         {
             TvShows = (await _tvShowsService.SearchTvShowsAsync(((Message)_stateContext.UpdateContext.Update).Text.Trim(), cancellationToken)).ToList();
-
-            return true;
         }
     }
 }

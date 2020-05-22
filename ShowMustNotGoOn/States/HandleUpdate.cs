@@ -11,55 +11,55 @@ namespace ShowMustNotGoOn.States
     {
     }
 
-    internal abstract class ChooseState : StateBase
-    {
-        private readonly IStateContext _stateContext;
-        private readonly IEnumerable<(Func<CancellationToken, Task<bool>> condition, Type type)> _conditions;
+    //internal abstract class ChooseState : StateBase
+    //{
+    //    private readonly IStateContext _stateContext;
+    //    private readonly IEnumerable<(Func<CancellationToken, Task<bool>> condition, Type type)> _conditions;
 
-        public ChooseState(IStateContext stateContext, IEnumerable<(Func<CancellationToken, Task<bool>> condition, Type type)> conditions)
-        {
-            _stateContext = stateContext;
-            _conditions = conditions;
-        }
+    //    public ChooseState(IStateContext stateContext, IEnumerable<(Func<CancellationToken, Task<bool>> condition, Type type)> conditions)
+    //    {
+    //        _stateContext = stateContext;
+    //        _conditions = conditions;
+    //    }
 
-        public async Task OnEnter(CancellationToken cancellationToken)
-        {
-            foreach (var (condition, type) in _conditions)
-            {
-                if (await condition.Invoke(cancellationToken))
-                {
-                    //_stateContext.StateMachineContext.MoveTo(type);
-                    break;
-                }
-            }
-        }
-    }
+    //    public async Task OnEnter(CancellationToken cancellationToken)
+    //    {
+    //        foreach (var (condition, type) in _conditions)
+    //        {
+    //            if (await condition.Invoke(cancellationToken))
+    //            {
+    //                //_stateContext.StateMachineContext.MoveTo(type);
+    //                break;
+    //            }
+    //        }
+    //    }
+    //}
 
-    public abstract class DoActionAndThen<TNext> : StateBase
-        where TNext : StateBase
-    {
-        private readonly IStateContext _stateContext;
-        private readonly Func<CancellationToken, Task> _action;
+    //public abstract class DoActionAndThen<TNext> : StateBase
+    //    where TNext : StateBase
+    //{
+    //    private readonly IStateContext _stateContext;
+    //    private readonly Func<CancellationToken, Task> _action;
 
-        protected DoActionAndThen(IStateContext stateContext, Func<CancellationToken, Task> action)
-        {
-            _stateContext = stateContext;
-            _action = action;
-        }
+    //    protected DoActionAndThen(IStateContext stateContext, Func<CancellationToken, Task> action)
+    //    {
+    //        _stateContext = stateContext;
+    //        _action = action;
+    //    }
 
-        public async Task OnEnter(CancellationToken cancellationToken)
-        {
-            await _action(cancellationToken);
-            //_stateContext.StateMachineContext.MoveTo<TNext>();
-        }
-    }
+    //    public async Task OnEnter(CancellationToken cancellationToken)
+    //    {
+    //        await _action(cancellationToken);
+    //        //_stateContext.StateMachineContext.MoveTo<TNext>();
+    //    }
+    //}
 
-    internal sealed class SendCantFindTvShowMessage : SendMessage
-    {
-        public SendCantFindTvShowMessage(IStateContext stateContext) : base(stateContext, "Can't find tv show for you")
-        {
-        }
-    }
+    //internal sealed class SendCantFindTvShowMessage : SendMessage
+    //{
+    //    public SendCantFindTvShowMessage(IStateContext stateContext) : base(stateContext, "Can't find tv show for you")
+    //    {
+    //    }
+    //}
 
     //internal sealed class HandleTextMessage : ChooseState
     //{

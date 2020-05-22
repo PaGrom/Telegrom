@@ -5,8 +5,8 @@ namespace ShowMustNotGoOn.StateMachine
 {
     public interface IState
     {
-        Task<bool> OnEnter(CancellationToken cancellationToken);
-        Task<bool> Handle(CancellationToken cancellationToken);
-        Task<bool> OnExit(CancellationToken cancellationToken);
+        Task OnEnter(CancellationToken cancellationToken);
+        Task Handle(CancellationToken cancellationToken);
+        Task OnExit(CancellationToken cancellationToken);
     }
 }
