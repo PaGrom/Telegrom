@@ -128,62 +128,41 @@ namespace ShowMustNotGoOn
 
             var initStateNode = stateMachineBuilder.AddInit<Start>();
 
-            var sendWelcomeMessageState = initStateNode
-                .AddNext(
-                    new ConditionalNextState(
-                        typeof(SendWelcomeMessage),
-                        NextStateType.AfterHandle,
-                        ctx => Task.FromResult(ctx.UpdateContext.Update is Message message 
-                                               && message.IsCommand() 
-                                               && string.Equals(message.Text, "/start", StringComparison.InvariantCultureIgnoreCase))),
-                    new ConditionalNextState(
-                        initStateNode,
-                        NextStateType.AfterHandle,
-                        ctx => Task.FromResult(true)))
-                .First();
+            var (sendWelcomeMessageState, _) = initStateNode
+                .SetNext(
+                    NextStateKind.AfterHandle,
+                    ctx => Task.FromResult(ctx.UpdateContext.Update is Message message
+                                           && message.IsCommand()
+                                           && string.Equals(message.Text, "/start", StringComparison.InvariantCultureIgnoreCase)),
+                    typeof(SendWelcomeMessage),
+                    initStateNode);
 
             var defaultHandleUpdateState = sendWelcomeMessageState
-                .AddNext<HandleUpdate>(NextStateType.AfterOnEnter);
+                .SetNext<HandleUpdate>(NextStateKind.AfterOnEnter);
 
-            var handleMessageState = defaultHandleUpdateState
-                .AddNext(
-                    new ConditionalNextState(
-                        typeof(HandleMessage),
-                        NextStateType.AfterHandle,
-                        ctx => Task.FromResult(ctx.UpdateContext.Update is Message)),
-                    new ConditionalNextState(
-                        defaultHandleUpdateState,
-                        NextStateType.AfterHandle,
-                        ctx => Task.FromResult(true)))
-                .First();
+            var (handleMessageState, _) = defaultHandleUpdateState
+                .SetNext(
+                    NextStateKind.AfterHandle,
+                    ctx => Task.FromResult(ctx.UpdateContext.Update is Message),
+                    typeof(HandleMessage),
+                    defaultHandleUpdateState);
 
-            var findTvShowsState = handleMessageState
-                .AddNext(
-                    new ConditionalNextState(
-                        typeof(HandleCommand),
-                        NextStateType.AfterOnEnter,
-                        ctx => Task.FromResult(((Message)ctx.UpdateContext.Update).IsCommand())),
-                    new ConditionalNextState(
-                        typeof(FindTvShows),
-                        NextStateType.AfterOnEnter,
-                        ctx => Task.FromResult(true)))
-                .Last();
+            var (handleCommandState, findTvShowsState) = handleMessageState
+                .SetNext<HandleCommand, FindTvShows>(
+                    NextStateKind.AfterOnEnter,
+                    ctx => Task.FromResult(((Message) ctx.UpdateContext.Update).IsCommand()));
 
-            findTvShowsState
-                .AddNext(
-                    new ConditionalNextState(
-                        defaultHandleUpdateState,
-                        NextStateType.AfterOnEnter,
-                        ctx =>
-                        {
-                            var (_, value) = ctx.Attributes[nameof(FindTvShows.TvShows)];
-                            var tvShows = (List<TvShow>)value;
-                            return Task.FromResult(tvShows.Any());
-                        }),
-                    new ConditionalNextState(
-                        defaultHandleUpdateState,
-                        NextStateType.AfterOnEnter,
-                        ctx => Task.FromResult(true)));
+            var (_, _) = findTvShowsState
+                .SetNext(
+                    NextStateKind.AfterOnEnter,
+                    ctx =>
+                    {
+                        var (_, value) = ctx.Attributes[nameof(FindTvShows.TvShows)];
+                        var tvShows = (List<TvShow>) value;
+                        return Task.FromResult(tvShows.Any());
+                    },
+                    defaultHandleUpdateState,
+                    defaultHandleUpdateState);
 
             stateMachineBuilder.SetDefaultStateNode(defaultHandleUpdateState);
 

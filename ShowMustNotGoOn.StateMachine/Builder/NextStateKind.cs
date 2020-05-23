@@ -1,6 +1,6 @@
 ﻿namespace ShowMustNotGoOn.StateMachine.Builder
 {
-    public enum NextStateType
+    public enum NextStateKind
     {
         AfterOnEnter,
         AfterHandle,

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
 using Autofac.Core;
@@ -8,134 +6,129 @@ using ShowMustNotGoOn.Core.Extensions;
 
 namespace ShowMustNotGoOn.StateMachine.Builder
 {
-    internal sealed class StateNode: IStateNode
+    public sealed class StateNode
     {
-        public Type StateType { get; }
+        internal Type StateType { get; }
 
-        public string GeneratedTypeName { get; private set; }
+        internal string GeneratedTypeName { get; private set; }
 
-        public List<ConditionalNextStateNode> ConditionalNextStateNodes = new List<ConditionalNextStateNode>();
+        internal NextStateKind? NextStateKind { get; private set; }
 
-        public StateNode(Type stateType)
+        internal Func<IStateContext, Task<bool>> NextStateCondition { get; private set; }
+
+        internal StateNode NextStateNodeIfTrue { get; private set; }
+
+        internal StateNode NextStateNodeElse { get; private set; }
+
+        internal StateNode(Type stateType)
         {
             StateType = stateType;
         }
 
-        public IStateNode AddNext<T>(NextStateType nextStateType) where T : IState
+        public StateNode SetNext<T>(NextStateKind nextStateKind) where T : IState
         {
-            return AddNext(new ConditionalNextState(typeof(T), nextStateType, context => Task.FromResult(true))).Single();
+            NextStateKind = nextStateKind;
+            return NextStateNodeIfTrue = new StateNode(typeof(T));
         }
 
-        public IStateNode AddNext(Type nextState, NextStateType nextStateType)
+        public StateNode SetNext(NextStateKind nextStateKind, Type nextState)
         {
             if (!typeof(IState).IsAssignableFrom(nextState))
             {
                 throw new ArgumentException(nameof(nextState), $"Type must implement interface {nameof(IState)}");
             }
 
-            return AddNext(new ConditionalNextState(nextState, nextStateType, context => Task.FromResult(true))).Single();
+            NextStateKind = nextStateKind;
+            return NextStateNodeIfTrue = new StateNode(nextState);
         }
 
-        public IStateNode AddNext(IStateNode stateNode, NextStateType nextStateType)
+        public StateNode SetNext(NextStateKind nextStateKind, StateNode nextStateNode)
         {
-            return AddNext(new ConditionalNextState(stateNode, nextStateType, context => Task.FromResult(true))).Single();
+            NextStateKind = nextStateKind;
+            return NextStateNodeIfTrue = nextStateNode;
         }
 
-        public ICollection<IStateNode> AddNext(params ConditionalNextState[] conditionalNextStates)
+        public (StateNode IfTrueState, StateNode ElseState) SetNext(NextStateKind nextStateKind, Func<IStateContext, Task<bool>> condition, Type ifTrue, Type @else)
         {
-            if (conditionalNextStates.Length == 0)
+            if (!typeof(IState).IsAssignableFrom(ifTrue))
             {
-                throw new ArgumentOutOfRangeException(nameof(conditionalNextStates),
-                    "There must be at least one conditional next state");
+                throw new ArgumentException(nameof(ifTrue), $"Type must implement interface {nameof(IState)}");
             }
 
-            foreach (var conditionalNextState in conditionalNextStates)
+            if (!typeof(IState).IsAssignableFrom(@else))
             {
-                StateNode nextStateNode = null;
-                if (conditionalNextState.NextState != null)
-                {
-                    nextStateNode = new StateNode(conditionalNextState.NextState);
-                }
-
-                if (conditionalNextState.NextStateNode != null)
-                {
-                    nextStateNode = (StateNode)conditionalNextState.NextStateNode;
-                }
-
-                var conditionalNextStateNode = new ConditionalNextStateNode
-                {
-                    NextStateNode = nextStateNode,
-                    NextStateType = conditionalNextState.NextStateType,
-                    Condition = conditionalNextState.Condition
-                };
-
-                ConditionalNextStateNodes.Add(conditionalNextStateNode);
+                throw new ArgumentException(nameof(@else), $"Type must implement interface {nameof(IState)}");
             }
 
-            return ConditionalNextStateNodes.Select(n => (IStateNode)n.NextStateNode).ToList();
+            NextStateKind = nextStateKind;
+            NextStateCondition = condition;
+            NextStateNodeIfTrue = new StateNode(ifTrue);
+            NextStateNodeElse = new StateNode(@else);
+
+            return (NextStateNodeIfTrue, NextStateNodeElse);
         }
 
-        // TODO: If/else is enough
-        //public (IStateNode IfTrueState, IStateNode ElseState) AddNext(NextStateType nextStateType, Func<IStateContext, Task<bool>> condition, Type ifTrue, Type @else)
-        //{
-        //    if (!typeof(IState).IsAssignableFrom(ifTrue))
-        //    {
-        //        throw new ArgumentException(nameof(ifTrue), $"Type must implement interface {nameof(IState)}");
-        //    }
+        public (StateNode IfTrueState, StateNode ElseState) SetNext(NextStateKind nextStateKind, Func<IStateContext, Task<bool>> condition, Type ifTrue, StateNode elseStateNode)
+        {
+            if (!typeof(IState).IsAssignableFrom(ifTrue))
+            {
+                throw new ArgumentException(nameof(ifTrue), $"Type must implement interface {nameof(IState)}");
+            }
 
-        //    if (!typeof(IState).IsAssignableFrom(@else))
-        //    {
-        //        throw new ArgumentException(nameof(@else), $"Type must implement interface {nameof(IState)}");
-        //    }
+            NextStateKind = nextStateKind;
+            NextStateCondition = condition;
+            NextStateNodeIfTrue = new StateNode(ifTrue);
+            NextStateNodeElse = elseStateNode;
 
-        //    ConditionalStates = (condition, new StateNode(ifTrue), new StateNode(@else));
-        //    return (ConditionalStates.IfTrueStateNode, ConditionalStates.ElseStateNode);
-        //}
+            return (NextStateNodeIfTrue, NextStateNodeElse);
+        }
 
-        //public (IStateNode IfTrueState, IStateNode ElseState) AddNext(NextStateType nextStateType, Func<IStateContext, Task<bool>> condition, Type ifTrue, IStateNode elseStateNode)
-        //{
-        //    if (!typeof(IState).IsAssignableFrom(ifTrue))
-        //    {
-        //        throw new ArgumentException(nameof(ifTrue), $"Type must implement interface {nameof(IState)}");
-        //    }
+        public (StateNode IfTrueState, StateNode ElseState) SetNext(NextStateKind nextStateKind, Func<IStateContext, Task<bool>> condition, StateNode ifTrueStateNode, Type @else)
+        {
+            if (!typeof(IState).IsAssignableFrom(@else))
+            {
+                throw new ArgumentException(nameof(@else), $"Type must implement interface {nameof(IState)}");
+            }
 
-        //    ConditionalStates = (condition, new StateNode(ifTrue), (StateNode)elseStateNode);
-        //    return (ConditionalStates.IfTrueStateNode, ConditionalStates.ElseStateNode);
-        //}
+            NextStateKind = nextStateKind;
+            NextStateCondition = condition;
+            NextStateNodeIfTrue = ifTrueStateNode;
+            NextStateNodeElse = new StateNode(@else);
 
-        //public (IStateNode IfTrueState, IStateNode ElseState) AddNext(NextStateType nextStateType, Func<IStateContext, Task<bool>> condition, IStateNode ifTrueStateNode, Type @else)
-        //{
-        //    if (!typeof(IState).IsAssignableFrom(@else))
-        //    {
-        //        throw new ArgumentException(nameof(@else), $"Type must implement interface {nameof(IState)}");
-        //    }
+            return (NextStateNodeIfTrue, NextStateNodeElse);
+        }
 
-        //    ConditionalStates = (condition, (StateNode)ifTrueStateNode, new StateNode(@else));
-        //    return (ConditionalStates.IfTrueStateNode, ConditionalStates.ElseStateNode);
-        //}
+        public (StateNode IfTrueState, StateNode ElseState) SetNext(NextStateKind nextStateKind, Func<IStateContext, Task<bool>> condition, StateNode ifTrueStateNode, StateNode elseStateNode)
+        {
+            NextStateKind = nextStateKind;
+            NextStateCondition = condition;
+            NextStateNodeIfTrue = ifTrueStateNode;
+            NextStateNodeElse = elseStateNode;
 
-        //public (IStateNode IfTrueState, IStateNode ElseState) AddNext(Func<IStateContext, Task<bool>> condition, IStateNode ifTrueStateNode, IStateNode elseStateNode)
-        //{
-        //    ConditionalStates = (condition, (StateNode)ifTrueStateNode, (StateNode)elseStateNode);
-        //    return (ConditionalStates.IfTrueStateNode, ConditionalStates.ElseStateNode);
-        //}
+            return (NextStateNodeIfTrue, NextStateNodeElse);
+        }
 
-        //public (IStateNode IfTrueState, IStateNode ElseState) AddNext<TIfTrue, TElse>(Func<IStateContext, Task<bool>> condition)
-        //    where TIfTrue : IState
-        //    where TElse : IState
-        //{
-        //    ConditionalStates = (condition, new StateNode(typeof(TIfTrue)), new StateNode(typeof(TElse)));
-        //    return (ConditionalStates.IfTrueStateNode, ConditionalStates.ElseStateNode);
-        //}
+        public (StateNode IfTrueState, StateNode ElseState) SetNext<TIfTrue, TElse>(NextStateKind nextStateKind, Func<IStateContext, Task<bool>> condition)
+            where TIfTrue : IState
+            where TElse : IState
+        {
+            NextStateKind = nextStateKind;
+            NextStateCondition = condition;
+            NextStateNodeIfTrue = new StateNode(typeof(TIfTrue));
+            NextStateNodeElse = new StateNode(typeof(TElse));
 
-        public void Register(ContainerBuilder containerBuilder)
+            return (NextStateNodeIfTrue, NextStateNodeElse);
+        }
+
+        internal void Register(ContainerBuilder containerBuilder)
         {
             if (GeneratedTypeName != null)
             {
                 return;
             }
 
-            GeneratedTypeName = $"{nameof(GeneratedState)}<{StateType.Name}->{string.Join(';', ConditionalNextStateNodes.Select(n => $"{n.NextStateType}:{n.NextStateNode.StateType.Name}"))}>";
+            GeneratedTypeName = $"{nameof(GeneratedState)}<{StateType.Name}" +
+                                $"{(NextStateKind == null ? "" : $"->{NextStateKind}:{NextStateNodeIfTrue.StateType.Name}{(NextStateNodeElse == null ? "" : $"||{NextStateNodeElse.StateType.Name}")}")}>";
 
             containerBuilder.RegisterType<GeneratedState>()
                 .WithParameter(
@@ -146,7 +139,8 @@ namespace ShowMustNotGoOn.StateMachine.Builder
                 .Named<IState>(GeneratedTypeName)
                 .InstancePerUpdate();
 
-            ConditionalNextStateNodes.ForEach(n => n.NextStateNode.Register(containerBuilder));
+            NextStateNodeIfTrue?.Register(containerBuilder);
+            NextStateNodeElse?.Register(containerBuilder);
         }
     }
 }

@@ -36,7 +36,7 @@ namespace ShowMustNotGoOn.StateMachine.Builder
 
             await PersistOutputStateAttributesAsync(cancellationToken);
 
-            await MoveNextAsync(NextStateType.AfterOnEnter);
+            await MoveNextAsync(NextStateKind.AfterOnEnter);
         }
 
         public async Task Handle(CancellationToken cancellationToken)
@@ -45,7 +45,7 @@ namespace ShowMustNotGoOn.StateMachine.Builder
 
             await PersistOutputStateAttributesAsync(cancellationToken);
 
-            await MoveNextAsync(NextStateType.AfterHandle);
+            await MoveNextAsync(NextStateKind.AfterHandle);
         }
 
         public async Task OnExit(CancellationToken cancellationToken)
@@ -54,36 +54,24 @@ namespace ShowMustNotGoOn.StateMachine.Builder
 
             await PersistOutputStateAttributesAsync(cancellationToken);
 
-            await MoveNextAsync(NextStateType.AfterOnExit);
+            await MoveNextAsync(NextStateKind.AfterOnExit);
         }
 
-        private async Task MoveNextAsync(NextStateType nextStateType)
+        private async Task MoveNextAsync(NextStateKind nextStateKind)
         {
-            var conditionalNextStateNodes = _stateNode.ConditionalNextStateNodes
-                .Where(n => n.NextStateType == nextStateType)
-                .ToList();
-
-            if (!conditionalNextStateNodes.Any())
+            if (_stateNode.NextStateKind != nextStateKind)
             {
                 return;
             }
 
-            var nextConditionalStateFound = false;
-
-            foreach (var conditionalNextStateNode in conditionalNextStateNodes)
+            if (_stateNode.NextStateCondition == null
+                || await _stateNode.NextStateCondition(_stateContext))
             {
-                if (await conditionalNextStateNode.Condition(_stateContext))
-                {
-                    _stateContext.StateMachineContext.MoveTo(conditionalNextStateNode.NextStateNode.GeneratedTypeName);
-                    nextConditionalStateFound = true;
-                    break;
-                }
+                _stateContext.StateMachineContext.MoveTo(_stateNode.NextStateNodeIfTrue.GeneratedTypeName);
+                return;
             }
 
-            if (!nextConditionalStateFound)
-            {
-                _stateContext.StateMachineContext.Reset();
-            }
+            _stateContext.StateMachineContext.MoveTo(_stateNode.NextStateNodeElse.GeneratedTypeName);
         }
 
         private async Task FillInputAttributesAsync(CancellationToken cancellationToken)
