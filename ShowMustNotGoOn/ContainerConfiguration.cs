@@ -1,8 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using Autofac;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -13,11 +11,8 @@ using ShowMustNotGoOn.Core.Contexts;
 using ShowMustNotGoOn.Core.Extensions;
 using ShowMustNotGoOn.Core.MessageBus;
 using ShowMustNotGoOn.Core.TelegramModel;
-using ShowMustNotGoOn.DatabaseContext.Model;
 using ShowMustNotGoOn.Settings;
 using ShowMustNotGoOn.StateMachine;
-using ShowMustNotGoOn.StateMachine.Builder;
-using ShowMustNotGoOn.States;
 using ShowMustNotGoOn.TelegramService;
 using ShowMustNotGoOn.TvShowsService;
 using ShowMustNotGoOn.UsersService;
@@ -110,9 +105,9 @@ namespace ShowMustNotGoOn
                 .InstancePerSession();
 
             builder.RegisterType<ChannelHolder<Request>>()
-	            .As<IChannelReaderProvider<Request>>()
-	            .As<IChannelWriterProvider<Request>>()
-	            .InstancePerSession();
+                .As<IChannelReaderProvider<Request>>()
+                .As<IChannelWriterProvider<Request>>()
+                .InstancePerSession();
 
             builder.RegisterModule<StateMachineModule>();
 
@@ -124,52 +119,7 @@ namespace ShowMustNotGoOn
                 builder.RegisterState(state);
             }
 
-            var stateMachineBuilder = new StateMachineBuilder(builder);
-
-            var initStateNode = stateMachineBuilder.AddInit<Start>();
-
-            var (sendWelcomeMessageState, _) = initStateNode
-                .SetNext(
-                    NextStateKind.AfterHandle,
-                    ctx => Task.FromResult(ctx.UpdateContext.Update is Message message
-                                           && message.IsCommand()
-                                           && string.Equals(message.Text, "/start", StringComparison.InvariantCultureIgnoreCase)),
-                    typeof(SendWelcomeMessage),
-                    initStateNode);
-
-            var defaultHandleUpdateState = sendWelcomeMessageState
-                .SetNext<HandleUpdate>(NextStateKind.AfterOnEnter);
-
-            var (handleMessageState, _) = defaultHandleUpdateState
-                .SetNext(
-                    NextStateKind.AfterHandle,
-                    ctx => Task.FromResult(ctx.UpdateContext.Update is Message),
-                    typeof(HandleMessage),
-                    defaultHandleUpdateState);
-
-            var (handleCommandState, findTvShowsState) = handleMessageState
-                .SetNext<HandleCommand, FindTvShows>(
-                    NextStateKind.AfterOnEnter,
-                    ctx => Task.FromResult(((Message) ctx.UpdateContext.Update).IsCommand()));
-
-            var (_, _) = findTvShowsState
-                .SetNext(
-                    NextStateKind.AfterOnEnter,
-                    ctx =>
-                    {
-                        var (_, value) = ctx.Attributes[nameof(FindTvShows.TvShows)];
-                        var tvShows = (List<TvShow>) value;
-                        return Task.FromResult(tvShows.Any());
-                    },
-                    defaultHandleUpdateState,
-                    defaultHandleUpdateState);
-
-            stateMachineBuilder.SetDefaultStateNode(defaultHandleUpdateState);
-
-            stateMachineBuilder.Build();
-
-            builder.RegisterInstance(new StateMachineConfigurationProvider(stateMachineBuilder.InitStateName, stateMachineBuilder.DefaultStateName))
-                .As<IStateMachineConfigurationProvider>();
+            builder.RegisterModule<StateMachineBuilderModule>();
 
             builder.RegisterType<Application>()
                 .AsSelf()

@@ -10,7 +10,15 @@ namespace ShowMustNotGoOn.Core.TelegramModel
         /// <summary>
         /// Array of <see cref="T:ShowMustNotGoOn.Core.TelegramModel.InlineKeyboardButton" /> rows, each represented by an Array of <see cref="T:ShowMustNotGoOn.Core.TelegramModel.InlineKeyboardButton" />.
         /// </summary>
-        public List<List<InlineKeyboardButton>> InlineKeyboard { get; }
+        public List<List<InlineKeyboardButton>> InlineKeyboard { get; set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="T:ShowMustNotGoOn.Core.TelegramModel.InlineKeyboardMarkup" /> class
+        /// </summary>
+        public InlineKeyboardMarkup()
+            : this(new List<List<InlineKeyboardButton>>())
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="T:ShowMustNotGoOn.Core.TelegramModel.InlineKeyboardMarkup" /> class with only one keyboard button
