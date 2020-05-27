@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Autofac;
-using Autofac.Core;
-using ShowMustNotGoOn.Core.Extensions;
 
 namespace ShowMustNotGoOn.StateMachine.Builder
 {
@@ -10,7 +7,7 @@ namespace ShowMustNotGoOn.StateMachine.Builder
     {
         internal Type StateType { get; }
 
-        internal string GeneratedTypeName { get; private set; }
+        internal string GeneratedTypeName { get; set; }
 
         internal NextStateKind? NextStateKind { get; private set; }
 
@@ -118,29 +115,6 @@ namespace ShowMustNotGoOn.StateMachine.Builder
             NextStateNodeElse = new StateNode(typeof(TElse));
 
             return (NextStateNodeIfTrue, NextStateNodeElse);
-        }
-
-        internal void Register(ContainerBuilder containerBuilder)
-        {
-            if (GeneratedTypeName != null)
-            {
-                return;
-            }
-
-            GeneratedTypeName = $"{nameof(GeneratedState)}<{StateType.Name}" +
-                                $"{(NextStateKind == null ? "" : $"->{NextStateKind}:{NextStateNodeIfTrue.StateType.Name}{(NextStateNodeElse == null ? "" : $"||{NextStateNodeElse.StateType.Name}")}")}>";
-
-            containerBuilder.RegisterType<GeneratedState>()
-                .WithParameter(
-                    new ResolvedParameter(
-                        (pi, ctx) => pi.ParameterType.IsAssignableFrom(typeof(IState)),
-                        (pi, ctx) => ctx.ResolveNamed<IState>(StateType.Name)))
-                .WithParameter(new TypedParameter(typeof(StateNode), this))
-                .Named<IState>(GeneratedTypeName)
-                .InstancePerUpdate();
-
-            NextStateNodeIfTrue?.Register(containerBuilder);
-            NextStateNodeElse?.Register(containerBuilder);
         }
     }
 }

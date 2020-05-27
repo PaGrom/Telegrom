@@ -4,6 +4,8 @@ using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using Autofac;
+using Autofac.Core;
+using ShowMustNotGoOn.Core.Extensions;
 using ShowMustNotGoOn.StateMachine.Builder;
 
 namespace ShowMustNotGoOn.StateMachine
@@ -13,6 +15,8 @@ namespace ShowMustNotGoOn.StateMachine
         private readonly ContainerBuilder _builder;
         private StateNode _initStateNode;
         private StateNode _defaultStateNode;
+
+        private int _statesCount;
 
         public string InitStateName => _initStateNode?.GeneratedTypeName;
         public string DefaultStateName => _defaultStateNode?.GeneratedTypeName;
@@ -37,10 +41,34 @@ namespace ShowMustNotGoOn.StateMachine
 
         public void Build()
         {
-            _initStateNode.Register(_builder);
+            Register(_initStateNode);
 #if DEBUG
             GraphvizGenerate();
 #endif
+        }
+
+        private void Register(StateNode node)
+        {
+            if (node == null || node.GeneratedTypeName != null)
+            {
+                return;
+            }
+
+            node.GeneratedTypeName = $"{nameof(GeneratedState)}<{node.StateType.Name}" +
+                                     $"{(node.NextStateKind == null ? "" : $"->{node.NextStateKind}:{node.NextStateNodeIfTrue.StateType.Name}{(node.NextStateNodeElse == null ? "" : $"||{node.NextStateNodeElse.StateType.Name}")}")}>" +
+                                     $"{_statesCount++}";
+
+            _builder.RegisterType<GeneratedState>()
+                .WithParameter(
+                    new ResolvedParameter(
+                        (pi, ctx) => pi.ParameterType.IsAssignableFrom(typeof(IState)),
+                        (pi, ctx) => ctx.ResolveNamed<IState>(node.StateType.Name)))
+                .WithParameter(new TypedParameter(typeof(StateNode), this))
+                .Named<IState>(node.GeneratedTypeName)
+                .InstancePerUpdate();
+
+            Register(node.NextStateNodeIfTrue);
+            Register(node.NextStateNodeElse);
         }
 
         private void GraphvizGenerate()
