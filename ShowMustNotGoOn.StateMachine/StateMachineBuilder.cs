@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -55,7 +56,8 @@ namespace ShowMustNotGoOn.StateMachine
             }
 
             node.GeneratedTypeName = $"{nameof(GeneratedState)}<{node.StateType.Name}" +
-                                     $"{(node.NextStateKind == null ? "" : $"->{node.NextStateKind}:{node.NextStateNodeIfTrue.StateType.Name}{(node.NextStateNodeElse == null ? "" : $"||{node.NextStateNodeElse.StateType.Name}")}")}>" +
+                                     $"{(node.IfStates.Any() ? "->If:" : "")}{string.Join(';', node.IfStates.Select(s => s.StateNode.StateType.Name))}" +
+                                     $"{(node.ElseState == null ? "" : $"->Else:{node.ElseState.StateNode.StateType.Name}")}>" +
                                      $"{_statesCount++}";
 
             _builder.RegisterType<GeneratedState>()
@@ -63,12 +65,16 @@ namespace ShowMustNotGoOn.StateMachine
                     new ResolvedParameter(
                         (pi, ctx) => pi.ParameterType.IsAssignableFrom(typeof(IState)),
                         (pi, ctx) => ctx.ResolveNamed<IState>(node.StateType.Name)))
-                .WithParameter(new TypedParameter(typeof(StateNode), this))
+                .WithParameter(new TypedParameter(typeof(StateNode), node))
                 .Named<IState>(node.GeneratedTypeName)
                 .InstancePerUpdate();
 
-            Register(node.NextStateNodeIfTrue);
-            Register(node.NextStateNodeElse);
+            foreach (var ifState in node.IfStates)
+            {
+                Register(ifState.StateNode);
+            }
+
+            Register(node.ElseState?.StateNode);
         }
 
         private void GraphvizGenerate()
@@ -99,18 +105,19 @@ namespace ShowMustNotGoOn.StateMachine
 
                 stringBuilder.AppendLine($"\t{generatedTypeName} [ label = \"{node.StateType.Name}\" ]");
 
-                if (node.NextStateNodeIfTrue != null)
+                var ifCount = 0;
+                foreach (var ifState in node.IfStates)
                 {
-                    var nextNodeGeneratedTypeName = rgx.Replace(node.NextStateNodeIfTrue.GeneratedTypeName, "");
-                    stringBuilder.AppendLine($"\t{generatedTypeName} -> {nextNodeGeneratedTypeName} [ label = \"{node.NextStateKind} {(node.NextStateCondition == null ? "" : "If")}\" ]");
-                    GenerateNode(node.NextStateNodeIfTrue);
+                    var nextNodeGeneratedTypeName = rgx.Replace(ifState.StateNode.GeneratedTypeName, "");
+                    stringBuilder.AppendLine($"\t{generatedTypeName} -> {nextNodeGeneratedTypeName} [ label = \"{node.NextStateKind} If{(ifCount++ == 0 ? "" : $"{ifCount}")}\" ]");
+                    GenerateNode(ifState.StateNode);
                 }
 
-                if (node.NextStateNodeElse != null)
+                if (node.ElseState != null)
                 {
-                    var nextNodeGeneratedTypeName = rgx.Replace(node.NextStateNodeElse.GeneratedTypeName, "");
-                    stringBuilder.AppendLine($"\t{generatedTypeName} -> {nextNodeGeneratedTypeName} [ label = \"{node.NextStateKind} Else\" ]");
-                    GenerateNode(node.NextStateNodeElse);
+                    var nextNodeGeneratedTypeName = rgx.Replace(node.ElseState.StateNode.GeneratedTypeName, "");
+                    stringBuilder.AppendLine($"\t{generatedTypeName} -> {nextNodeGeneratedTypeName} [ label = \"{node.NextStateKind}{(node.IfStates.Any() ? " Else" : "")}\" ]");
+                    GenerateNode(node.ElseState.StateNode);
                 }
             }
         }

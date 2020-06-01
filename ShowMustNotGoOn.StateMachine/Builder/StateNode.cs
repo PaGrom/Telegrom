@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ShowMustNotGoOn.StateMachine.Builder
 {
@@ -11,110 +12,56 @@ namespace ShowMustNotGoOn.StateMachine.Builder
 
         internal NextStateKind? NextStateKind { get; private set; }
 
-        internal Func<IStateContext, Task<bool>> NextStateCondition { get; private set; }
+        internal List<IfState> IfStates { get; private set; } = new List<IfState>();
 
-        internal StateNode NextStateNodeIfTrue { get; private set; }
-
-        internal StateNode NextStateNodeElse { get; private set; }
+        internal ElseState ElseState { get; private set; }
 
         internal StateNode(Type stateType)
         {
             StateType = stateType;
         }
 
-        public StateNode SetNext<T>(NextStateKind nextStateKind) where T : IState
+        private void SetNextInternal(NextStateKind nextStateKind, ElseState elseState, params IfState[] ifStates)
         {
             NextStateKind = nextStateKind;
-            return NextStateNodeIfTrue = new StateNode(typeof(T));
+            ElseState = elseState;
+            IfStates = ifStates.ToList();
         }
 
-        public StateNode SetNext(NextStateKind nextStateKind, Type nextState)
+        public StateNode SetNext(NextStateKind nextStateKind, ElseState elseState)
         {
-            if (!typeof(IState).IsAssignableFrom(nextState))
-            {
-                throw new ArgumentException(nameof(nextState), $"Type must implement interface {nameof(IState)}");
-            }
-
-            NextStateKind = nextStateKind;
-            return NextStateNodeIfTrue = new StateNode(nextState);
+            SetNextInternal(nextStateKind, elseState);
+            return ElseState.StateNode;
         }
 
-        public StateNode SetNext(NextStateKind nextStateKind, StateNode nextStateNode)
+        public (StateNode IfState, StateNode ElseState) SetNext(NextStateKind nextStateKind, IfState ifState, ElseState elseState)
         {
-            NextStateKind = nextStateKind;
-            return NextStateNodeIfTrue = nextStateNode;
+            SetNextInternal(nextStateKind, elseState, ifState);
+            return (ifState.StateNode, elseState.StateNode);
         }
 
-        public (StateNode IfTrueState, StateNode ElseState) SetNext(NextStateKind nextStateKind, Func<IStateContext, Task<bool>> condition, Type ifTrue, Type @else)
+        public (StateNode IfState, StateNode IfState1, StateNode ElseState) SetNext(NextStateKind nextStateKind, IfState ifState, IfState ifState1, ElseState elseState)
         {
-            if (!typeof(IState).IsAssignableFrom(ifTrue))
-            {
-                throw new ArgumentException(nameof(ifTrue), $"Type must implement interface {nameof(IState)}");
-            }
-
-            if (!typeof(IState).IsAssignableFrom(@else))
-            {
-                throw new ArgumentException(nameof(@else), $"Type must implement interface {nameof(IState)}");
-            }
-
-            NextStateKind = nextStateKind;
-            NextStateCondition = condition;
-            NextStateNodeIfTrue = new StateNode(ifTrue);
-            NextStateNodeElse = new StateNode(@else);
-
-            return (NextStateNodeIfTrue, NextStateNodeElse);
+            SetNextInternal(nextStateKind, elseState, ifState, ifState1);
+            return (ifState.StateNode, ifState1.StateNode, elseState.StateNode);
         }
 
-        public (StateNode IfTrueState, StateNode ElseState) SetNext(NextStateKind nextStateKind, Func<IStateContext, Task<bool>> condition, Type ifTrue, StateNode elseStateNode)
+        public (StateNode IfState, StateNode IfState1, StateNode IfState2, StateNode ElseState) SetNext(NextStateKind nextStateKind, IfState ifState, IfState ifState1, IfState ifState2, ElseState elseState)
         {
-            if (!typeof(IState).IsAssignableFrom(ifTrue))
-            {
-                throw new ArgumentException(nameof(ifTrue), $"Type must implement interface {nameof(IState)}");
-            }
-
-            NextStateKind = nextStateKind;
-            NextStateCondition = condition;
-            NextStateNodeIfTrue = new StateNode(ifTrue);
-            NextStateNodeElse = elseStateNode;
-
-            return (NextStateNodeIfTrue, NextStateNodeElse);
+            SetNextInternal(nextStateKind, elseState, ifState, ifState1, ifState2);
+            return (ifState.StateNode, ifState1.StateNode, ifState2.StateNode, elseState.StateNode);
         }
 
-        public (StateNode IfTrueState, StateNode ElseState) SetNext(NextStateKind nextStateKind, Func<IStateContext, Task<bool>> condition, StateNode ifTrueStateNode, Type @else)
+        public (StateNode IfState, StateNode IfState1, StateNode IfState2, StateNode IfState3, StateNode ElseState) SetNext(NextStateKind nextStateKind, IfState ifState, IfState ifState1, IfState ifState2, IfState ifState3, ElseState elseState)
         {
-            if (!typeof(IState).IsAssignableFrom(@else))
-            {
-                throw new ArgumentException(nameof(@else), $"Type must implement interface {nameof(IState)}");
-            }
-
-            NextStateKind = nextStateKind;
-            NextStateCondition = condition;
-            NextStateNodeIfTrue = ifTrueStateNode;
-            NextStateNodeElse = new StateNode(@else);
-
-            return (NextStateNodeIfTrue, NextStateNodeElse);
+            SetNextInternal(nextStateKind, elseState, ifState, ifState1, ifState2, ifState3);
+            return (ifState.StateNode, ifState1.StateNode, ifState2.StateNode, ifState3.StateNode, elseState.StateNode);
         }
 
-        public (StateNode IfTrueState, StateNode ElseState) SetNext(NextStateKind nextStateKind, Func<IStateContext, Task<bool>> condition, StateNode ifTrueStateNode, StateNode elseStateNode)
+        public (StateNode IfState, StateNode IfState1, StateNode IfState2, StateNode IfState3, StateNode IfState4, StateNode ElseState) SetNext(NextStateKind nextStateKind, IfState ifState, IfState ifState1, IfState ifState2, IfState ifState3, IfState ifState4, ElseState elseState)
         {
-            NextStateKind = nextStateKind;
-            NextStateCondition = condition;
-            NextStateNodeIfTrue = ifTrueStateNode;
-            NextStateNodeElse = elseStateNode;
-
-            return (NextStateNodeIfTrue, NextStateNodeElse);
-        }
-
-        public (StateNode IfTrueState, StateNode ElseState) SetNext<TIfTrue, TElse>(NextStateKind nextStateKind, Func<IStateContext, Task<bool>> condition)
-            where TIfTrue : IState
-            where TElse : IState
-        {
-            NextStateKind = nextStateKind;
-            NextStateCondition = condition;
-            NextStateNodeIfTrue = new StateNode(typeof(TIfTrue));
-            NextStateNodeElse = new StateNode(typeof(TElse));
-
-            return (NextStateNodeIfTrue, NextStateNodeElse);
+            SetNextInternal(nextStateKind, elseState, ifState, ifState1, ifState2, ifState3, ifState4);
+            return (ifState.StateNode, ifState1.StateNode, ifState2.StateNode, ifState3.StateNode, ifState4.StateNode, elseState.StateNode);
         }
     }
 }

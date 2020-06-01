@@ -64,14 +64,16 @@ namespace ShowMustNotGoOn.StateMachine.Builder
                 return;
             }
 
-            if (_stateNode.NextStateCondition == null
-                || await _stateNode.NextStateCondition(_stateContext))
-            {
-                _stateContext.StateMachineContext.MoveTo(_stateNode.NextStateNodeIfTrue.GeneratedTypeName);
-                return;
-            }
+            _stateContext.StateMachineContext.MoveTo(_stateNode.ElseState.StateNode.GeneratedTypeName);
 
-            _stateContext.StateMachineContext.MoveTo(_stateNode.NextStateNodeElse.GeneratedTypeName);
+            foreach (var ifState in _stateNode.IfStates)
+            {
+                if (await ifState.Condition(_stateContext))
+                {
+                    _stateContext.StateMachineContext.MoveTo(ifState.StateNode.GeneratedTypeName);
+                    break;
+                }
+            }
         }
 
         private async Task FillInputAttributesAsync(CancellationToken cancellationToken)
