@@ -93,8 +93,8 @@ namespace ShowMustNotGoOn
             builder.RegisterType<SessionManager>()
                 .InstancePerLifetimeScope();
 
-            builder.RegisterType<MessageHandler>()
-                .InstancePerUpdate();
+            //builder.RegisterType<MessageHandler>()
+            //    .InstancePerUpdate();
 
             builder.RegisterType<SessionContext>()
                 .InstancePerSession();

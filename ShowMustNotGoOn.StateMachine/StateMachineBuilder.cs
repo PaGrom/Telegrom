@@ -109,7 +109,8 @@ namespace ShowMustNotGoOn.StateMachine
                 foreach (var ifState in node.IfStates)
                 {
                     var nextNodeGeneratedTypeName = rgx.Replace(ifState.StateNode.GeneratedTypeName, "");
-                    stringBuilder.AppendLine($"\t{generatedTypeName} -> {nextNodeGeneratedTypeName} [ label = \"{node.NextStateKind} If{(ifCount++ == 0 ? "" : $"{ifCount}")}\" ]");
+                    stringBuilder.AppendLine($"\t{generatedTypeName} -> {nextNodeGeneratedTypeName} [ label = \"{node.NextStateKind} If{(ifCount == 0 ? "" : $"{ifCount}")}\" ]");
+                    ifCount++;
                     GenerateNode(ifState.StateNode);
                 }
 

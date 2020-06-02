@@ -14,6 +14,12 @@ namespace ShowMustNotGoOn.States
         private readonly DatabaseContext.DatabaseContext _databaseContext;
 
         [Input]
+        public List<TvShow> TvShows { get; set; }
+
+        [Input]
+        public TvShow CurrentTvShow { get; set; }
+
+        [Input]
         public BotMessage BotMessage { get; set; }
 
         [Input]
@@ -30,14 +36,15 @@ namespace ShowMustNotGoOn.States
         {
             var buttons = new List<InlineKeyboardButton>();
 
-            // TODO: Get rid of CurrentPage and TotalPages
-            if (BotMessage.CurrentPage > 0)
+            var tvShowIndex = TvShows.FindIndex(s => s.Id == CurrentTvShow.Id);
+            
+            if (tvShowIndex > 0)
             {
                 var callback = await CreateCallbackAsync(BotMessage.Id, CallbackType.Prev);
                 buttons.Add(InlineKeyboardButton.WithCallbackData("Prev", callback.Id.ToString()));
             }
 
-            if (BotMessage.CurrentPage < BotMessage.TotalPages - 1)
+            if (tvShowIndex < TvShows.Count - 1)
             {
                 var callback = await CreateCallbackAsync(BotMessage.Id, CallbackType.Next);
                 buttons.Add(InlineKeyboardButton.WithCallbackData("Next", callback.Id.ToString()));

@@ -14,9 +14,5 @@ namespace ShowMustNotGoOn.DatabaseContext.Model
         public int MessageTextId { get; set; }
 
         public int MyShowsId { get; set; }
-
-        public int CurrentPage { get; set; }
-
-        public int TotalPages { get; set; }
     }
 }

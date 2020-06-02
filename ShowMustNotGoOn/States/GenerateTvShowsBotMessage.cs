@@ -43,16 +43,12 @@ namespace ShowMustNotGoOn.States
 
             await _databaseContext.SaveChangesAsync(cancellationToken);
 
-            const int pageCount = 0;
-
             BotMessage = new BotMessage
             {
                 UserId = _stateContext.UpdateContext.SessionContext.User.Id,
                 BotCommandType = null,
                 MessageTextId = messageText.Id,
-                MyShowsId = TvShows.First().Id,
-                CurrentPage = pageCount,
-                TotalPages = TvShows.Count
+                MyShowsId = TvShows.First().Id
             };
 
             await _databaseContext.BotMessages.AddAsync(BotMessage, cancellationToken);
