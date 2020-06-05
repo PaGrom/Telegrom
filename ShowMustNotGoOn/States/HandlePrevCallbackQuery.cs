@@ -8,7 +8,7 @@ using ShowMustNotGoOn.StateMachine.Attributes;
 
 namespace ShowMustNotGoOn.States
 {
-    internal sealed class HandleNextCallbackQuery : StateBase
+    internal sealed class HandlePrevCallbackQuery : StateBase
     {
         private readonly DatabaseContext.DatabaseContext _databaseContext;
         private readonly ITvShowsService _tvShowsService;
@@ -21,7 +21,7 @@ namespace ShowMustNotGoOn.States
         [Output]
         public TvShow CurrentTvShow { get; set; }
 
-        public HandleNextCallbackQuery(DatabaseContext.DatabaseContext databaseContext,
+        public HandlePrevCallbackQuery(DatabaseContext.DatabaseContext databaseContext,
             ITvShowsService tvShowsService)
         {
             _databaseContext = databaseContext;
@@ -37,9 +37,9 @@ namespace ShowMustNotGoOn.States
 
             var currentIndex = tvShows.FindIndex(s => s.Id == CurrentTvShow.Id);
 
-            var nextIndex = ++currentIndex;
+            var nextIndex = --currentIndex;
 
-            if (nextIndex >= tvShows.Count)
+            if (nextIndex < 0)
             {
                 nextIndex = 0;
             }

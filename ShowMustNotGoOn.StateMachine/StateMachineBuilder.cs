@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -44,7 +45,11 @@ namespace ShowMustNotGoOn.StateMachine
         {
             Register(_initStateNode);
 #if DEBUG
-            GraphvizGenerate();
+            var (digraph, ascii) = GraphvizGenerate();
+
+            var digraphLog = "digraph.log";
+            File.WriteAllText(digraphLog, digraph);
+            File.AppendAllText(digraphLog, ascii);
 #endif
         }
 
@@ -77,7 +82,7 @@ namespace ShowMustNotGoOn.StateMachine
             Register(node.ElseState?.StateNode);
         }
 
-        private void GraphvizGenerate()
+        private (string Digraph, string ascii) GraphvizGenerate()
         {
             var rgx = new Regex("[^a-zA-Z0-9]");
             var generatedNodes = new HashSet<string>();
@@ -88,9 +93,7 @@ namespace ShowMustNotGoOn.StateMachine
 
             var digraph = stringBuilder.ToString();
 
-            Console.WriteLine(digraph);
-
-            Console.WriteLine(GenerateAscii(digraph));
+            return (digraph, GenerateAscii(digraph));
 
             void GenerateNode(StateNode node)
             {

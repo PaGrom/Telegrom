@@ -74,7 +74,7 @@ namespace ShowMustNotGoOn
                 .SetNext(NextStateKind.AfterOnEnter, new ElseState(typeof(SendSendPhotoRequest)))
                 .SetNext(NextStateKind.AfterOnEnter, new ElseState(defaultHandleUpdateState));
 
-            var (handleNextCallbackQueryState, _) = handleCallbackQueryState
+            var (handleNextCallbackQueryState, handlePrevCallbackQueryState, _) = handleCallbackQueryState
                 .SetNext(
                     NextStateKind.AfterOnEnter,
                     new IfState(
@@ -85,6 +85,14 @@ namespace ShowMustNotGoOn
                             return Task.FromResult(callback.CallbackType == CallbackType.Next);
                         },
                         typeof(HandleNextCallbackQuery)),
+                    new IfState(
+                        ctx =>
+                        {
+                            var (_, value) = ctx.Attributes[nameof(HandleCallbackQuery.Callback)];
+                            var callback = (Callback)value;
+                            return Task.FromResult(callback.CallbackType == CallbackType.Prev);
+                        },
+                        typeof(HandlePrevCallbackQuery)),
                     new ElseState(defaultHandleUpdateState));
 
             var updateTvShowsBotMessageState = handleNextCallbackQueryState
@@ -116,6 +124,11 @@ namespace ShowMustNotGoOn
                 .SetNext(
                     NextStateKind.AfterOnEnter,
                     new ElseState(defaultHandleUpdateState));
+
+            handlePrevCallbackQueryState
+                .SetNext(
+                    NextStateKind.AfterOnEnter,
+                    new ElseState(updateTvShowsBotMessageState));
 
             stateMachineBuilder.SetDefaultStateNode(defaultHandleUpdateState);
 

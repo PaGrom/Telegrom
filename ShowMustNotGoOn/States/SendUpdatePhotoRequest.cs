@@ -32,6 +32,13 @@ namespace ShowMustNotGoOn.States
 
             await _stateContext.UpdateContext.SessionContext.PostRequestAsync(answerCallbackQueryRequest, cancellationToken);
 
+            const string notFoundImage = "https://images-na.ssl-images-amazon.com/images/I/312yeogBelL._SX466_.jpg";
+
+            if (string.IsNullOrEmpty(CurrentTvShow.Image))
+            {
+                CurrentTvShow.Image = notFoundImage;
+            }
+
             var editMessageMediaRequest = new EditMessageMediaRequest(userId, callbackQuery.MessageId, CurrentTvShow.Image);
 
             await _stateContext.UpdateContext.SessionContext.PostRequestAsync(editMessageMediaRequest, cancellationToken);

@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.TelegramModel;
 using ShowMustNotGoOn.DatabaseContext.Model;
@@ -43,6 +44,8 @@ namespace ShowMustNotGoOn.States
 
             BotMessage = await _databaseContext.BotMessages
                 .FindAsync(new object[] { Callback.BotMessageId }, cancellationToken);
+
+            _databaseContext.Entry(BotMessage).State = EntityState.Detached;
 
             CurrentTvShow = await _tvShowsService.GetTvShowByMyShowsIdAsync(BotMessage.MyShowsId, cancellationToken)
                             ?? await _tvShowsService.GetTvShowFromMyShowsAsync(BotMessage.MyShowsId, cancellationToken);

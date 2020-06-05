@@ -20,7 +20,7 @@ namespace ShowMustNotGoOn.States
 
         public override async Task OnEnter(CancellationToken cancellationToken)
         {
-            //_databaseContext.BotMessages.Update(BotMessage);
+            _databaseContext.BotMessages.Update(BotMessage);
             await _databaseContext.SaveChangesAsync(cancellationToken);
         }
     }
