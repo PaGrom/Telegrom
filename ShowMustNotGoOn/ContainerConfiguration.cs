@@ -7,15 +7,16 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
-using ShowMustNotGoOn.Core.Contexts;
-using ShowMustNotGoOn.Core.Extensions;
-using ShowMustNotGoOn.Core.MessageBus;
-using ShowMustNotGoOn.Core.TelegramModel;
 using ShowMustNotGoOn.Settings;
-using ShowMustNotGoOn.StateMachine;
-using ShowMustNotGoOn.TelegramService;
 using ShowMustNotGoOn.TvShowsService;
-using ShowMustNotGoOn.UsersService;
+using Telegrom.Core;
+using Telegrom.Core.Contexts;
+using Telegrom.Core.Extensions;
+using Telegrom.Core.MessageBus;
+using Telegrom.Core.TelegramModel;
+using Telegrom.Database;
+using Telegrom.StateMachine;
+using Telegrom.TelegramService;
 
 namespace ShowMustNotGoOn
 {
@@ -47,7 +48,7 @@ namespace ShowMustNotGoOn
             
             builder.RegisterInstance(appSettings).SingleInstance();
 
-            var options = new DbContextOptionsBuilder<DatabaseContext.DatabaseContext>()
+            var options = new DbContextOptionsBuilder<DatabaseContext>()
                 .UseSqlite(appSettings.DatabaseSettings.ConnectionString)
                 .EnableSensitiveDataLogging()
                 .UseLoggerFactory(loggerFactory)
@@ -56,10 +57,18 @@ namespace ShowMustNotGoOn
             builder.RegisterInstance(options)
                 .As<DbContextOptions>();
 
-            builder.RegisterType<DatabaseContext.DatabaseContext>()
+            builder.RegisterType<DatabaseContext>()
                 .InstancePerUpdate();
 
-            builder.RegisterModule<UsersServiceModule>();
+            builder.RegisterType<IdentityService>()
+                .As<IIdentityService>();
+
+            builder.RegisterType<GlobalAttributesService>()
+                .As<IGlobalAttributesService>();
+
+            builder.RegisterType<SessionAttributesService>()
+                .As<ISessionAttributesService>()
+                .InstancePerUpdate();
 
             builder.RegisterModule(new TvShowsServiceModule
             {

@@ -1,17 +1,18 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using ShowMustNotGoOn.Core.TelegramModel;
-using ShowMustNotGoOn.DatabaseContext.Model;
-using ShowMustNotGoOn.StateMachine;
-using ShowMustNotGoOn.StateMachine.Attributes;
+using ShowMustNotGoOn.Core.Model;
+using Telegrom.Core;
+using Telegrom.Core.TelegramModel;
+using Telegrom.StateMachine;
+using Telegrom.StateMachine.Attributes;
 
 namespace ShowMustNotGoOn.States
 {
     internal sealed class GenerateNavigationButtons : StateBase
     {
-        private readonly IStateContext _stateContext;
-        private readonly DatabaseContext.DatabaseContext _databaseContext;
+        private readonly ISessionAttributesService _sessionAttributesService;
 
         [Input]
         public List<TvShow> TvShows { get; set; }
@@ -26,10 +27,9 @@ namespace ShowMustNotGoOn.States
         [Output]
         public InlineKeyboardMarkup InlineKeyboardMarkup { get; set; }
 
-        public GenerateNavigationButtons(IStateContext stateContext, DatabaseContext.DatabaseContext databaseContext)
+        public GenerateNavigationButtons(ISessionAttributesService sessionAttributesService)
         {
-            _stateContext = stateContext;
-            _databaseContext = databaseContext;
+            _sessionAttributesService = sessionAttributesService;
         }
 
         public override async Task OnEnter(CancellationToken cancellationToken)
@@ -53,15 +53,16 @@ namespace ShowMustNotGoOn.States
             InlineKeyboardMarkup.AddRow(buttons);
 
             // TODO: Move to UnitOfWork
-            async Task<Callback> CreateCallbackAsync(int botMessageId, CallbackType callbackType)
+            async Task<Callback> CreateCallbackAsync(Guid botMessageId, CallbackType callbackType)
             {
-                var callback = (await _databaseContext.Callbacks
-                    .AddAsync(new Callback
-                    {
-                        BotMessageId = botMessageId,
-                        CallbackType = callbackType
-                    }, cancellationToken)).Entity;
-                await _databaseContext.SaveChangesAsync(cancellationToken);
+                var callback = new Callback
+                {
+                    Id = Guid.NewGuid(),
+                    BotMessageId = botMessageId,
+                    CallbackType = callbackType
+                };
+
+                await _sessionAttributesService.SaveOrUpdateSessionAttributeAsync(callback.Id, callback, cancellationToken);
 
                 return callback;
             }

@@ -1,7 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
-using ShowMustNotGoOn.Core.TelegramModel;
-using ShowMustNotGoOn.StateMachine;
+using Telegrom.Core.TelegramModel;
+using Telegrom.StateMachine;
 
 namespace ShowMustNotGoOn.States
 {

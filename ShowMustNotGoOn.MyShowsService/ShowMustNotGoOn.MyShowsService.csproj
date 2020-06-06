@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ShowMustNotGoOn.Core\ShowMustNotGoOn.Core.csproj" />
+    <ProjectReference Include="..\Telegrom.Core\Telegrom.Core.csproj" />
   </ItemGroup>
 
 </Project>

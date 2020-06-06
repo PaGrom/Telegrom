@@ -2,15 +2,16 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ShowMustNotGoOn.Core;
-using ShowMustNotGoOn.DatabaseContext.Model;
-using ShowMustNotGoOn.StateMachine;
-using ShowMustNotGoOn.StateMachine.Attributes;
+using ShowMustNotGoOn.Core.Model;
+using Telegrom.Core;
+using Telegrom.StateMachine;
+using Telegrom.StateMachine.Attributes;
 
 namespace ShowMustNotGoOn.States
 {
     internal sealed class HandlePrevCallbackQuery : StateBase
     {
-        private readonly DatabaseContext.DatabaseContext _databaseContext;
+        private readonly ISessionAttributesService _sessionAttributesService;
         private readonly ITvShowsService _tvShowsService;
 
         [Input]
@@ -21,17 +22,16 @@ namespace ShowMustNotGoOn.States
         [Output]
         public TvShow CurrentTvShow { get; set; }
 
-        public HandlePrevCallbackQuery(DatabaseContext.DatabaseContext databaseContext,
+        public HandlePrevCallbackQuery(ISessionAttributesService sessionAttributesService,
             ITvShowsService tvShowsService)
         {
-            _databaseContext = databaseContext;
+            _sessionAttributesService = sessionAttributesService;
             _tvShowsService = tvShowsService;
         }
 
         public override async Task OnEnter(CancellationToken cancellationToken)
         {
-            var messageText = await _databaseContext.MessageTexts
-                .FindAsync(new object[] { BotMessage.MessageTextId }, cancellationToken);
+            var messageText = await _sessionAttributesService.GetSessionAttributeAsync<MessageText>(BotMessage.MessageTextId, cancellationToken);
 
             var tvShows = (await _tvShowsService.SearchTvShowsAsync(messageText.Text, cancellationToken)).ToList();
 

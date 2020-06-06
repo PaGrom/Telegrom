@@ -1,27 +1,27 @@
 using System.Threading;
 using System.Threading.Tasks;
-using ShowMustNotGoOn.DatabaseContext.Model;
-using ShowMustNotGoOn.StateMachine;
-using ShowMustNotGoOn.StateMachine.Attributes;
+using ShowMustNotGoOn.Core.Model;
+using Telegrom.Core;
+using Telegrom.StateMachine;
+using Telegrom.StateMachine.Attributes;
 
 namespace ShowMustNotGoOn.States
 {
     internal sealed class UpdateTvShowsBotMessage : StateBase
     {
-        private readonly DatabaseContext.DatabaseContext _databaseContext;
+        private readonly ISessionAttributesService _sessionAttributesService;
 
         [Input]
         public BotMessage BotMessage { get; set; }
 
-        public UpdateTvShowsBotMessage(DatabaseContext.DatabaseContext databaseContext)
+        public UpdateTvShowsBotMessage(ISessionAttributesService sessionAttributesService)
         {
-            _databaseContext = databaseContext;
+            _sessionAttributesService = sessionAttributesService;
         }
 
-        public override async Task OnEnter(CancellationToken cancellationToken)
+        public override Task OnEnter(CancellationToken cancellationToken)
         {
-            _databaseContext.BotMessages.Update(BotMessage);
-            await _databaseContext.SaveChangesAsync(cancellationToken);
+            return _sessionAttributesService.SaveOrUpdateSessionAttributeAsync(BotMessage.Id, BotMessage, cancellationToken);
         }
     }
 }

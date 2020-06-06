@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using ShowMustNotGoOn.DatabaseContext.Model;
+using ShowMustNotGoOn.Core.Model;
 using ShowMustNotGoOn.MyShowsService.Model;
 
 namespace ShowMustNotGoOn.MyShowsService

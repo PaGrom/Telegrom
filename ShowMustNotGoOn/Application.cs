@@ -2,10 +2,10 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using ShowMustNotGoOn.Core;
-using ShowMustNotGoOn.Core.Contexts;
-using ShowMustNotGoOn.Core.MessageBus;
-using ShowMustNotGoOn.Core.TelegramModel;
+using Telegrom.Core;
+using Telegrom.Core.Contexts;
+using Telegrom.Core.MessageBus;
+using Telegrom.Core.TelegramModel;
 
 namespace ShowMustNotGoOn
 {

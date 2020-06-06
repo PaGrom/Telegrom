@@ -1,19 +1,19 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using ShowMustNotGoOn.Core;
-using ShowMustNotGoOn.Core.TelegramModel;
-using ShowMustNotGoOn.DatabaseContext.Model;
-using ShowMustNotGoOn.StateMachine;
-using ShowMustNotGoOn.StateMachine.Attributes;
+using ShowMustNotGoOn.Core.Model;
+using Telegrom.Core;
+using Telegrom.Core.TelegramModel;
+using Telegrom.StateMachine;
+using Telegrom.StateMachine.Attributes;
 
 namespace ShowMustNotGoOn.States
 {
     internal sealed class GenerateSubscriptionsButtons : StateBase
     {
-        private readonly IStateContext _stateContext;
-        private readonly DatabaseContext.DatabaseContext _databaseContext;
-        private readonly ITvShowsService _tvShowsService;
+        private readonly ISessionAttributesService _sessionAttributesService;
 
         [Input]
         public TvShow CurrentTvShow { get; set; }
@@ -25,44 +25,43 @@ namespace ShowMustNotGoOn.States
         [Output]
         public InlineKeyboardMarkup InlineKeyboardMarkup { get; set; }
 
-        public GenerateSubscriptionsButtons(IStateContext stateContext,
-            DatabaseContext.DatabaseContext databaseContext,
-            ITvShowsService tvShowsService)
+        public GenerateSubscriptionsButtons(ISessionAttributesService sessionAttributesService)
         {
-            _stateContext = stateContext;
-            _databaseContext = databaseContext;
-            _tvShowsService = tvShowsService;
+            _sessionAttributesService = sessionAttributesService;
         }
 
         public override async Task OnEnter(CancellationToken cancellationToken)
         {
             var buttons = new List<InlineKeyboardButton>();
 
-            var subscription = await _tvShowsService
-                .GetUserSubscriptionToTvShowAsync(_stateContext.UpdateContext.SessionContext.User, CurrentTvShow, SubscriptionType.EndOfShow, cancellationToken);
+            var subscription = (await _sessionAttributesService
+                .GetAllByTypeAsync<Subscription>(cancellationToken))
+                .SingleOrDefault(s => s.TvShowId == CurrentTvShow.Id
+                                      && s.SubscriptionType == SubscriptionType.EndOfShow);
 
             if (subscription != null)
             {
-                var callback = await CreateCallbackAsync(BotMessage.Id, CallbackType.UnsubscribeToEndOfShow, cancellationToken);
+                var callback = await CreateCallbackAsync(BotMessage.Id, CallbackType.UnsubscribeToEndOfShow);
                 buttons.Add(InlineKeyboardButton.WithCallbackData("Unsubscribe from end of show", callback.Id.ToString()));
             }
             else
             {
-                var callback = await CreateCallbackAsync(BotMessage.Id, CallbackType.SubscribeToEndOfShow, cancellationToken);
+                var callback = await CreateCallbackAsync(BotMessage.Id, CallbackType.SubscribeToEndOfShow);
                 buttons.Add(InlineKeyboardButton.WithCallbackData("Subscribe to end of show", callback.Id.ToString()));
             }
 
             InlineKeyboardMarkup.AddRow(buttons);
 
-            async Task<Callback> CreateCallbackAsync(int botMessageId, CallbackType callbackType, CancellationToken cancellationToken)
+            async Task<Callback> CreateCallbackAsync(Guid botMessageId, CallbackType callbackType)
             {
-                var callback = (await _databaseContext.Callbacks
-                    .AddAsync(new Callback
-                    {
-                        BotMessageId = botMessageId,
-                        CallbackType = callbackType
-                    }, cancellationToken)).Entity;
-                await _databaseContext.SaveChangesAsync(cancellationToken);
+                var callback = new Callback
+                {
+                    Id = Guid.NewGuid(),
+                    BotMessageId = botMessageId,
+                    CallbackType = callbackType
+                };
+
+                await _sessionAttributesService.SaveOrUpdateSessionAttributeAsync(callback.Id, callback, cancellationToken);
 
                 return callback;
             }

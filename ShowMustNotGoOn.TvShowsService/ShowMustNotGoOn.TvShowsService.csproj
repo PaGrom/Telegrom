@@ -10,8 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ShowMustNotGoOn.Core\ShowMustNotGoOn.Core.csproj" />
-    <ProjectReference Include="..\ShowMustNotGoOn.DatabaseContext\ShowMustNotGoOn.DatabaseContext.csproj" />
+    <ProjectReference Include="..\ShowMustNotGoOn.DatabaseContext\Telegrom.Database.csproj" />
     <ProjectReference Include="..\ShowMustNotGoOn.MyShowsService\ShowMustNotGoOn.MyShowsService.csproj" />
   </ItemGroup>
 

@@ -1,19 +1,21 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using ShowMustNotGoOn.Core.TelegramModel;
-using ShowMustNotGoOn.DatabaseContext.Extensions;
-using ShowMustNotGoOn.DatabaseContext.Model;
-using ShowMustNotGoOn.StateMachine;
-using ShowMustNotGoOn.StateMachine.Attributes;
+using ShowMustNotGoOn.Core.Model;
+using Telegrom.Core;
+using Telegrom.Core.TelegramModel;
+using Telegrom.StateMachine;
+using Telegrom.StateMachine.Attributes;
 
 namespace ShowMustNotGoOn.States
 {
     internal sealed class GenerateTvShowsBotMessage : StateBase
     {
         private readonly IStateContext _stateContext;
-        private readonly DatabaseContext.DatabaseContext _databaseContext;
+        private readonly IGlobalAttributesService _globalAttributesService;
+        private readonly ISessionAttributesService _sessionAttributesService;
 
         [Input]
         public List<TvShow> TvShows { get; set; }
@@ -25,34 +27,41 @@ namespace ShowMustNotGoOn.States
         public BotMessage BotMessage { get; set; }
 
         public GenerateTvShowsBotMessage(IStateContext stateContext,
-            DatabaseContext.DatabaseContext databaseContext)
+            IGlobalAttributesService globalAttributesService,
+            ISessionAttributesService sessionAttributesService)
         {
             _stateContext = stateContext;
-            _databaseContext = databaseContext;
+            _globalAttributesService = globalAttributesService;
+            _sessionAttributesService = sessionAttributesService;
         }
 
         public override async Task OnEnter(CancellationToken cancellationToken)
         {
             var messageTextString = ((Message)_stateContext.UpdateContext.Update).Text.Trim();
 
-            var messageText = await _databaseContext.MessageTexts
-                .AddIfNotExistsAsync(new MessageText 
-                {
-                    Text = messageTextString
-                }, s => s.Text == messageTextString, cancellationToken);
+            var messageText = new MessageText
+            {
+                Text = messageTextString
+            };
 
-            await _databaseContext.SaveChangesAsync(cancellationToken);
+            var messageTextId = await _globalAttributesService.GetAttributeIdByValueAsync(messageText, cancellationToken);
+
+            if (messageTextId == null)
+            {
+                messageTextId = Guid.NewGuid();
+
+                await _globalAttributesService.CreateOrUpdateGlobalAttributeAsync(messageTextId.Value, messageText, cancellationToken);
+            }
 
             BotMessage = new BotMessage
             {
-                UserId = _stateContext.UpdateContext.SessionContext.User.Id,
-                BotCommandType = null,
-                MessageTextId = messageText.Id,
+                Id = Guid.NewGuid(),
+                BotCommandType = BotCommandType.NotCommand,
+                MessageTextId = messageTextId.Value,
                 MyShowsId = TvShows.First().Id
             };
 
-            await _databaseContext.BotMessages.AddAsync(BotMessage, cancellationToken);
-            await _databaseContext.SaveChangesAsync(cancellationToken);
+            await _sessionAttributesService.SaveOrUpdateSessionAttributeAsync(BotMessage.Id, BotMessage, cancellationToken);
 
             CurrentTvShow = TvShows.First();
         }

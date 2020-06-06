@@ -1,19 +1,19 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using ShowMustNotGoOn.Core;
-using ShowMustNotGoOn.Core.TelegramModel;
-using ShowMustNotGoOn.DatabaseContext.Model;
-using ShowMustNotGoOn.StateMachine;
-using ShowMustNotGoOn.StateMachine.Attributes;
+using ShowMustNotGoOn.Core.Model;
+using Telegrom.Core;
+using Telegrom.Core.TelegramModel;
+using Telegrom.StateMachine;
+using Telegrom.StateMachine.Attributes;
 
 namespace ShowMustNotGoOn.States
 {
     internal sealed class HandleCallbackQuery : StateBase
     {
         private readonly IStateContext _stateContext;
-        private readonly DatabaseContext.DatabaseContext _databaseContext;
+        private readonly ISessionAttributesService _sessionAttributesService;
         private readonly ITvShowsService _tvShowsService;
 
         [Output]
@@ -26,11 +26,11 @@ namespace ShowMustNotGoOn.States
         public TvShow CurrentTvShow { get; set; }
 
         public HandleCallbackQuery(IStateContext stateContext,
-            DatabaseContext.DatabaseContext databaseContext,
+            ISessionAttributesService sessionAttributesService,
             ITvShowsService tvShowsService)
         {
             _stateContext = stateContext;
-            _databaseContext = databaseContext;
+            _sessionAttributesService = sessionAttributesService;
             _tvShowsService = tvShowsService;
         }
 
@@ -40,15 +40,11 @@ namespace ShowMustNotGoOn.States
 
             var callbackId = Guid.Parse(callbackQuery.Data);
 
-            Callback = await _databaseContext.Callbacks.FindAsync(new object[] { callbackId }, cancellationToken);
+            Callback = await _sessionAttributesService.GetSessionAttributeAsync<Callback>(callbackId, cancellationToken);
 
-            BotMessage = await _databaseContext.BotMessages
-                .FindAsync(new object[] { Callback.BotMessageId }, cancellationToken);
+            BotMessage = await _sessionAttributesService.GetSessionAttributeAsync<BotMessage>(Callback.BotMessageId, cancellationToken);
 
-            _databaseContext.Entry(BotMessage).State = EntityState.Detached;
-
-            CurrentTvShow = await _tvShowsService.GetTvShowByMyShowsIdAsync(BotMessage.MyShowsId, cancellationToken)
-                            ?? await _tvShowsService.GetTvShowFromMyShowsAsync(BotMessage.MyShowsId, cancellationToken);
+            CurrentTvShow = await _tvShowsService.GetTvShowFromMyShowsAsync(BotMessage.MyShowsId, cancellationToken);
         }
     }
 }

@@ -7,7 +7,7 @@ using AutoMapper;
 using Microsoft.Extensions.Logging;
 using RestSharp;
 using ShowMustNotGoOn.Core;
-using ShowMustNotGoOn.DatabaseContext.Model;
+using ShowMustNotGoOn.Core.Model;
 using ShowMustNotGoOn.MyShowsService.Model;
 
 namespace ShowMustNotGoOn.MyShowsService

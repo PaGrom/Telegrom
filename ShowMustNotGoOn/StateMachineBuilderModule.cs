@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
-using ShowMustNotGoOn.Core.TelegramModel;
-using ShowMustNotGoOn.DatabaseContext.Model;
-using ShowMustNotGoOn.StateMachine;
-using ShowMustNotGoOn.StateMachine.Builder;
+using ShowMustNotGoOn.Core.Model;
 using ShowMustNotGoOn.States;
+using Telegrom.Core.TelegramModel;
+using Telegrom.Database.Model;
+using Telegrom.StateMachine;
+using Telegrom.StateMachine.Builder;
 
 namespace ShowMustNotGoOn
 {
