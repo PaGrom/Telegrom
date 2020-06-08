@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,7 +12,7 @@ namespace ShowMustNotGoOn.States
 {
     internal sealed class HandlePrevCallbackQuery : StateBase
     {
-        private readonly ISessionAttributesService _sessionAttributesService;
+        private readonly IGlobalAttributesService _globalAttributesService;
         private readonly ITvShowsService _tvShowsService;
 
         [Input]
@@ -22,20 +23,23 @@ namespace ShowMustNotGoOn.States
         [Output]
         public TvShow CurrentTvShow { get; set; }
 
-        public HandlePrevCallbackQuery(ISessionAttributesService sessionAttributesService,
+        [Output]
+        public List<TvShow> TvShows { get; set; }
+
+        public HandlePrevCallbackQuery(IGlobalAttributesService globalAttributesService,
             ITvShowsService tvShowsService)
         {
-            _sessionAttributesService = sessionAttributesService;
+            _globalAttributesService = globalAttributesService;
             _tvShowsService = tvShowsService;
         }
 
         public override async Task OnEnter(CancellationToken cancellationToken)
         {
-            var messageText = await _sessionAttributesService.GetSessionAttributeAsync<MessageText>(BotMessage.MessageTextId, cancellationToken);
+            var messageText = await _globalAttributesService.GetGlobalAttributeAsync<MessageText>(BotMessage.MessageTextId, cancellationToken);
 
-            var tvShows = (await _tvShowsService.SearchTvShowsAsync(messageText.Text, cancellationToken)).ToList();
+            TvShows = (await _tvShowsService.SearchTvShowsAsync(messageText.Text, cancellationToken)).ToList();
 
-            var currentIndex = tvShows.FindIndex(s => s.Id == CurrentTvShow.Id);
+            var currentIndex = TvShows.FindIndex(s => s.Id == CurrentTvShow.Id);
 
             var nextIndex = --currentIndex;
 
@@ -44,7 +48,7 @@ namespace ShowMustNotGoOn.States
                 nextIndex = 0;
             }
 
-            CurrentTvShow = tvShows[nextIndex];
+            CurrentTvShow = TvShows[nextIndex];
 
             BotMessage.MyShowsId = CurrentTvShow.Id;
         }

@@ -44,16 +44,17 @@ namespace Telegrom.StateMachine
             try
             {
                 state = _lifetimeScope.ResolveNamed<IState>(stateName);
+                await state.OnEnter(cancellationToken);
+                await state.Handle(cancellationToken);
             }
             catch
             {
-                _logger.LogError($"State {stateName} doesn't exists. Set default state: {_configurationProvider.DefaultStateName}");
+                _logger.LogError($"State {stateName} doesn't exists or failed. Set default state: {_configurationProvider.DefaultStateName}");
                 stateName = _configurationProvider.DefaultStateName;
                 state = _lifetimeScope.ResolveNamed<IState>(stateName);
+                await state.OnEnter(cancellationToken);
+                await state.Handle(cancellationToken);
             }
-
-            await state.OnEnter(cancellationToken);
-            await state.Handle(cancellationToken);
 
             if (_stateMachineContext.NextStateName == null)
             {
