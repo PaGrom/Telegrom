@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using Telegrom.StateMachine.Attributes;
 
 namespace Telegrom.StateMachine.Builder
