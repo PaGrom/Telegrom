@@ -4,9 +4,9 @@ using Telegrom.Core.TelegramModel;
 using Telegrom.StateMachine;
 using Telegrom.StateMachine.Attributes;
 
-namespace ShowMustNotGoOn.States
+namespace ShowMustNotGoOn.Core.States
 {
-    internal sealed class GenerateKeyboard : StateBase
+    public sealed class GenerateKeyboard : StateBase
     {
         [Output]
         public InlineKeyboardMarkup InlineKeyboardMarkup { get; set; }

@@ -1,8 +1,8 @@
 using Telegrom.StateMachine;
 
-namespace ShowMustNotGoOn.States
+namespace ShowMustNotGoOn.Core.States
 {
-    internal class StateMachineConfigurationProvider : IStateMachineConfigurationProvider
+    public class StateMachineConfigurationProvider : IStateMachineConfigurationProvider
     {
         public string InitialStateName { get; }
         public string DefaultStateName { get; }

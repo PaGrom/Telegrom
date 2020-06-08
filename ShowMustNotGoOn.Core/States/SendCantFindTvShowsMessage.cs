@@ -1,8 +1,8 @@
 using Telegrom.StateMachine;
 
-namespace ShowMustNotGoOn.States
+namespace ShowMustNotGoOn.Core.States
 {
-    internal class SendCantFindTvShowsMessage : SendMessage
+    public class SendCantFindTvShowsMessage : SendMessage
     {
         public SendCantFindTvShowsMessage(IStateContext stateContext) : base(stateContext, "  сожалению, сериалов по вашему запросу не найдено") { }
     }

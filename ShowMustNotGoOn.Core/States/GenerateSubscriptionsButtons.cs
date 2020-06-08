@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ShowMustNotGoOn.Core.Model;
@@ -8,14 +9,11 @@ using Telegrom.Core.TelegramModel;
 using Telegrom.StateMachine;
 using Telegrom.StateMachine.Attributes;
 
-namespace ShowMustNotGoOn.States
+namespace ShowMustNotGoOn.Core.States
 {
-    internal sealed class GenerateNavigationButtons : StateBase
+    public sealed class GenerateSubscriptionsButtons : StateBase
     {
         private readonly ISessionAttributesService _sessionAttributesService;
-
-        [Input]
-        public List<TvShow> TvShows { get; set; }
 
         [Input]
         public TvShow CurrentTvShow { get; set; }
@@ -27,7 +25,7 @@ namespace ShowMustNotGoOn.States
         [Output]
         public InlineKeyboardMarkup InlineKeyboardMarkup { get; set; }
 
-        public GenerateNavigationButtons(ISessionAttributesService sessionAttributesService)
+        public GenerateSubscriptionsButtons(ISessionAttributesService sessionAttributesService)
         {
             _sessionAttributesService = sessionAttributesService;
         }
@@ -36,23 +34,24 @@ namespace ShowMustNotGoOn.States
         {
             var buttons = new List<InlineKeyboardButton>();
 
-            var tvShowIndex = TvShows.FindIndex(s => s.Id == CurrentTvShow.Id);
-            
-            if (tvShowIndex > 0)
-            {
-                var callback = await CreateCallbackAsync(BotMessage.Id, CallbackType.Prev);
-                buttons.Add(InlineKeyboardButton.WithCallbackData("Prev", callback.Id.ToString()));
-            }
+            var subscription = (await _sessionAttributesService
+                .GetAllByTypeAsync<Subscription>(cancellationToken))
+                .SingleOrDefault(s => s.TvShowId == CurrentTvShow.Id
+                                      && s.SubscriptionType == SubscriptionType.EndOfShow);
 
-            if (tvShowIndex < TvShows.Count - 1)
+            if (subscription != null)
             {
-                var callback = await CreateCallbackAsync(BotMessage.Id, CallbackType.Next);
-                buttons.Add(InlineKeyboardButton.WithCallbackData("Next", callback.Id.ToString()));
+                var callback = await CreateCallbackAsync(BotMessage.Id, CallbackType.UnsubscribeToEndOfShow);
+                buttons.Add(InlineKeyboardButton.WithCallbackData("Unsubscribe from end of show", callback.Id.ToString()));
+            }
+            else
+            {
+                var callback = await CreateCallbackAsync(BotMessage.Id, CallbackType.SubscribeToEndOfShow);
+                buttons.Add(InlineKeyboardButton.WithCallbackData("Subscribe to end of show", callback.Id.ToString()));
             }
 
             InlineKeyboardMarkup.AddRow(buttons);
 
-            // TODO: Move to UnitOfWork
             async Task<Callback> CreateCallbackAsync(Guid botMessageId, CallbackType callbackType)
             {
                 var callback = new Callback

@@ -5,9 +5,9 @@ using Telegrom.Core;
 using Telegrom.StateMachine;
 using Telegrom.StateMachine.Attributes;
 
-namespace ShowMustNotGoOn.States
+namespace ShowMustNotGoOn.Core.States
 {
-    internal sealed class UpdateTvShowsBotMessage : StateBase
+    public sealed class UpdateTvShowsBotMessage : StateBase
     {
         private readonly ISessionAttributesService _sessionAttributesService;
 

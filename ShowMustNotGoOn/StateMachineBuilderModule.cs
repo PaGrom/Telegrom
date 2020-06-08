@@ -4,9 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
 using ShowMustNotGoOn.Core.Model;
-using ShowMustNotGoOn.States;
+using ShowMustNotGoOn.Core.States;
 using Telegrom.Core.TelegramModel;
-using Telegrom.Database.Model;
 using Telegrom.StateMachine;
 using Telegrom.StateMachine.Builder;
 

@@ -9,9 +9,9 @@ using Telegrom.Core.TelegramModel;
 using Telegrom.StateMachine;
 using Telegrom.StateMachine.Attributes;
 
-namespace ShowMustNotGoOn.States
+namespace ShowMustNotGoOn.Core.States
 {
-    internal sealed class GenerateTvShowsBotMessage : StateBase
+    public sealed class GenerateTvShowsBotMessage : StateBase
     {
         private readonly IStateContext _stateContext;
         private readonly IGlobalAttributesService _globalAttributesService;

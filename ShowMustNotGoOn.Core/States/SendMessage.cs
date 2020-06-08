@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Telegrom.Core.TelegramModel;
 using Telegrom.StateMachine;
 
-namespace ShowMustNotGoOn.States
+namespace ShowMustNotGoOn.Core.States
 {
     public abstract class SendMessage : StateBase
     {

@@ -2,15 +2,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.Model;
 using Telegrom.Core.TelegramModel;
 using Telegrom.StateMachine;
 using Telegrom.StateMachine.Attributes;
 
-namespace ShowMustNotGoOn.States
+namespace ShowMustNotGoOn.Core.States
 {
-    internal sealed class FindTvShows : StateBase
+    public sealed class FindTvShows : StateBase
     {
         private readonly IStateContext _stateContext;
         private readonly ITvShowsService _tvShowsService;

@@ -1,16 +1,15 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.Model;
 using Telegrom.Core;
 using Telegrom.Core.TelegramModel;
 using Telegrom.StateMachine;
 using Telegrom.StateMachine.Attributes;
 
-namespace ShowMustNotGoOn.States
+namespace ShowMustNotGoOn.Core.States
 {
-    internal sealed class HandleCallbackQuery : StateBase
+    public sealed class HandleCallbackQuery : StateBase
     {
         private readonly IStateContext _stateContext;
         private readonly ISessionAttributesService _sessionAttributesService;

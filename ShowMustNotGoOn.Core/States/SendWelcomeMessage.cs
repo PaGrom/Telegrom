@@ -1,8 +1,8 @@
 using Telegrom.StateMachine;
 
-namespace ShowMustNotGoOn.States
+namespace ShowMustNotGoOn.Core.States
 {
-    internal class SendWelcomeMessage : SendMessage
+    public class SendWelcomeMessage : SendMessage
     {
         public SendWelcomeMessage(IStateContext stateContext) : base(stateContext, "Привет!") { }
     }

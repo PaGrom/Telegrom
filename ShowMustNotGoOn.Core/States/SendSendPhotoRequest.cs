@@ -4,9 +4,9 @@ using Telegrom.Core.TelegramModel;
 using Telegrom.StateMachine;
 using Telegrom.StateMachine.Attributes;
 
-namespace ShowMustNotGoOn.States
+namespace ShowMustNotGoOn.Core.States
 {
-    internal class SendSendPhotoRequest : StateBase
+    public class SendSendPhotoRequest : StateBase
     {
         private readonly IStateContext _stateContext;
 

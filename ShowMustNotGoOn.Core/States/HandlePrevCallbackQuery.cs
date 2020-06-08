@@ -2,15 +2,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using ShowMustNotGoOn.Core;
 using ShowMustNotGoOn.Core.Model;
 using Telegrom.Core;
 using Telegrom.StateMachine;
 using Telegrom.StateMachine.Attributes;
 
-namespace ShowMustNotGoOn.States
+namespace ShowMustNotGoOn.Core.States
 {
-    internal sealed class HandlePrevCallbackQuery : StateBase
+    public sealed class HandlePrevCallbackQuery : StateBase
     {
         private readonly IGlobalAttributesService _globalAttributesService;
         private readonly ITvShowsService _tvShowsService;

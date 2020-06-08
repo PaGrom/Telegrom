@@ -5,9 +5,9 @@ using Telegrom.Core.TelegramModel;
 using Telegrom.StateMachine;
 using Telegrom.StateMachine.Attributes;
 
-namespace ShowMustNotGoOn.States
+namespace ShowMustNotGoOn.Core.States
 {
-    internal sealed class GenerateSendPhotoWithFirstTvShowRequest : StateBase
+    public sealed class GenerateSendPhotoWithFirstTvShowRequest : StateBase
     {
         private readonly IStateContext _stateContext;
 
