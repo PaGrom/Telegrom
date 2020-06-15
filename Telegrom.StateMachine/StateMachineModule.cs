@@ -19,6 +19,10 @@ namespace Telegrom.StateMachine
             builder.RegisterType<StateMachineContext>()
                 .As<IStateMachineContext>()
                 .InstancePerUpdate();
+
+            builder.RegisterType<SessionStateAttributesService>()
+                .As<ISessionStateAttributesService>()
+                .InstancePerUpdate();
         }
     }
 }
