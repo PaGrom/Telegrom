@@ -1,6 +1,6 @@
 ﻿namespace ShowMustNotGoOn.Core.Model
 {
-    public sealed class TvShow
+    public sealed class TvShowDescription
     {
         public int Id { get; set; }
         public string Title { get; set; }

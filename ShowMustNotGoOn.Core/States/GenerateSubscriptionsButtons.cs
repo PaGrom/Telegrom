@@ -16,7 +16,7 @@ namespace ShowMustNotGoOn.Core.States
         private readonly ISessionAttributesService _sessionAttributesService;
 
         [Input]
-        public TvShow CurrentTvShow { get; set; }
+        public TvShowInfo CurrentTvShowInfo { get; set; }
 
         [Input]
         public BotMessage BotMessage { get; set; }
@@ -36,7 +36,7 @@ namespace ShowMustNotGoOn.Core.States
 
             var subscription = (await _sessionAttributesService
                 .GetAllByTypeAsync<Subscription>(cancellationToken))
-                .SingleOrDefault(s => s.TvShowId == CurrentTvShow.Id
+                .SingleOrDefault(s => s.TvShowId == CurrentTvShowInfo.MyShowsId
                                       && s.SubscriptionType == SubscriptionType.EndOfShow);
 
             if (subscription != null)

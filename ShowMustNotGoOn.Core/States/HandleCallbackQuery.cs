@@ -13,7 +13,6 @@ namespace ShowMustNotGoOn.Core.States
     {
         private readonly IStateContext _stateContext;
         private readonly ISessionAttributesService _sessionAttributesService;
-        private readonly ITvShowsService _tvShowsService;
 
         [Output]
         public Callback Callback { get; set; }
@@ -22,15 +21,13 @@ namespace ShowMustNotGoOn.Core.States
         public BotMessage BotMessage { get; set; }
 
         [Output]
-        public TvShow CurrentTvShow { get; set; }
+        public TvShowInfo CurrentTvShowInfo { get; set; }
 
         public HandleCallbackQuery(IStateContext stateContext,
-            ISessionAttributesService sessionAttributesService,
-            ITvShowsService tvShowsService)
+            ISessionAttributesService sessionAttributesService)
         {
             _stateContext = stateContext;
             _sessionAttributesService = sessionAttributesService;
-            _tvShowsService = tvShowsService;
         }
 
         public override async Task OnEnter(CancellationToken cancellationToken)
@@ -43,7 +40,11 @@ namespace ShowMustNotGoOn.Core.States
 
             BotMessage = await _sessionAttributesService.GetSessionAttributeAsync<BotMessage>(Callback.BotMessageId, cancellationToken);
 
-            CurrentTvShow = await _tvShowsService.GetTvShowFromMyShowsAsync(BotMessage.MyShowsId, cancellationToken);
+            CurrentTvShowInfo = new TvShowInfo
+            {
+                MyShowsId = BotMessage.TvShowInfo.MyShowsId
+
+            };
         }
     }
 }

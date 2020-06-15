@@ -57,8 +57,8 @@ namespace ShowMustNotGoOn
                     new IfState(
                         ctx =>
                         {
-                            var (_, value) = ctx.Attributes[nameof(FindTvShows.TvShows)];
-                            var tvShows = (List<TvShow>) value;
+                            var (_, value) = ctx.Attributes[nameof(FindTvShows.TvShowsInfos)];
+                            var tvShows = (List<TvShowInfo>) value;
                             return Task.FromResult(tvShows.Any());
                         }, typeof(GenerateTvShowsBotMessage)),
                     new ElseState(typeof(SendCantFindTvShowsMessage)));
@@ -89,7 +89,7 @@ namespace ShowMustNotGoOn
                         ctx =>
                         {
                             var (_, value) = ctx.Attributes[nameof(HandleCallbackQuery.Callback)];
-                            var callback = (Callback)value;
+                            var callback = (Callback) value;
                             return Task.FromResult(callback.CallbackType == CallbackType.Prev);
                         },
                         typeof(HandlePrevCallbackQuery)),
@@ -115,7 +115,7 @@ namespace ShowMustNotGoOn
                     NextStateKind.AfterOnEnter,
                     new ElseState(typeof(GenerateSubscriptionsButtons)));
 
-            var sendUpdatePhotoRequestState =  generateSubscriptionsButtonsForUpdateState
+            var sendUpdatePhotoRequestState = generateSubscriptionsButtonsForUpdateState
                 .SetNext(
                     NextStateKind.AfterOnEnter,
                     new ElseState(typeof(SendUpdatePhotoRequest)));
@@ -134,7 +134,8 @@ namespace ShowMustNotGoOn
 
             stateMachineBuilder.Build();
 
-            builder.RegisterInstance(new StateMachineConfigurationProvider(stateMachineBuilder.InitStateName, stateMachineBuilder.DefaultStateName))
+            builder.RegisterInstance(new StateMachineConfigurationProvider(stateMachineBuilder.InitStateName,
+                    stateMachineBuilder.DefaultStateName))
                 .As<IStateMachineConfigurationProvider>();
         }
     }

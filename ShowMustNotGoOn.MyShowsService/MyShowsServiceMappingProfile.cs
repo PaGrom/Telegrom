@@ -8,8 +8,12 @@ namespace ShowMustNotGoOn.MyShowsService
     {
         public MyShowsServiceMappingProfile()
         {
-            CreateMap<Result, TvShow>()
+            CreateMap<Result, TvShowDescription>()
                 .ForMember(dest => dest.Id,
+                    opt => opt.MapFrom(src => src.Id));
+
+            CreateMap<Result, TvShowInfo>()
+                .ForMember(dest => dest.MyShowsId,
                     opt => opt.MapFrom(src => src.Id));
         }
     }

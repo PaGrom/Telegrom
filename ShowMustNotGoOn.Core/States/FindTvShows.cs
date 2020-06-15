@@ -15,7 +15,7 @@ namespace ShowMustNotGoOn.Core.States
         private readonly ITvShowsService _tvShowsService;
 
         [Output]
-        public List<TvShow> TvShows { get; set; }
+        public List<TvShowInfo> TvShowsInfos { get; set; }
 
         public FindTvShows(IStateContext stateContext, ITvShowsService tvShowsService)
         {
@@ -25,7 +25,7 @@ namespace ShowMustNotGoOn.Core.States
 
         public override async Task OnEnter(CancellationToken cancellationToken)
         {
-            TvShows = (await _tvShowsService.SearchTvShowsAsync(((Message)_stateContext.UpdateContext.Update).Text.Trim(), cancellationToken)).ToList();
+            TvShowsInfos = (await _tvShowsService.SearchTvShowsAsync(((Message)_stateContext.UpdateContext.Update).Text.Trim(), cancellationToken)).ToList();
         }
     }
 }

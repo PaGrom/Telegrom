@@ -8,8 +8,8 @@ namespace ShowMustNotGoOn.Core
 {
     public interface ITvShowsService
     {
-        Task<Guid> AddNewTvShowAsync(TvShow tvShow, CancellationToken cancellationToken);
-        Task<IEnumerable<TvShow>> SearchTvShowsAsync(string name, CancellationToken cancellationToken);
-        Task<TvShow> GetTvShowFromMyShowsAsync(int myShowsId, CancellationToken cancellationToken);
+        Task<Guid> AddNewTvShowAsync(TvShowDescription tvShowDescription, CancellationToken cancellationToken);
+        Task<IEnumerable<TvShowInfo>> SearchTvShowsAsync(string name, CancellationToken cancellationToken);
+        Task<TvShowDescription> GetTvShowDescriptionAsync(int myShowsId, CancellationToken cancellationToken);
     }
 }

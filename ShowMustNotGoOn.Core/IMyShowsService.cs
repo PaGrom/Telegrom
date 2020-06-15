@@ -7,7 +7,7 @@ namespace ShowMustNotGoOn.Core
 {
     public interface IMyShowsService
     {
-        Task<IEnumerable<TvShow>> SearchTvShowsAsync(string name, CancellationToken cancellationToken);
-        Task<TvShow> GetTvShowAsync(int tvShowId, CancellationToken cancellationToken);
+        Task<IEnumerable<TvShowInfo>> SearchTvShowsAsync(string name, CancellationToken cancellationToken);
+        Task<TvShowDescription> GetTvShowAsync(int tvShowId, CancellationToken cancellationToken);
     }
 }

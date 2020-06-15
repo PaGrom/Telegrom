@@ -11,6 +11,8 @@ namespace ShowMustNotGoOn.TvShowsService
 {
     public class TvShowsService : ITvShowsService
     {
+        const string NotFoundImage = "https://images-na.ssl-images-amazon.com/images/I/312yeogBelL._SX466_.jpg";
+
         private readonly IMyShowsService _myShowsService;
         private readonly IGlobalAttributesService _globalAttributesService;
         private readonly ILogger<TvShowsService> _logger;
@@ -24,32 +26,39 @@ namespace ShowMustNotGoOn.TvShowsService
             _logger = logger;
         }
 
-        public async Task<Guid> AddNewTvShowAsync(TvShow tvShow, CancellationToken cancellationToken)
+        public async Task<Guid> AddNewTvShowAsync(TvShowDescription tvShowDescription, CancellationToken cancellationToken)
         {
-            var guid = await _globalAttributesService.GetAttributeIdByValueAsync(tvShow, cancellationToken);
+            var guid = await _globalAttributesService.GetAttributeIdByValueAsync(tvShowDescription, cancellationToken);
 
             if (guid != null)
             {
-                _logger.LogInformation($"TV Show '{tvShow.Title}' (Id: {tvShow.Id}) already exists in db");
+                _logger.LogInformation($"TV Show '{tvShowDescription.Title}' (Id: {tvShowDescription.Id}) already exists in db");
             }
             else
             {
-                _logger.LogInformation($"Adding TV Show '{tvShow.Title}' (Id: {tvShow.Id}) to db");
+                _logger.LogInformation($"Adding TV Show '{tvShowDescription.Title}' (Id: {tvShowDescription.Id}) to db");
                 guid = Guid.NewGuid();
-                await _globalAttributesService.CreateOrUpdateGlobalAttributeAsync(guid.Value, tvShow, cancellationToken);
+                await _globalAttributesService.CreateOrUpdateGlobalAttributeAsync(guid.Value, tvShowDescription, cancellationToken);
             }
 
             return guid.Value;
         }
 
-        public Task<IEnumerable<TvShow>> SearchTvShowsAsync(string name, CancellationToken cancellationToken)
+        public Task<IEnumerable<TvShowInfo>> SearchTvShowsAsync(string name, CancellationToken cancellationToken)
         {
             return _myShowsService.SearchTvShowsAsync(name, cancellationToken);
         }
 
-        public Task<TvShow> GetTvShowFromMyShowsAsync(int myShowsId, CancellationToken cancellationToken)
+        public async Task<TvShowDescription> GetTvShowDescriptionAsync(int myShowsId, CancellationToken cancellationToken)
         {
-            return _myShowsService.GetTvShowAsync(myShowsId, cancellationToken);
+            var tvShowDescription = await _myShowsService.GetTvShowAsync(myShowsId, cancellationToken);
+
+            if (string.IsNullOrEmpty(tvShowDescription.Image))
+            {
+                tvShowDescription.Image = NotFoundImage;
+            }
+
+            return tvShowDescription;
         }
     }
 }

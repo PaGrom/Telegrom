@@ -25,7 +25,7 @@ namespace ShowMustNotGoOn.MyShowsService
             _logger = logger;
         }
 
-        public async Task<IEnumerable<TvShow>> SearchTvShowsAsync(string name, CancellationToken cancellationToken)
+        public async Task<IEnumerable<TvShowInfo>> SearchTvShowsAsync(string name, CancellationToken cancellationToken)
         {
             var request = new RestRequest(Method.POST)
             {
@@ -44,10 +44,10 @@ namespace ShowMustNotGoOn.MyShowsService
 
             var responseResult = await ExecuteAsync<ResponseResult>(request, cancellationToken);
 
-            return _mapper.Map<List<Result>, IEnumerable<TvShow>>(responseResult.Result);
+            return _mapper.Map<List<Result>, IEnumerable<TvShowInfo>>(responseResult.Result);
         }
 
-        public async Task<TvShow> GetTvShowAsync(int tvShowId, CancellationToken cancellationToken)
+        public async Task<TvShowDescription> GetTvShowAsync(int tvShowId, CancellationToken cancellationToken)
         {
             var request = new RestRequest(Method.POST)
             {
@@ -67,7 +67,7 @@ namespace ShowMustNotGoOn.MyShowsService
 
             var responseResult = await ExecuteAsync<ResponseResult>(request, cancellationToken);
 
-            return _mapper.Map<Result, TvShow>(responseResult.Result.First());
+            return _mapper.Map<Result, TvShowDescription>(responseResult.Result.First());
         }
 
         private async Task<T> ExecuteAsync<T>(IRestRequest request, CancellationToken cancellationToken) where T : new()

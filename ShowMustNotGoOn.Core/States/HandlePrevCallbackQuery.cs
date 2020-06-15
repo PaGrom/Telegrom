@@ -20,10 +20,10 @@ namespace ShowMustNotGoOn.Core.States
 
         [Input]
         [Output]
-        public TvShow CurrentTvShow { get; set; }
+        public TvShowInfo CurrentTvShowInfo { get; set; }
 
         [Output]
-        public List<TvShow> TvShows { get; set; }
+        public List<TvShowInfo> TvShowsInfos { get; set; }
 
         public HandlePrevCallbackQuery(IGlobalAttributesService globalAttributesService,
             ITvShowsService tvShowsService)
@@ -36,9 +36,9 @@ namespace ShowMustNotGoOn.Core.States
         {
             var messageText = await _globalAttributesService.GetGlobalAttributeAsync<MessageText>(BotMessage.MessageTextId, cancellationToken);
 
-            TvShows = (await _tvShowsService.SearchTvShowsAsync(messageText.Text, cancellationToken)).ToList();
+            TvShowsInfos = (await _tvShowsService.SearchTvShowsAsync(messageText.Text, cancellationToken)).ToList();
 
-            var currentIndex = TvShows.FindIndex(s => s.Id == CurrentTvShow.Id);
+            var currentIndex = TvShowsInfos.FindIndex(s => s.MyShowsId == CurrentTvShowInfo.MyShowsId);
 
             var nextIndex = --currentIndex;
 
@@ -47,9 +47,9 @@ namespace ShowMustNotGoOn.Core.States
                 nextIndex = 0;
             }
 
-            CurrentTvShow = TvShows[nextIndex];
+            CurrentTvShowInfo = TvShowsInfos[nextIndex];
 
-            BotMessage.MyShowsId = CurrentTvShow.Id;
+            BotMessage.TvShowInfo = CurrentTvShowInfo;
         }
     }
 }

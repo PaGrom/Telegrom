@@ -10,6 +10,6 @@ namespace ShowMustNotGoOn.Core.Model
 
         public Guid MessageTextId { get; set; }
 
-        public int MyShowsId { get; set; }
+        public TvShowInfo TvShowInfo { get; set; }
     }
 }

@@ -18,10 +18,10 @@ namespace ShowMustNotGoOn.Core.States
         private readonly ISessionAttributesService _sessionAttributesService;
 
         [Input]
-        public List<TvShow> TvShows { get; set; }
+        public List<TvShowInfo> TvShowsInfos { get; set; }
 
         [Output]
-        public TvShow CurrentTvShow { get; set; }
+        public TvShowInfo CurrentTvShowInfo { get; set; }
 
         [Output]
         public BotMessage BotMessage { get; set; }
@@ -53,17 +53,17 @@ namespace ShowMustNotGoOn.Core.States
                 await _globalAttributesService.CreateOrUpdateGlobalAttributeAsync(messageTextId.Value, messageText, cancellationToken);
             }
 
+            CurrentTvShowInfo = TvShowsInfos.First();
+
             BotMessage = new BotMessage
             {
                 Id = Guid.NewGuid(),
                 BotCommandType = BotCommandType.NotCommand,
                 MessageTextId = messageTextId.Value,
-                MyShowsId = TvShows.First().Id
+                TvShowInfo = CurrentTvShowInfo
             };
 
             await _sessionAttributesService.SaveOrUpdateSessionAttributeAsync(BotMessage.Id, BotMessage, cancellationToken);
-
-            CurrentTvShow = TvShows.First();
         }
     }
 }

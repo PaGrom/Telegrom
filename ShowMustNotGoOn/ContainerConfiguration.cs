@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -7,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
+using ShowMustNotGoOn.Core.States;
 using ShowMustNotGoOn.Settings;
 using ShowMustNotGoOn.TvShowsService;
 using Telegrom.Core;
@@ -45,7 +48,7 @@ namespace ShowMustNotGoOn
                 TelegramSettings = configuration.GetSection("Telegram").Get<TelegramSettings>(),
                 MyShowsSettings = configuration.GetSection("MyShows").Get<MyShowsSettings>()
             };
-            
+
             builder.RegisterInstance(appSettings).SingleInstance();
 
             var options = new DbContextOptionsBuilder<DatabaseContext>()
@@ -120,8 +123,11 @@ namespace ShowMustNotGoOn
 
             builder.RegisterModule<StateMachineModule>();
 
-            var states = Assembly.GetCallingAssembly().GetTypes()
-                .Where(type => !type.IsAbstract && typeof(IState).IsAssignableFrom(type));
+            LoadAllAssemblies();
+
+            var states = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetTypes())
+                .Where(type => !type.IsAbstract && type.IsPublic && typeof(IState).IsAssignableFrom(type))
+                .ToList();
 
             foreach (var state in states)
             {
@@ -134,6 +140,62 @@ namespace ShowMustNotGoOn
                 .AsSelf()
                 .SingleInstance()
                 .AutoActivate();
+        }
+
+        // Source: https://dotnetstories.com/blog/Dynamically-pre-load-assemblies-in-a-ASPNET-Core-or-any-C-project-en-7155735300
+
+        private static void LoadAllAssemblies(bool includeFramework = false)
+        {
+            // Storage to ensure not loading the same assembly twice and optimize calls to GetAssemblies()
+            var loaded = new ConcurrentDictionary<string, bool>();
+
+            // Filter to avoid loading all the .net framework
+            bool ShouldLoad(string assemblyName)
+            {
+                return (includeFramework || NotNetFramework(assemblyName))
+                       && !loaded.ContainsKey(assemblyName);
+            }
+
+            bool NotNetFramework(string assemblyName)
+            {
+                return !assemblyName.StartsWith("Microsoft.")
+                       && !assemblyName.StartsWith("System.")
+                       && !assemblyName.StartsWith("Newtonsoft.")
+                       && assemblyName != "netstandard";
+            }
+
+            void LoadReferencedAssembly(Assembly assembly)
+            {
+                // Check all referenced assemblies of the specified assembly
+                foreach (var an in assembly.GetReferencedAssemblies().Where(a => ShouldLoad(a.FullName)))
+                {
+                    // Load the assembly and load its dependencies
+                    LoadReferencedAssembly(Assembly.Load(an)); // AppDomain.CurrentDomain.Load(name)
+                    loaded.TryAdd(an.FullName, true);
+                    System.Diagnostics.Debug.WriteLine($"\n>> Referenced assembly => {an.FullName}");
+                }
+            }
+
+            // Populate already loaded assemblies
+            System.Diagnostics.Debug.WriteLine($">> Already loaded assemblies:");
+            foreach (var a in AppDomain.CurrentDomain.GetAssemblies().Where(a => ShouldLoad(a.FullName)))
+            {
+                loaded.TryAdd(a.FullName, true);
+                System.Diagnostics.Debug.WriteLine($">>>> {a.FullName}");
+            }
+
+            int alreadyLoaded = loaded.Keys.Count();
+            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+
+            // Loop on loaded assembliesto load dependencies (it includes Startup assembly so should load all the dependency tree) 
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies().Where(a => NotNetFramework(a.FullName)))
+                LoadReferencedAssembly(assembly);
+
+            // Debug
+            System.Diagnostics.Debug.WriteLine(
+                $"\n>> Assemblies loaded after scann ({(loaded.Keys.Count - alreadyLoaded)} assemblies in {sw.ElapsedMilliseconds} ms):");
+            foreach (var a in loaded.Keys.OrderBy(k => k))
+                System.Diagnostics.Debug.WriteLine($">>>> {a}");
         }
     }
 }

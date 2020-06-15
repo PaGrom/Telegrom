@@ -10,16 +10,18 @@ namespace ShowMustNotGoOn.Core.States
     public class SendUpdatePhotoRequest : StateBase
     {
         private readonly IStateContext _stateContext;
+        private readonly ITvShowsService _tvShowsService;
 
         [Input]
-        public TvShow CurrentTvShow { get; set; }
+        public TvShowInfo CurrentTvShowInfo { get; set; }
 
         [Input]
         public InlineKeyboardMarkup InlineKeyboardMarkup { get; set; }
 
-        public SendUpdatePhotoRequest(IStateContext stateContext)
+        public SendUpdatePhotoRequest(IStateContext stateContext, ITvShowsService tvShowsService)
         {
             _stateContext = stateContext;
+            _tvShowsService = tvShowsService;
         }
 
         public override async Task OnEnter(CancellationToken cancellationToken)
@@ -32,18 +34,13 @@ namespace ShowMustNotGoOn.Core.States
 
             await _stateContext.UpdateContext.SessionContext.PostRequestAsync(answerCallbackQueryRequest, cancellationToken);
 
-            const string notFoundImage = "https://images-na.ssl-images-amazon.com/images/I/312yeogBelL._SX466_.jpg";
+            var tvShowDescription = await _tvShowsService.GetTvShowDescriptionAsync(CurrentTvShowInfo.MyShowsId, cancellationToken);
 
-            if (string.IsNullOrEmpty(CurrentTvShow.Image))
-            {
-                CurrentTvShow.Image = notFoundImage;
-            }
-
-            var editMessageMediaRequest = new EditMessageMediaRequest(userId, callbackQuery.MessageId, CurrentTvShow.Image);
+            var editMessageMediaRequest = new EditMessageMediaRequest(userId, callbackQuery.MessageId, tvShowDescription.Image);
 
             await _stateContext.UpdateContext.SessionContext.PostRequestAsync(editMessageMediaRequest, cancellationToken);
 
-            var editCaptionRequest = new EditMessageCaptionRequest(userId, callbackQuery.MessageId, $"{ CurrentTvShow.Title } / { CurrentTvShow.TitleOriginal}")
+            var editCaptionRequest = new EditMessageCaptionRequest(userId, callbackQuery.MessageId, $"{ tvShowDescription.Title } / { tvShowDescription.TitleOriginal}")
             {
                 ReplyMarkup = InlineKeyboardMarkup
             };

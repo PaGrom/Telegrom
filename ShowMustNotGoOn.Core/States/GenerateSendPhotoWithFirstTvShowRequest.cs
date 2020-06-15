@@ -10,33 +10,28 @@ namespace ShowMustNotGoOn.Core.States
     public sealed class GenerateSendPhotoWithFirstTvShowRequest : StateBase
     {
         private readonly IStateContext _stateContext;
+        private readonly ITvShowsService _tvShowsService;
 
         [Input]
-        public TvShow CurrentTvShow { get; set; }
+        public TvShowInfo CurrentTvShowInfo { get; set; }
 
         [Output]
         public SendPhotoRequest SendPhotoRequest { get; set; }
 
-        public GenerateSendPhotoWithFirstTvShowRequest(IStateContext stateContext)
+        public GenerateSendPhotoWithFirstTvShowRequest(IStateContext stateContext, ITvShowsService tvShowsService)
         {
             _stateContext = stateContext;
+            _tvShowsService = tvShowsService;
         }
 
-        public override Task OnEnter(CancellationToken cancellationToken)
+        public override async Task OnEnter(CancellationToken cancellationToken)
         {
-            const string notFoundImage = "https://images-na.ssl-images-amazon.com/images/I/312yeogBelL._SX466_.jpg";
+            var tvShowDescription = await _tvShowsService.GetTvShowDescriptionAsync(CurrentTvShowInfo.MyShowsId, cancellationToken);
 
-            if (string.IsNullOrEmpty(CurrentTvShow.Image))
+            SendPhotoRequest = new SendPhotoRequest(_stateContext.UpdateContext.SessionContext.User.Id, tvShowDescription.Image)
             {
-                CurrentTvShow.Image = notFoundImage;
-            }
-
-            SendPhotoRequest = new SendPhotoRequest(_stateContext.UpdateContext.SessionContext.User.Id, CurrentTvShow.Image)
-            {
-                Caption = $"{CurrentTvShow.Title} / {CurrentTvShow.TitleOriginal}"
+                Caption = $"{tvShowDescription.Title} / {tvShowDescription.TitleOriginal}"
             };
-
-            return Task.CompletedTask;
         }
     }
 }

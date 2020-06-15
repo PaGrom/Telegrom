@@ -15,10 +15,10 @@ namespace ShowMustNotGoOn.Core.States
         private readonly ISessionAttributesService _sessionAttributesService;
 
         [Input]
-        public List<TvShow> TvShows { get; set; }
+        public List<TvShowInfo> TvShowsInfos { get; set; }
 
         [Input]
-        public TvShow CurrentTvShow { get; set; }
+        public TvShowInfo CurrentTvShowInfo { get; set; }
 
         [Input]
         public BotMessage BotMessage { get; set; }
@@ -36,7 +36,7 @@ namespace ShowMustNotGoOn.Core.States
         {
             var buttons = new List<InlineKeyboardButton>();
 
-            var tvShowIndex = TvShows.FindIndex(s => s.Id == CurrentTvShow.Id);
+            var tvShowIndex = TvShowsInfos.FindIndex(s => s.MyShowsId == CurrentTvShowInfo.MyShowsId);
             
             if (tvShowIndex > 0)
             {
@@ -44,7 +44,7 @@ namespace ShowMustNotGoOn.Core.States
                 buttons.Add(InlineKeyboardButton.WithCallbackData("Prev", callback.Id.ToString()));
             }
 
-            if (tvShowIndex < TvShows.Count - 1)
+            if (tvShowIndex < TvShowsInfos.Count - 1)
             {
                 var callback = await CreateCallbackAsync(BotMessage.Id, CallbackType.Next);
                 buttons.Add(InlineKeyboardButton.WithCallbackData("Next", callback.Id.ToString()));
