@@ -62,7 +62,7 @@ namespace ShowMustNotGoOn.Core.States
                     CallbackType = callbackType
                 };
 
-                await _sessionAttributesService.SaveOrUpdateSessionAttributeAsync(callback.Id, callback, cancellationToken);
+                await _sessionAttributesService.SaveOrUpdateSessionAttributeAsync(callback, cancellationToken);
 
                 return callback;
             }

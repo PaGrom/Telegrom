@@ -21,7 +21,7 @@ namespace ShowMustNotGoOn.Core.States
 
         public override Task OnEnter(CancellationToken cancellationToken)
         {
-            return _sessionAttributesService.SaveOrUpdateSessionAttributeAsync(BotMessage.Id, BotMessage, cancellationToken);
+            return _sessionAttributesService.SaveOrUpdateSessionAttributeAsync(BotMessage, cancellationToken);
         }
     }
 }

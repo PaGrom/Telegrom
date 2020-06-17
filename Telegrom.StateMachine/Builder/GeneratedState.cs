@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Telegrom.Core;
 using Telegrom.StateMachine.Attributes;
 
 namespace Telegrom.StateMachine.Builder
@@ -11,24 +12,27 @@ namespace Telegrom.StateMachine.Builder
         private readonly IState _current;
         private readonly StateNode _stateNode;
         private readonly IStateContext _stateContext;
+        private readonly ISessionStateAttributesService _sessionStateAttributesService;
 
         public GeneratedState(
             IState current,
             StateNode stateNode,
-            IStateContext stateContext)
+            IStateContext stateContext,
+            ISessionStateAttributesService sessionStateAttributesService)
         {
             _current = current;
             _stateNode = stateNode;
             _stateContext = stateContext;
+            _sessionStateAttributesService = sessionStateAttributesService;
         }
 
         public async Task OnEnter(CancellationToken cancellationToken)
         {
-            RestoreInputAttributes();
+            await RestoreInputAttributesAsync(cancellationToken);
 
             await _current.OnEnter(cancellationToken);
 
-            SaveOutputStateAttributes();
+            await SaveOutputStateAttributesAsync(cancellationToken);
 
             await MoveNextAsync(NextStateKind.AfterOnEnter);
         }
@@ -37,7 +41,7 @@ namespace Telegrom.StateMachine.Builder
         {
             await _current.Handle(cancellationToken);
 
-            SaveOutputStateAttributes();
+            await SaveOutputStateAttributesAsync(cancellationToken);
 
             await MoveNextAsync(NextStateKind.AfterHandle);
         }
@@ -46,7 +50,7 @@ namespace Telegrom.StateMachine.Builder
         {
             await _current.OnExit(cancellationToken);
 
-            SaveOutputStateAttributes();
+            await SaveOutputStateAttributesAsync(cancellationToken);
 
             await MoveNextAsync(NextStateKind.AfterOnExit);
         }
@@ -70,8 +74,13 @@ namespace Telegrom.StateMachine.Builder
             }
         }
 
-        private void RestoreInputAttributes()
+        private async Task RestoreInputAttributesAsync(CancellationToken cancellationToken)
         {
+            await foreach (var (attributeName, attributeType, obj) in _sessionStateAttributesService.GetAllStateAttributesAsync(cancellationToken))
+            {
+                _stateContext.Attributes[attributeName] = (attributeType, obj);
+            }
+
             var type = _current.GetType();
             var props = type.GetProperties().Where(
                 prop => Attribute.IsDefined(prop, typeof(InputAttribute)));
@@ -92,7 +101,7 @@ namespace Telegrom.StateMachine.Builder
             }
         }
 
-        private void SaveOutputStateAttributes()
+        private async Task SaveOutputStateAttributesAsync(CancellationToken cancellationToken)
         {
             var type = _current.GetType();
             var props = type.GetProperties().Where(
@@ -110,6 +119,8 @@ namespace Telegrom.StateMachine.Builder
                 }
 
                 _stateContext.Attributes[propName] = (propType, propValue);
+
+                await _sessionStateAttributesService.CreateOrUpdateStateAttributeAsync(propName, propType, propValue, cancellationToken);
             }
         }
     }

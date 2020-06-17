@@ -9,7 +9,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
-using ShowMustNotGoOn.Core.States;
 using ShowMustNotGoOn.Settings;
 using ShowMustNotGoOn.TvShowsService;
 using Telegrom.Core;
@@ -66,12 +65,19 @@ namespace ShowMustNotGoOn
             builder.RegisterType<IdentityService>()
                 .As<IIdentityService>();
 
+            builder.RegisterType<IdentityStatesService>()
+                .As<IIdentityStatesService>()
+                .InstancePerUpdate();
+
             builder.RegisterType<GlobalAttributesService>()
                 .As<IGlobalAttributesService>();
 
             builder.RegisterType<SessionAttributesService>()
                 .As<ISessionAttributesService>()
                 .InstancePerUpdate();
+
+            builder.RegisterType<SessionStateAttributesRemover>()
+                .As<ISessionStateAttributesRemover>();
 
             builder.RegisterModule(new TvShowsServiceModule
             {

@@ -37,10 +37,7 @@ namespace Telegrom.Core.Contexts
                     {
                         var scope = _lifetimeScope.BeginLifetimeScope(
                             typeof(SessionContext),
-                            builder =>
-                            {
-                                builder.RegisterInstance(user);
-                            });
+                            builder => { builder.RegisterInstance(user); });
 
                         sessionContext = scope.Resolve<SessionContext>();
 

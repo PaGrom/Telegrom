@@ -7,8 +7,9 @@ namespace Telegrom.Core
 {
     public interface ISessionAttributesService
     {
-        Task<T> GetSessionAttributeAsync<T>(Guid guid, CancellationToken cancellationToken);
-        Task<IEnumerable<T>> GetAllByTypeAsync<T>(CancellationToken cancellationToken);
-        Task SaveOrUpdateSessionAttributeAsync<T>(Guid guid, T obj, CancellationToken cancellationToken);
+        Task<T> GetSessionAttributeAsync<T>(Guid guid, CancellationToken cancellationToken) where T : ISessionAttribute;
+        Task<IEnumerable<T>> GetAllByTypeAsync<T>(CancellationToken cancellationToken) where T : ISessionAttribute;
+        Task SaveOrUpdateSessionAttributeAsync<T>(T obj, CancellationToken cancellationToken) where T : ISessionAttribute;
+        Task RemoveSessionAttributeAsync<T>(T obj, CancellationToken cancellationToken) where T : ISessionAttribute;
     }
 }

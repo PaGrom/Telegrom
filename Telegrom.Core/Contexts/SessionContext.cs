@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
 using Microsoft.Extensions.Logging;
@@ -15,6 +16,7 @@ namespace Telegrom.Core.Contexts
         private readonly IChannelReaderProvider<Request> _outgoingChannelReaderProvider;
         private readonly IChannelWriterProvider<Request> _outgoingChannelWriterProvider;
         private readonly ITelegramRequestDispatcher _telegramRequestDispatcher;
+        private readonly ISessionStateAttributesRemover _sessionStateAttributesRemover;
         private readonly ILogger<SessionContext> _logger;
         private Task _updateHandleTask;
         private Task _requestHandleTask;
@@ -28,6 +30,7 @@ namespace Telegrom.Core.Contexts
             IChannelReaderProvider<Request> outgoingChannelReaderProvider,
             IChannelWriterProvider<Request> outgoingChannelWriterProvider,
             ITelegramRequestDispatcher telegramRequestDispatcher,
+            ISessionStateAttributesRemover sessionStateAttributesRemover,
             ILogger<SessionContext> logger)
         {
             _lifetimeScope = lifetimeScope;
@@ -37,6 +40,7 @@ namespace Telegrom.Core.Contexts
             _outgoingChannelReaderProvider = outgoingChannelReaderProvider;
             _outgoingChannelWriterProvider = outgoingChannelWriterProvider;
             _telegramRequestDispatcher = telegramRequestDispatcher;
+            _sessionStateAttributesRemover = sessionStateAttributesRemover;
             _logger = logger;
         }
 
@@ -49,10 +53,7 @@ namespace Telegrom.Core.Contexts
                     var updateContext = new UpdateContext(this, update);
                     await using var innerScope = _lifetimeScope.BeginLifetimeScope(
                         typeof(UpdateContext),
-                        builder =>
-                        {
-                            builder.RegisterInstance(updateContext).As<IUpdateContext>();
-                        });
+                        builder => { builder.RegisterInstance(updateContext).As<IUpdateContext>(); });
 
                     //await innerScope.Resolve<MessageHandler>().UpdateHandleAsync(cancellationToken);
                     await innerScope.Resolve<IUpdateHandler>().Execute(cancellationToken);
@@ -63,14 +64,30 @@ namespace Telegrom.Core.Contexts
             {
                 await foreach (var request in _outgoingChannelReaderProvider.Reader.ReadAllAsync(cancellationToken))
                 {
-	                await _telegramRequestDispatcher.DispatchAsync(request, cancellationToken);
+                    await _telegramRequestDispatcher.DispatchAsync(request, cancellationToken);
                 }
+            }
+
+            async Task RestartOnExceptionAsync(Func<Task> task)
+            {
+                do
+                {
+                    try
+                    {
+                        await task();
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Get exception during update or request handle");
+                    }
+                } while (true);
             }
 
             _logger.LogInformation($"Session for identityUser {User.Id} started");
 
-            _updateHandleTask = Task.Run(UpdateHandle, cancellationToken);
-            _requestHandleTask = Task.Run(RequestHandle, cancellationToken);
+            _updateHandleTask = Task.Run(() => RestartOnExceptionAsync(UpdateHandle), cancellationToken);
+            _requestHandleTask = Task.Run(() => RestartOnExceptionAsync(RequestHandle), cancellationToken);
         }
 
         public async Task PostUpdateAsync(Update update, CancellationToken cancellationToken)
@@ -91,10 +108,14 @@ namespace Telegrom.Core.Contexts
             {
                 await _updateHandleTask;
             }
+
             if (_requestHandleTask != null)
             {
                 await _requestHandleTask;
             }
+
+            await _sessionStateAttributesRemover.RemoveAllSessionStateAttributesAsync(User, CancellationToken.None);
+
             _logger.LogInformation($"Session for identityUser {User.Id} stopped");
         }
     }

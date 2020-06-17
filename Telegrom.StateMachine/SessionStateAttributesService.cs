@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Telegrom.Core;
-using Telegrom.StateMachine.StateAttributes;
 
 namespace Telegrom.StateMachine
 {
@@ -16,40 +18,43 @@ namespace Telegrom.StateMachine
             _sessionAttributesService = sessionAttributesService;
         }
 
-        public async Task<string> GetOrSetDefaultCurrentStateAsync(string defaultStateName, CancellationToken cancellationToken)
+        public async Task CreateOrUpdateStateAttributeAsync(string name, Type type, object obj, CancellationToken cancellationToken)
         {
-            var currentSessionState =
-                (await _sessionAttributesService.GetAllByTypeAsync<CurrentSessionState>(cancellationToken))
-                .SingleOrDefault();
-
-            if (currentSessionState != null)
-            {
-                return currentSessionState.StateName;
-            }
-
-            currentSessionState = new CurrentSessionState
-            {
-                Id = Guid.NewGuid(),
-                StateName = defaultStateName
-            };
-
-            await _sessionAttributesService.SaveOrUpdateSessionAttributeAsync(currentSessionState.Id, currentSessionState, cancellationToken);
-
-            return currentSessionState.StateName;
-        }
-
-        public async Task UpdateCurrentStateAsync(string stateName, CancellationToken cancellationToken)
-        {
-            var currentSessionState =
-                (await _sessionAttributesService.GetAllByTypeAsync<CurrentSessionState>(cancellationToken))
-                .SingleOrDefault() ?? new CurrentSessionState
+            var typeName = type.AssemblyQualifiedName;
+            var stateAttribute =
+                (await _sessionAttributesService.GetAllByTypeAsync<StateAttribute>(cancellationToken))
+                .SingleOrDefault(a => a.Name.Equals(name) && a.TypeName.Equals(typeName))
+                ?? new StateAttribute
                 {
-                    Id = Guid.NewGuid()
+                    Id = Guid.NewGuid(),
+                    Name = name,
+                    TypeName = typeName
                 };
 
-            currentSessionState.StateName = stateName;
+            stateAttribute.Object = JsonConvert.SerializeObject(obj);
 
-            await _sessionAttributesService.SaveOrUpdateSessionAttributeAsync(currentSessionState.Id, currentSessionState, cancellationToken);
+            await _sessionAttributesService.SaveOrUpdateSessionAttributeAsync(stateAttribute, cancellationToken);
+        }
+
+        public async IAsyncEnumerable<(string name, Type type, object obj)> GetAllStateAttributesAsync([EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            var attributes = await _sessionAttributesService.GetAllByTypeAsync<StateAttribute>(cancellationToken);
+
+            foreach (var attribute in attributes)
+            {
+                var type = Type.GetType(attribute.TypeName);
+                yield return (attribute.Name, type, JsonConvert.DeserializeObject(attribute.Object, type));
+            }
+        }
+
+        public async Task RemoveAllStateAttributes(CancellationToken cancellationToken)
+        {
+            var attributes = await _sessionAttributesService.GetAllByTypeAsync<StateAttribute>(cancellationToken);
+
+            foreach (var attribute in attributes)
+            {
+                await _sessionAttributesService.RemoveSessionAttributeAsync(attribute, cancellationToken);
+            }
         }
     }
 }

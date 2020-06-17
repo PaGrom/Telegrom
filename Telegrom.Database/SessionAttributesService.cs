@@ -22,7 +22,7 @@ namespace Telegrom.Database
             _sessionContext = sessionContext;
         }
 
-        public async Task<T> GetSessionAttributeAsync<T>(Guid guid, CancellationToken cancellationToken)
+        public async Task<T> GetSessionAttributeAsync<T>(Guid guid, CancellationToken cancellationToken) where T: ISessionAttribute
         {
             var attribute = await _databaseContext.SessionAttributes
                 .FindAsync(new object[] { guid, _sessionContext.User.Id, typeof(T).FullName }, cancellationToken);
@@ -30,7 +30,7 @@ namespace Telegrom.Database
             return JsonConvert.DeserializeObject<T>(attribute.Value);
         }
 
-        public async Task<IEnumerable<T>> GetAllByTypeAsync<T>(CancellationToken cancellationToken)
+        public async Task<IEnumerable<T>> GetAllByTypeAsync<T>(CancellationToken cancellationToken) where T : ISessionAttribute
         {
             var values = await _databaseContext.SessionAttributes
                 .Where(a => a.SessionId == _sessionContext.User.Id && a.Type == typeof(T).FullName)
@@ -40,10 +40,10 @@ namespace Telegrom.Database
             return values;
         }
 
-        public async Task SaveOrUpdateSessionAttributeAsync<T>(Guid guid, T obj, CancellationToken cancellationToken)
+        public async Task SaveOrUpdateSessionAttributeAsync<T>(T obj, CancellationToken cancellationToken) where T : ISessionAttribute
         {
             var existedAttribute = await _databaseContext.SessionAttributes
-                .FindAsync(new object[] { guid, _sessionContext.User.Id, typeof(T).FullName }, cancellationToken);
+                .FindAsync(new object[] { obj.Id, _sessionContext.User.Id, typeof(T).FullName }, cancellationToken);
 
             if (existedAttribute != null)
             {
@@ -53,12 +53,22 @@ namespace Telegrom.Database
             {
                 await _databaseContext.SessionAttributes.AddAsync(new SessionAttribute
                 {
-                    Id = guid,
+                    Id = obj.Id,
                     SessionId = _sessionContext.User.Id,
                     Type = typeof(T).FullName,
                     Value = JsonConvert.SerializeObject(obj)
                 }, cancellationToken);
             }
+
+            await _databaseContext.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task RemoveSessionAttributeAsync<T>(T obj, CancellationToken cancellationToken) where T : ISessionAttribute
+        {
+            var attribute = await _databaseContext.SessionAttributes
+                .FindAsync(new object[] {obj.Id, _sessionContext.User.Id, typeof(T).FullName}, cancellationToken);
+
+            _databaseContext.SessionAttributes.Remove(attribute);
 
             await _databaseContext.SaveChangesAsync(cancellationToken);
         }

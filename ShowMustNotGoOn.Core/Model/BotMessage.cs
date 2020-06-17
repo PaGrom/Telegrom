@@ -1,8 +1,9 @@
 ﻿using System;
+using Telegrom.Core;
 
 namespace ShowMustNotGoOn.Core.Model
 {
-    public sealed class BotMessage
+    public sealed class BotMessage : ISessionAttribute
     {
         public Guid Id { get; set; }
 

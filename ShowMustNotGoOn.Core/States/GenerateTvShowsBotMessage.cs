@@ -63,7 +63,7 @@ namespace ShowMustNotGoOn.Core.States
                 TvShowInfo = CurrentTvShowInfo
             };
 
-            await _sessionAttributesService.SaveOrUpdateSessionAttributeAsync(BotMessage.Id, BotMessage, cancellationToken);
+            await _sessionAttributesService.SaveOrUpdateSessionAttributeAsync(BotMessage, cancellationToken);
         }
     }
 }

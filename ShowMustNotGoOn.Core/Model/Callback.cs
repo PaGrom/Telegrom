@@ -1,8 +1,9 @@
 ﻿using System;
+using Telegrom.Core;
 
 namespace ShowMustNotGoOn.Core.Model
 {
-    public sealed class Callback
+    public sealed class Callback : ISessionAttribute
     {
         public Guid Id { get; set; }
 
