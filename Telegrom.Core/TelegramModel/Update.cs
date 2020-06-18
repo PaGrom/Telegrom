@@ -5,6 +5,7 @@
     /// </summary>
     public abstract class Update
     {
+        public int UpdateId { get; set; }
         public User From { get; set; }
     }
 }

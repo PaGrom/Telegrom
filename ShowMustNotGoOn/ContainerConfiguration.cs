@@ -62,6 +62,9 @@ namespace ShowMustNotGoOn
             builder.RegisterType<DatabaseContext>()
                 .InstancePerUpdate();
 
+            builder.RegisterType<WakeUpService>()
+                .As<IWakeUpService>();
+
             builder.RegisterType<IdentityService>()
                 .As<IIdentityService>();
 
@@ -115,6 +118,13 @@ namespace ShowMustNotGoOn
             //    .InstancePerUpdate();
 
             builder.RegisterType<SessionContext>()
+                .InstancePerSession();
+
+            builder.RegisterType<DatabaseContext>()
+                .InstancePerSession();
+
+            builder.RegisterType<UpdateService>()
+                .As<IUpdateService>()
                 .InstancePerSession();
 
             builder.RegisterType<ChannelHolder<Update>>()

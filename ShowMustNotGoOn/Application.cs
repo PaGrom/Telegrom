@@ -15,15 +15,18 @@ namespace ShowMustNotGoOn
 
         private readonly SessionManager _sessionManager;
         private readonly ITelegramRequestDispatcher _telegramRequestDispatcher;
+        private readonly IWakeUpService _wakeUpService;
         private readonly ILogger<Application> _logger;
 
         public Application(SessionManager sessionManager,
             ITelegramUpdateReceiver telegramUpdateReceiver,
             ITelegramRequestDispatcher telegramRequestDispatcher,
+            IWakeUpService wakeUpService,
             ILogger<Application> logger)
         {
             _sessionManager = sessionManager;
             _telegramRequestDispatcher = telegramRequestDispatcher;
+            _wakeUpService = wakeUpService;
             _logger = logger;
 
             telegramUpdateReceiver.SetUpdateReceivedHandler(HandleTelegramMessageReceived);
@@ -36,6 +39,7 @@ namespace ShowMustNotGoOn
         public async Task RunAsync()
         {
             _logger.LogInformation("Application start");
+            await _wakeUpService.WakeUpAsync(HandleTelegramMessageReceived, _cancellationTokenSource.Token);
             await _telegramRequestDispatcher.RunAsync(_cancellationTokenSource.Token);
             await _sessionManager.CompleteAllAsync();
         }

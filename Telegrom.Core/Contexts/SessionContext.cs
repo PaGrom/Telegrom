@@ -17,6 +17,7 @@ namespace Telegrom.Core.Contexts
         private readonly IChannelWriterProvider<Request> _outgoingChannelWriterProvider;
         private readonly ITelegramRequestDispatcher _telegramRequestDispatcher;
         private readonly ISessionStateAttributesRemover _sessionStateAttributesRemover;
+        private readonly IUpdateService _updateService;
         private readonly ILogger<SessionContext> _logger;
         private Task _updateHandleTask;
         private Task _requestHandleTask;
@@ -31,6 +32,7 @@ namespace Telegrom.Core.Contexts
             IChannelWriterProvider<Request> outgoingChannelWriterProvider,
             ITelegramRequestDispatcher telegramRequestDispatcher,
             ISessionStateAttributesRemover sessionStateAttributesRemover,
+            IUpdateService updateService,
             ILogger<SessionContext> logger)
         {
             _lifetimeScope = lifetimeScope;
@@ -41,6 +43,7 @@ namespace Telegrom.Core.Contexts
             _outgoingChannelWriterProvider = outgoingChannelWriterProvider;
             _telegramRequestDispatcher = telegramRequestDispatcher;
             _sessionStateAttributesRemover = sessionStateAttributesRemover;
+            _updateService = updateService;
             _logger = logger;
         }
 
@@ -50,6 +53,7 @@ namespace Telegrom.Core.Contexts
             {
                 await foreach (var update in _incomingChannelReaderProvider.Reader.ReadAllAsync(cancellationToken))
                 {
+                    await _updateService.SaveUpdateAsync(update, cancellationToken);
                     var updateContext = new UpdateContext(this, update);
                     await using var innerScope = _lifetimeScope.BeginLifetimeScope(
                         typeof(UpdateContext),
@@ -57,6 +61,7 @@ namespace Telegrom.Core.Contexts
 
                     //await innerScope.Resolve<MessageHandler>().UpdateHandleAsync(cancellationToken);
                     await innerScope.Resolve<IUpdateHandler>().Execute(cancellationToken);
+                    await _updateService.MakeUpdateProcessedAsync(update, cancellationToken);
                 }
             }
 

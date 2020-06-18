@@ -12,9 +12,10 @@ namespace Telegrom.Database
         }
 
         public DbSet<IdentityUser> IdentityUsers { get; set; }
-        public DbSet<GlobalAttribute> GlobalAttributes { get; set; }
-        public DbSet<SessionAttribute> SessionAttributes { get; set; }
         public DbSet<IdentityState> IdentityStates { get; set; }
+        public DbSet<SessionUpdate> SessionUpdates { get; set; }
+        public DbSet<SessionAttribute> SessionAttributes { get; set; }
+        public DbSet<GlobalAttribute> GlobalAttributes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -45,6 +46,14 @@ namespace Telegrom.Database
             modelBuilder.Entity<IdentityState>(entity =>
             {
                 entity.HasKey(e => e.IdentityId);
+
+                entity.Property(e => e.RowVersion)
+                    .IsConcurrencyToken();
+            });
+
+            modelBuilder.Entity<SessionUpdate>(entity =>
+            {
+                entity.HasKey(e => new { e.IdentityId, e.UpdateId });
 
                 entity.Property(e => e.RowVersion)
                     .IsConcurrencyToken();

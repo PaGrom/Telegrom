@@ -11,6 +11,8 @@ namespace Telegrom.TelegramService
             CreateMap<Telegram.Bot.Types.User, User>();
 
             CreateMap<Telegram.Bot.Types.Update, Message>()
+                .ForMember(dest => dest.UpdateId,
+                    opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.From,
                     opt => opt.MapFrom(src => src.GetUser()))
                 .ForMember(dest => dest.MessageId,
@@ -19,6 +21,8 @@ namespace Telegrom.TelegramService
                     opt => opt.MapFrom(src => src.Message.Text));
 
             CreateMap<Telegram.Bot.Types.Update, CallbackQuery>()
+                .ForMember(dest => dest.UpdateId,
+                    opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.From,
                     opt => opt.MapFrom(src => src.GetUser()))
                 .ForMember(dest => dest.Id,
