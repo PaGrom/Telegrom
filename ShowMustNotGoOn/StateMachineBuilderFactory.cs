@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Autofac;
 using ShowMustNotGoOn.Core.Model;
 using ShowMustNotGoOn.Core.States;
 using Telegrom.Core.TelegramModel;
@@ -11,11 +10,11 @@ using Telegrom.StateMachine.Builder;
 
 namespace ShowMustNotGoOn
 {
-    public class StateMachineBuilderModule : Module
+    public static class StateMachineBuilderFactory
     {
-        protected override void Load(ContainerBuilder builder)
+        public static StateMachineBuilder Create()
         {
-            var stateMachineBuilder = new StateMachineBuilder(builder);
+            var stateMachineBuilder = new StateMachineBuilder();
 
             var initStateNode = stateMachineBuilder.AddInit<Start>();
 
@@ -132,11 +131,7 @@ namespace ShowMustNotGoOn
 
             stateMachineBuilder.SetDefaultStateNode(defaultHandleUpdateState);
 
-            stateMachineBuilder.Build();
-
-            builder.RegisterInstance(new StateMachineConfigurationProvider(stateMachineBuilder.InitStateName,
-                    stateMachineBuilder.DefaultStateName))
-                .As<IStateMachineConfigurationProvider>();
+            return stateMachineBuilder;
         }
     }
 }

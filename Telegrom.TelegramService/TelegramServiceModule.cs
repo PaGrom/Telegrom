@@ -10,45 +10,44 @@ namespace Telegrom.TelegramService
 {
     public class TelegramServiceModule : Module
     {
-        public string TelegramApiToken { get; set; }
-        public string ProxyAddress { get; set; }
-        public string Socks5HostName { get; set; }
-        public int? Socks5Port { get; set; }
-        public string Socks5Username { get; set; }
-        public string Socks5Password { get; set; }
-
         protected override void Load(ContainerBuilder builder)
         {
-            if (!string.IsNullOrEmpty(ProxyAddress))
+            if (!string.IsNullOrEmpty(TelegramOptions.Current.ProxyAddress))
             {
-                builder.RegisterInstance(new TelegramBotClient(TelegramApiToken, new WebProxy(ProxyAddress)
-                    {
-                        UseDefaultCredentials = true
-                    }))
+                builder.RegisterInstance(new TelegramBotClient(
+                        TelegramOptions.Current.TelegramApiToken,
+                        new WebProxy(TelegramOptions.Current.ProxyAddress) 
+                        {
+                            UseDefaultCredentials = true
+                        }))
                     .AsImplementedInterfaces()
                     .SingleInstance();
             }
-            else if (!string.IsNullOrEmpty(Socks5HostName)
-                && Socks5Port.HasValue)
+            else if (!string.IsNullOrEmpty(TelegramOptions.Current.Socks5HostName)
+                && TelegramOptions.Current.Socks5Port.HasValue)
             {
                 HttpToSocks5Proxy proxy;
-                if (!string.IsNullOrEmpty(Socks5Username)
-                    && !string.IsNullOrEmpty(Socks5Password))
+                if (!string.IsNullOrEmpty(TelegramOptions.Current.Socks5Username)
+                    && !string.IsNullOrEmpty(TelegramOptions.Current.Socks5Password))
                 {
-                    proxy = new HttpToSocks5Proxy(Socks5HostName, Socks5Port.Value, Socks5Username, Socks5Password);
+                    proxy = new HttpToSocks5Proxy(
+                        TelegramOptions.Current.Socks5HostName,
+                        TelegramOptions.Current.Socks5Port.Value,
+                        TelegramOptions.Current.Socks5Username,
+                        TelegramOptions.Current.Socks5Password);
                 }
                 else
                 {
-                    proxy = new HttpToSocks5Proxy(Socks5HostName, Socks5Port.Value);
+                    proxy = new HttpToSocks5Proxy(TelegramOptions.Current.Socks5HostName, TelegramOptions.Current.Socks5Port.Value);
                 }
 
-                builder.RegisterInstance(new TelegramBotClient(TelegramApiToken, proxy))
+                builder.RegisterInstance(new TelegramBotClient(TelegramOptions.Current.TelegramApiToken, proxy))
                     .AsImplementedInterfaces()
                     .SingleInstance();
             }
             else
             {
-                builder.RegisterInstance(new TelegramBotClient(TelegramApiToken))
+                builder.RegisterInstance(new TelegramBotClient(TelegramOptions.Current.TelegramApiToken))
                     .AsImplementedInterfaces()
                     .SingleInstance();
             }

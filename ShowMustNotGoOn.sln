@@ -17,7 +17,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Telegrom.StateMachine", "Te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Telegrom.Core", "Telegrom.Core\Telegrom.Core.csproj", "{C11E9A50-339F-4404-AEAF-1D1A51CCC83D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShowMustNotGoOn.Core", "ShowMustNotGoOn.Core\ShowMustNotGoOn.Core.csproj", "{EDDE0755-6473-4244-86FA-1BA503346F26}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShowMustNotGoOn.Core", "ShowMustNotGoOn.Core\ShowMustNotGoOn.Core.csproj", "{EDDE0755-6473-4244-86FA-1BA503346F26}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Telegrom", "Telegrom\Telegrom.csproj", "{99FD1511-5132-4359-A151-C508A4EF828A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,6 +59,10 @@ Global
 		{EDDE0755-6473-4244-86FA-1BA503346F26}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EDDE0755-6473-4244-86FA-1BA503346F26}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EDDE0755-6473-4244-86FA-1BA503346F26}.Release|Any CPU.Build.0 = Release|Any CPU
+		{99FD1511-5132-4359-A151-C508A4EF828A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{99FD1511-5132-4359-A151-C508A4EF828A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{99FD1511-5132-4359-A151-C508A4EF828A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{99FD1511-5132-4359-A151-C508A4EF828A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

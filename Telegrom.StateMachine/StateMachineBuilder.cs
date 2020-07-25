@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using Autofac;
@@ -9,11 +11,13 @@ using Autofac.Core;
 using Telegrom.Core.Extensions;
 using Telegrom.StateMachine.Builder;
 
+[assembly: InternalsVisibleTo("Telegrom")]
+
 namespace Telegrom.StateMachine
 {
     public class StateMachineBuilder
     {
-        private readonly ContainerBuilder _builder;
+        private ContainerBuilder _builder;
         private StateNode _initStateNode;
         private StateNode _defaultStateNode;
 
@@ -22,9 +26,12 @@ namespace Telegrom.StateMachine
         public string InitStateName => _initStateNode?.GeneratedTypeName;
         public string DefaultStateName => _defaultStateNode?.GeneratedTypeName;
 
-        public StateMachineBuilder(ContainerBuilder builder)
+        private static StateMachineBuilder _current;
+
+        public static StateMachineBuilder Current
         {
-            _builder = builder;
+            get => _current;
+            set => _current = value ?? throw new ArgumentNullException(nameof(value));
         }
 
         public StateNode AddInit<TInit>() where TInit: IState
@@ -40,8 +47,10 @@ namespace Telegrom.StateMachine
             _defaultStateNode = stateNode;
         }
 
-        public void Build()
+        internal void Build(ContainerBuilder builder)
         {
+            _builder = builder;
+
             Register(_initStateNode);
 #if DEBUG
             var (digraph, ascii) = GraphvizGenerate();

@@ -7,22 +7,20 @@ using Telegrom.Core.Contexts;
 using Telegrom.Core.MessageBus;
 using Telegrom.Core.TelegramModel;
 
-namespace ShowMustNotGoOn
+namespace Telegrom
 {
-    public class Application : IDisposable
+    internal class InternalBotService
     {
-	    private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-
         private readonly SessionManager _sessionManager;
         private readonly ITelegramRequestDispatcher _telegramRequestDispatcher;
         private readonly IWakeUpService _wakeUpService;
-        private readonly ILogger<Application> _logger;
+        private readonly ILogger<InternalBotService> _logger;
 
-        public Application(SessionManager sessionManager,
+        public InternalBotService(SessionManager sessionManager,
             ITelegramUpdateReceiver telegramUpdateReceiver,
             ITelegramRequestDispatcher telegramRequestDispatcher,
             IWakeUpService wakeUpService,
-            ILogger<Application> logger)
+            ILogger<InternalBotService> logger)
         {
             _sessionManager = sessionManager;
             _telegramRequestDispatcher = telegramRequestDispatcher;
@@ -31,16 +29,13 @@ namespace ShowMustNotGoOn
 
             telegramUpdateReceiver.SetUpdateReceivedHandler(HandleTelegramMessageReceived);
             telegramUpdateReceiver.Start();
-
-            Task.Factory.StartNew(async () => { await RunAsync(); },
-                TaskCreationOptions.LongRunning);
         }
 
-        public async Task RunAsync()
+        public async Task RunAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Application start");
-            await _wakeUpService.WakeUpAsync(HandleTelegramMessageReceived, _cancellationTokenSource.Token);
-            await _telegramRequestDispatcher.RunAsync(_cancellationTokenSource.Token);
+            _logger.LogInformation("InternalBotService started");
+            await _wakeUpService.WakeUpAsync(HandleTelegramMessageReceived, cancellationToken);
+            await _telegramRequestDispatcher.RunAsync(cancellationToken);
             await _sessionManager.CompleteAllAsync();
         }
 
@@ -48,11 +43,6 @@ namespace ShowMustNotGoOn
         {
             var sessionContext = await _sessionManager.GetSessionContextAsync(update.From, cancellationToken);
             await sessionContext.PostUpdateAsync(update, cancellationToken);
-        }
-
-        public void Dispose()
-        {
-	        _cancellationTokenSource?.Dispose();
         }
     }
 }
