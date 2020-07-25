@@ -6,7 +6,8 @@ using Microsoft.Extensions.Configuration;
 using ShowMustNotGoOn.Settings;
 using ShowMustNotGoOn.TvShowsService;
 using Telegrom;
-using Telegrom.Database;
+using Telegrom.Database.InMemory;
+using Telegrom.Database.Sqlite;
 using Telegrom.StateMachine;
 using Telegrom.TelegramService;
 
@@ -56,7 +57,8 @@ namespace ShowMustNotGoOn
                     Socks5Username = appSettings.TelegramSettings.Socks5Username,
                     Socks5Password = appSettings.TelegramSettings.Socks5Password
                 })
-                .AddDatabaseOptions(new DatabaseOptions(appSettings.DatabaseSettings.ConnectionString))
+                //.UseInMemoryDatabase("123", optionsBuilder => optionsBuilder.EnableSensitiveDataLogging())
+                .UseSqliteDatabase(appSettings.DatabaseSettings.ConnectionString, optionsBuilder => optionsBuilder.EnableSensitiveDataLogging())
                 .AddStateMachineBuilder(stateMachineBuilder);
         }
     }

@@ -34,10 +34,9 @@ namespace Telegrom
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
-            if (StateMachineBuilder.Current == null)
-            {
-                throw new Exception("You have to create StateMachineBuilder");
-            }
+            _ = StateMachineBuilder.Current ?? throw new Exception("You have to create StateMachineBuilder");
+
+            _ = DatabaseOptions.Current ?? throw new Exception("You have to configure db");
 
             var lifetimeScope = _lifetimeScope ?? new ContainerBuilder().Build();
 
@@ -63,8 +62,7 @@ namespace Telegrom
                 .As(typeof(ILogger<>))
                 .SingleInstance();
 
-            var options = new DbContextOptionsBuilder<DatabaseContext>()
-                .UseSqlite(DatabaseOptions.Current.ConnectionString)
+            var options = DatabaseOptions.Current
                 .EnableSensitiveDataLogging()
                 .UseLoggerFactory(loggerFactory)
                 .Options;
