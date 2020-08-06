@@ -2,6 +2,7 @@
 
 namespace Telegrom.Database.Model
 {
+    [Table("IdentityUser", Schema = "Telegrom")]
     public sealed class IdentityUser
     {
         [DatabaseGenerated(DatabaseGeneratedOption.None)]

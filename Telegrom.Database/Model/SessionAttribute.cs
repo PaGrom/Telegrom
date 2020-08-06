@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Telegrom.Database.Model
 {
+    [Table("SessionAttribute", Schema = "Telegrom")]
     public sealed class SessionAttribute
     {
         [DatabaseGenerated(DatabaseGeneratedOption.None)]

@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Telegrom.Database.Model
 {
+    [Table("GlobalAttribute", Schema = "Telegrom")]
     public sealed class GlobalAttribute
     {
         [DatabaseGenerated(DatabaseGeneratedOption.None)]

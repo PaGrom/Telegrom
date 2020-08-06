@@ -2,6 +2,7 @@
 
 namespace Telegrom.Database.Model
 {
+    [Table("SessionUpdate", Schema = "Telegrom")]
     public sealed class SessionUpdate
     {
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
