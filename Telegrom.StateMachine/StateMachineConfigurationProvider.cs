@@ -1,6 +1,4 @@
-using Telegrom.StateMachine;
-
-namespace ShowMustNotGoOn.Core.States
+﻿namespace Telegrom.StateMachine
 {
     public class StateMachineConfigurationProvider : IStateMachineConfigurationProvider
     {

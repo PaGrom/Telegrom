@@ -11,7 +11,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ShowMustNotGoOn.Core\ShowMustNotGoOn.Core.csproj" />
     <ProjectReference Include="..\Telegrom.Core\Telegrom.Core.csproj" />
     <ProjectReference Include="..\Telegrom.Database\Telegrom.Database.csproj" />
     <ProjectReference Include="..\Telegrom.StateMachine\Telegrom.StateMachine.csproj" />

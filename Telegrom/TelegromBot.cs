@@ -11,7 +11,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
-using ShowMustNotGoOn.Core.States;
 using Telegrom.Core;
 using Telegrom.Core.Contexts;
 using Telegrom.Core.Extensions;
