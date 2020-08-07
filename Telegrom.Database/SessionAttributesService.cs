@@ -72,5 +72,15 @@ namespace Telegrom.Database
 
             await _databaseContext.SaveChangesAsync(cancellationToken);
         }
+
+        public async Task<IEnumerable<T>> FindAttributesInAllSessionsAsync<T>(Func<T, bool> predicate, CancellationToken cancellationToken) where T : ISessionAttribute
+        {
+            var attributes = await _databaseContext.SessionAttributes
+                .Where(a => a.Type == typeof(T).FullName)
+                .Select(a => JsonConvert.DeserializeObject<T>(a.Value))
+                .ToListAsync(cancellationToken);
+
+            return attributes.Where(predicate);
+        }
     }
 }
