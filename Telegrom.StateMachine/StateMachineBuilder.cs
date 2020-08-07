@@ -21,10 +21,10 @@ namespace Telegrom.StateMachine
         private StateNode _initStateNode;
         private StateNode _defaultStateNode;
 
-        private int _statesCount;
+        private readonly HashSet<string> _stateNames = new HashSet<string>();
 
-        public string InitStateName => _initStateNode?.GeneratedTypeName;
-        public string DefaultStateName => _defaultStateNode?.GeneratedTypeName;
+        public string InitStateName => _initStateNode?.StateName;
+        public string DefaultStateName => _defaultStateNode?.StateName;
 
         private static StateMachineBuilder _current;
 
@@ -36,7 +36,7 @@ namespace Telegrom.StateMachine
 
         public StateNode AddInit<TInit>() where TInit: IState
         {
-            _initStateNode = new StateNode(typeof(TInit));
+            _initStateNode = new StateNode(typeof(TInit), "init");
             _defaultStateNode = _initStateNode;
 
             return _initStateNode;
@@ -63,15 +63,15 @@ namespace Telegrom.StateMachine
 
         private void Register(StateNode node)
         {
-            if (node == null || node.GeneratedTypeName != null)
+            if (node == null || node.Built)
             {
                 return;
             }
 
-            node.GeneratedTypeName = $"{nameof(GeneratedState)}<{node.StateType.Name}" +
-                                     $"{(node.IfStates.Any() ? "->If:" : "")}{string.Join(';', node.IfStates.Select(s => s.StateNode.StateType.Name))}" +
-                                     $"{(node.ElseState == null ? "" : $"->Else:{node.ElseState.StateNode.StateType.Name}")}>" +
-                                     $"{_statesCount++}";
+            if (_stateNames.Contains(node.StateName))
+            {
+                throw new Exception($"Can't build state machine graph with not unique state names. Found several nodes with name {node.StateName}");
+            }
 
             _builder.RegisterType<GeneratedState>()
                 .WithParameter(
@@ -79,15 +79,18 @@ namespace Telegrom.StateMachine
                         (pi, ctx) => pi.ParameterType.IsAssignableFrom(typeof(IState)),
                         (pi, ctx) => ctx.ResolveNamed<IState>(node.StateType.Name)))
                 .WithParameter(new TypedParameter(typeof(StateNode), node))
-                .Named<IState>(node.GeneratedTypeName)
+                .Named<IState>(node.StateName)
                 .InstancePerUpdate();
+
+            node.Built = true;
+            _stateNames.Add(node.StateName);
 
             foreach (var ifState in node.IfStates)
             {
                 Register(ifState.StateNode);
             }
 
-            Register(node.ElseState?.StateNode);
+            Register(node.DefaultState?.StateNode);
         }
 
         private (string Digraph, string ascii) GraphvizGenerate()
@@ -105,7 +108,7 @@ namespace Telegrom.StateMachine
 
             void GenerateNode(StateNode node)
             {
-                var generatedTypeName = rgx.Replace(node.GeneratedTypeName, "");
+                var generatedTypeName = rgx.Replace(node.StateName, "");
 
                 if (generatedNodes.Contains(generatedTypeName))
                 {
@@ -119,17 +122,17 @@ namespace Telegrom.StateMachine
                 var ifCount = 0;
                 foreach (var ifState in node.IfStates)
                 {
-                    var nextNodeGeneratedTypeName = rgx.Replace(ifState.StateNode.GeneratedTypeName, "");
+                    var nextNodeGeneratedTypeName = rgx.Replace(ifState.StateNode.StateName, "");
                     stringBuilder.AppendLine($"\t{generatedTypeName} -> {nextNodeGeneratedTypeName} [ label = \"{node.NextStateKind} If{(ifCount == 0 ? "" : $"{ifCount}")}\" ]");
                     ifCount++;
                     GenerateNode(ifState.StateNode);
                 }
 
-                if (node.ElseState != null)
+                if (node.DefaultState != null)
                 {
-                    var nextNodeGeneratedTypeName = rgx.Replace(node.ElseState.StateNode.GeneratedTypeName, "");
+                    var nextNodeGeneratedTypeName = rgx.Replace(node.DefaultState.StateNode.StateName, "");
                     stringBuilder.AppendLine($"\t{generatedTypeName} -> {nextNodeGeneratedTypeName} [ label = \"{node.NextStateKind}{(node.IfStates.Any() ? " Else" : "")}\" ]");
-                    GenerateNode(node.ElseState.StateNode);
+                    GenerateNode(node.DefaultState.StateNode);
                 }
             }
         }

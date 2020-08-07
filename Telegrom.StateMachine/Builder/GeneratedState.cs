@@ -62,13 +62,13 @@ namespace Telegrom.StateMachine.Builder
                 return;
             }
 
-            _stateContext.StateMachineContext.MoveTo(_stateNode.ElseState.StateNode.GeneratedTypeName);
+            _stateContext.StateMachineContext.MoveTo(_stateNode.DefaultState.StateNode.StateName);
 
             foreach (var ifState in _stateNode.IfStates)
             {
                 if (await ifState.Condition(_stateContext))
                 {
-                    _stateContext.StateMachineContext.MoveTo(ifState.StateNode.GeneratedTypeName);
+                    _stateContext.StateMachineContext.MoveTo(ifState.StateNode.StateName);
                     break;
                 }
             }

@@ -27,10 +27,13 @@ namespace ShowMustNotGoOn
                                                && string.Equals(message.Text, "/start",
                                                    StringComparison.InvariantCultureIgnoreCase)),
                         typeof(SendWelcomeMessage)),
-                    new ElseState(initStateNode));
+                    new DefaultState(initStateNode));
 
             var defaultHandleUpdateState = sendWelcomeMessageState
-                .SetNext(NextStateKind.AfterOnEnter, new ElseState(typeof(HandleUpdate)));
+                .SetNext(
+                    NextStateKind.AfterOnEnter,
+                    new DefaultState(
+                        typeof(HandleUpdate)));
 
             var (handleMessageState, handleCallbackQueryState, _) = defaultHandleUpdateState
                 .SetNext(
@@ -41,14 +44,16 @@ namespace ShowMustNotGoOn
                     new IfState(
                         ctx => Task.FromResult(ctx.UpdateContext.Update is CallbackQuery),
                         typeof(HandleCallbackQuery)),
-                    new ElseState(defaultHandleUpdateState));
+                    new DefaultState(defaultHandleUpdateState));
 
             var (handleCommandState, findTvShowsState) = handleMessageState
                 .SetNext(
                     NextStateKind.AfterOnEnter,
-                    new IfState(ctx => Task.FromResult(((Message) ctx.UpdateContext.Update).IsCommand()),
+                    new IfState(
+                        ctx => Task.FromResult(((Message) ctx.UpdateContext.Update).IsCommand()),
                         typeof(HandleCommand)),
-                    new ElseState(typeof(FindTvShows)));
+                    new DefaultState(
+                        typeof(FindTvShows)));
 
             var (generateTvShowsMessageState, sendCantFindTvShowsMessageState) = findTvShowsState
                 .SetNext(
@@ -59,19 +64,21 @@ namespace ShowMustNotGoOn
                             var (_, value) = ctx.Attributes[nameof(FindTvShows.TvShowsInfos)];
                             var tvShows = (List<TvShowInfo>) value;
                             return Task.FromResult(tvShows.Any());
-                        }, typeof(GenerateTvShowsBotMessage)),
-                    new ElseState(typeof(SendCantFindTvShowsMessage)));
+                        },
+                        typeof(GenerateTvShowsBotMessage)),
+                    new DefaultState(
+                        typeof(SendCantFindTvShowsMessage)));
 
             sendCantFindTvShowsMessageState
-                .SetNext(NextStateKind.AfterOnEnter, new ElseState(defaultHandleUpdateState));
+                .SetNext(NextStateKind.AfterOnEnter, new DefaultState(defaultHandleUpdateState));
 
             generateTvShowsMessageState
-                .SetNext(NextStateKind.AfterOnEnter, new ElseState(typeof(GenerateSendPhotoWithFirstTvShowRequest)))
-                .SetNext(NextStateKind.AfterOnEnter, new ElseState(typeof(GenerateKeyboard)))
-                .SetNext(NextStateKind.AfterOnEnter, new ElseState(typeof(GenerateNavigationButtons)))
-                .SetNext(NextStateKind.AfterOnEnter, new ElseState(typeof(GenerateSubscriptionsButtons)))
-                .SetNext(NextStateKind.AfterOnEnter, new ElseState(typeof(SendSendPhotoRequest)))
-                .SetNext(NextStateKind.AfterOnEnter, new ElseState(defaultHandleUpdateState));
+                .SetNext(NextStateKind.AfterOnEnter, new DefaultState(typeof(GenerateSendPhotoWithFirstTvShowRequest)))
+                .SetNext(NextStateKind.AfterOnEnter, new DefaultState(typeof(GenerateKeyboard), $"{nameof(GenerateKeyboard)}ForTvShowMessage"))
+                .SetNext(NextStateKind.AfterOnEnter, new DefaultState(typeof(GenerateNavigationButtons), $"{nameof(GenerateNavigationButtons)}ForTvShowMessage"))
+                .SetNext(NextStateKind.AfterOnEnter, new DefaultState(typeof(GenerateSubscriptionsButtons), $"{nameof(GenerateSubscriptionsButtons)}ForTvShowMessage"))
+                .SetNext(NextStateKind.AfterOnEnter, new DefaultState(typeof(SendSendPhotoRequest)))
+                .SetNext(NextStateKind.AfterOnEnter, new DefaultState(defaultHandleUpdateState));
 
             var (handleNextCallbackQueryState, handlePrevCallbackQueryState, _) = handleCallbackQueryState
                 .SetNext(
@@ -92,42 +99,42 @@ namespace ShowMustNotGoOn
                             return Task.FromResult(callback.CallbackType == CallbackType.Prev);
                         },
                         typeof(HandlePrevCallbackQuery)),
-                    new ElseState(defaultHandleUpdateState));
+                    new DefaultState(defaultHandleUpdateState));
 
             var updateTvShowsBotMessageState = handleNextCallbackQueryState
                 .SetNext(
                     NextStateKind.AfterOnEnter,
-                    new ElseState(typeof(UpdateTvShowsBotMessage)));
+                    new DefaultState(typeof(UpdateTvShowsBotMessage)));
 
             var generateKeyBoardForUpdateState = updateTvShowsBotMessageState
                 .SetNext(
                     NextStateKind.AfterOnEnter,
-                    new ElseState(typeof(GenerateKeyboard)));
+                    new DefaultState(typeof(GenerateKeyboard)));
 
             var generateNavigationButtonsForUpdateState = generateKeyBoardForUpdateState
                 .SetNext(
                     NextStateKind.AfterOnEnter,
-                    new ElseState(typeof(GenerateNavigationButtons)));
+                    new DefaultState(typeof(GenerateNavigationButtons)));
 
             var generateSubscriptionsButtonsForUpdateState = generateNavigationButtonsForUpdateState
                 .SetNext(
                     NextStateKind.AfterOnEnter,
-                    new ElseState(typeof(GenerateSubscriptionsButtons)));
+                    new DefaultState(typeof(GenerateSubscriptionsButtons)));
 
             var sendUpdatePhotoRequestState = generateSubscriptionsButtonsForUpdateState
                 .SetNext(
                     NextStateKind.AfterOnEnter,
-                    new ElseState(typeof(SendUpdatePhotoRequest)));
+                    new DefaultState(typeof(SendUpdatePhotoRequest)));
 
             sendUpdatePhotoRequestState
                 .SetNext(
                     NextStateKind.AfterOnEnter,
-                    new ElseState(defaultHandleUpdateState));
+                    new DefaultState(defaultHandleUpdateState));
 
             handlePrevCallbackQueryState
                 .SetNext(
                     NextStateKind.AfterOnEnter,
-                    new ElseState(updateTvShowsBotMessageState));
+                    new DefaultState(updateTvShowsBotMessageState));
 
             stateMachineBuilder.SetDefaultStateNode(defaultHandleUpdateState);
 

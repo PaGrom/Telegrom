@@ -8,60 +8,63 @@ namespace Telegrom.StateMachine.Builder
     {
         internal Type StateType { get; }
 
-        internal string GeneratedTypeName { get; set; }
+        internal string StateName { get; }
 
         internal NextStateKind? NextStateKind { get; private set; }
 
+        internal bool Built { get; set; }
+
         internal List<IfState> IfStates { get; private set; } = new List<IfState>();
 
-        internal ElseState ElseState { get; private set; }
+        internal DefaultState DefaultState { get; private set; }
 
-        internal StateNode(Type stateType)
+        internal StateNode(Type stateType, string stateName)
         {
             StateType = stateType;
+            StateName = stateName;
         }
 
-        private void SetNextInternal(NextStateKind nextStateKind, ElseState elseState, params IfState[] ifStates)
+        private void SetNextInternal(NextStateKind nextStateKind, DefaultState defaultState, params IfState[] ifStates)
         {
             NextStateKind = nextStateKind;
-            ElseState = elseState;
+            DefaultState = defaultState;
             IfStates = ifStates.ToList();
         }
 
-        public StateNode SetNext(NextStateKind nextStateKind, ElseState elseState)
+        public StateNode SetNext(NextStateKind nextStateKind, DefaultState defaultState)
         {
-            SetNextInternal(nextStateKind, elseState);
-            return ElseState.StateNode;
+            SetNextInternal(nextStateKind, defaultState);
+            return DefaultState.StateNode;
         }
 
-        public (StateNode IfState, StateNode ElseState) SetNext(NextStateKind nextStateKind, IfState ifState, ElseState elseState)
+        public (StateNode IfState, StateNode DefaultState) SetNext(NextStateKind nextStateKind, IfState ifState, DefaultState defaultState)
         {
-            SetNextInternal(nextStateKind, elseState, ifState);
-            return (ifState.StateNode, elseState.StateNode);
+            SetNextInternal(nextStateKind, defaultState, ifState);
+            return (ifState.StateNode, defaultState.StateNode);
         }
 
-        public (StateNode IfState, StateNode IfState1, StateNode ElseState) SetNext(NextStateKind nextStateKind, IfState ifState, IfState ifState1, ElseState elseState)
+        public (StateNode IfState, StateNode IfState1, StateNode DefaultState) SetNext(NextStateKind nextStateKind, IfState ifState, IfState ifState1, DefaultState defaultState)
         {
-            SetNextInternal(nextStateKind, elseState, ifState, ifState1);
-            return (ifState.StateNode, ifState1.StateNode, elseState.StateNode);
+            SetNextInternal(nextStateKind, defaultState, ifState, ifState1);
+            return (ifState.StateNode, ifState1.StateNode, defaultState.StateNode);
         }
 
-        public (StateNode IfState, StateNode IfState1, StateNode IfState2, StateNode ElseState) SetNext(NextStateKind nextStateKind, IfState ifState, IfState ifState1, IfState ifState2, ElseState elseState)
+        public (StateNode IfState, StateNode IfState1, StateNode IfState2, StateNode DefaultState) SetNext(NextStateKind nextStateKind, IfState ifState, IfState ifState1, IfState ifState2, DefaultState defaultState)
         {
-            SetNextInternal(nextStateKind, elseState, ifState, ifState1, ifState2);
-            return (ifState.StateNode, ifState1.StateNode, ifState2.StateNode, elseState.StateNode);
+            SetNextInternal(nextStateKind, defaultState, ifState, ifState1, ifState2);
+            return (ifState.StateNode, ifState1.StateNode, ifState2.StateNode, defaultState.StateNode);
         }
 
-        public (StateNode IfState, StateNode IfState1, StateNode IfState2, StateNode IfState3, StateNode ElseState) SetNext(NextStateKind nextStateKind, IfState ifState, IfState ifState1, IfState ifState2, IfState ifState3, ElseState elseState)
+        public (StateNode IfState, StateNode IfState1, StateNode IfState2, StateNode IfState3, StateNode DefaultState) SetNext(NextStateKind nextStateKind, IfState ifState, IfState ifState1, IfState ifState2, IfState ifState3, DefaultState defaultState)
         {
-            SetNextInternal(nextStateKind, elseState, ifState, ifState1, ifState2, ifState3);
-            return (ifState.StateNode, ifState1.StateNode, ifState2.StateNode, ifState3.StateNode, elseState.StateNode);
+            SetNextInternal(nextStateKind, defaultState, ifState, ifState1, ifState2, ifState3);
+            return (ifState.StateNode, ifState1.StateNode, ifState2.StateNode, ifState3.StateNode, defaultState.StateNode);
         }
 
-        public (StateNode IfState, StateNode IfState1, StateNode IfState2, StateNode IfState3, StateNode IfState4, StateNode ElseState) SetNext(NextStateKind nextStateKind, IfState ifState, IfState ifState1, IfState ifState2, IfState ifState3, IfState ifState4, ElseState elseState)
+        public (StateNode IfState, StateNode IfState1, StateNode IfState2, StateNode IfState3, StateNode IfState4, StateNode DefaultState) SetNext(NextStateKind nextStateKind, IfState ifState, IfState ifState1, IfState ifState2, IfState ifState3, IfState ifState4, DefaultState defaultState)
         {
-            SetNextInternal(nextStateKind, elseState, ifState, ifState1, ifState2, ifState3, ifState4);
-            return (ifState.StateNode, ifState1.StateNode, ifState2.StateNode, ifState3.StateNode, ifState4.StateNode, elseState.StateNode);
+            SetNextInternal(nextStateKind, defaultState, ifState, ifState1, ifState2, ifState3, ifState4);
+            return (ifState.StateNode, ifState1.StateNode, ifState2.StateNode, ifState3.StateNode, ifState4.StateNode, defaultState.StateNode);
         }
     }
 }

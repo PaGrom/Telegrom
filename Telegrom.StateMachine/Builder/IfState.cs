@@ -8,7 +8,7 @@ namespace Telegrom.StateMachine.Builder
         internal Func<IStateContext, Task<bool>> Condition { get; }
         internal StateNode StateNode { get; }
 
-        public IfState(Func<IStateContext, Task<bool>> condition, Type stateType)
+        public IfState(Func<IStateContext, Task<bool>> condition, Type stateType, string stateName = null)
         {
             if (!typeof(IState).IsAssignableFrom(stateType))
             {
@@ -16,7 +16,7 @@ namespace Telegrom.StateMachine.Builder
             }
 
             Condition = condition;
-            StateNode = new StateNode(stateType);
+            StateNode = new StateNode(stateType, stateName ?? stateType.Name);
         }
 
         public IfState(Func<IStateContext, Task<bool>> condition, StateNode stateNode)

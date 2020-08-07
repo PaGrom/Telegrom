@@ -2,21 +2,21 @@
 
 namespace Telegrom.StateMachine.Builder
 {
-    public sealed class ElseState
+    public sealed class DefaultState
     {
         internal StateNode StateNode { get; }
 
-        public ElseState(Type stateType)
+        public DefaultState(Type stateType, string stateName = null)
         {
             if (!typeof(IState).IsAssignableFrom(stateType))
             {
                 throw new ArgumentException(nameof(stateType), $"Type must implement interface {nameof(IState)}");
             }
 
-            StateNode = new StateNode(stateType);
+            StateNode = new StateNode(stateType, stateName ?? stateType.Name);
         }
 
-        public ElseState(StateNode stateNode)
+        public DefaultState(StateNode stateNode)
         {
             StateNode = stateNode;
         }
