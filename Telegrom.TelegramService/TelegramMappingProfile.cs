@@ -32,6 +32,18 @@ namespace Telegrom.TelegramService
                 .ForMember(dest => dest.Data,
                     opt => opt.MapFrom(src => src.CallbackQuery.Data));
 
+            CreateMap<KeyboardButton, Telegram.Bot.Types.ReplyMarkups.KeyboardButton>()
+                .ForMember(dest => dest.Text,
+                    opt => opt.MapFrom(src => src.Text));
+
+            CreateMap<ReplyKeyboardMarkup, Telegram.Bot.Types.ReplyMarkups.ReplyKeyboardMarkup>()
+                .ConstructUsing((m, ctx) =>
+                    new Telegram.Bot.Types.ReplyMarkups.ReplyKeyboardMarkup(
+                        ctx.Mapper.Map<IEnumerable<IEnumerable<Telegram.Bot.Types.ReplyMarkups.KeyboardButton>>>(
+                            m.Keyboard)));
+
+            CreateMap<ReplyKeyboardRemove, Telegram.Bot.Types.ReplyMarkups.ReplyKeyboardRemove>();
+
             CreateMap<InlineKeyboardButton, Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>()
                 .ForMember(dest => dest.Text,
                     opt => opt.MapFrom(src => src.Text))
@@ -45,7 +57,11 @@ namespace Telegrom.TelegramService
                             m.InlineKeyboard)));
 
             CreateMap<SendMessageRequest, Telegram.Bot.Requests.SendMessageRequest>()
-                .ConstructUsing(r => new Telegram.Bot.Requests.SendMessageRequest(new Telegram.Bot.Types.ChatId(r.ChatId), r.Text));
+                .ConstructUsing((r, ctx) =>
+                    new Telegram.Bot.Requests.SendMessageRequest(new Telegram.Bot.Types.ChatId(r.ChatId), r.Text)
+                    {
+                        ReplyMarkup = ctx.Mapper.Map<Telegram.Bot.Types.ReplyMarkups.ReplyKeyboardMarkup>(r.KeyboardMarkup)
+                    });
 
             CreateMap<SendPhotoRequest, Telegram.Bot.Requests.SendPhotoRequest>()
                 .ForMember(dest => dest.ReplyMarkup, 
