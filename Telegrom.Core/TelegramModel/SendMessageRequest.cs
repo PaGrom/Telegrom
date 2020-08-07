@@ -18,7 +18,7 @@
         /// <param name="chatId">Unique identifier for the target chat or username of the target channel</param>
         /// <param name="text">Text of the message to be sent</param>
         /// <param name="keyboardMarkup">Keyboard</param>
-        public SendMessageRequest(int chatId, string text, ReplyKeyboardMarkup keyboardMarkup)
+        public SendMessageRequest(int chatId, string text, IReplyMarkup keyboardMarkup)
         {
             ChatId = chatId;
             Text = text;

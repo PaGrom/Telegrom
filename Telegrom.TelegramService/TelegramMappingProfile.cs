@@ -60,7 +60,12 @@ namespace Telegrom.TelegramService
                 .ConstructUsing((r, ctx) =>
                     new Telegram.Bot.Requests.SendMessageRequest(new Telegram.Bot.Types.ChatId(r.ChatId), r.Text)
                     {
-                        ReplyMarkup = ctx.Mapper.Map<Telegram.Bot.Types.ReplyMarkups.ReplyKeyboardMarkup>(r.KeyboardMarkup)
+                        ReplyMarkup = r.KeyboardMarkup switch
+                        {
+                            ReplyKeyboardMarkup markup => ctx.Mapper.Map<Telegram.Bot.Types.ReplyMarkups.ReplyKeyboardMarkup>(markup),
+                            ReplyKeyboardRemove remove => ctx.Mapper.Map<Telegram.Bot.Types.ReplyMarkups.ReplyKeyboardRemove>(remove),
+                            _ => null
+                        }
                     });
 
             CreateMap<SendPhotoRequest, Telegram.Bot.Requests.SendPhotoRequest>()
