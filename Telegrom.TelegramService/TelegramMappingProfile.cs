@@ -95,6 +95,12 @@ namespace Telegrom.TelegramService
                         ReplyMarkup = ctx.Mapper.Map<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup>(r.ReplyMarkup)
                     });
 
+            CreateMap<EditMessageReplyMarkupRequest, Telegram.Bot.Requests.EditMessageReplyMarkupRequest>()
+                .ConstructUsing((r, ctx) =>
+                    new Telegram.Bot.Requests.EditMessageReplyMarkupRequest(new Telegram.Bot.Types.ChatId(r.ChatId),
+                        r.MessageId,
+                        ctx.Mapper.Map<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup>(r.ReplyMarkup)));
+
             CreateMap<DeleteMessageRequest, Telegram.Bot.Requests.DeleteMessageRequest>()
                 .ConstructUsing(r =>
                     new Telegram.Bot.Requests.DeleteMessageRequest(new Telegram.Bot.Types.ChatId(r.ChatId),
