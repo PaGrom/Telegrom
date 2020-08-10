@@ -62,6 +62,7 @@ namespace Telegrom.TelegramService
                     {
                         ReplyMarkup = r.KeyboardMarkup switch
                         {
+                            InlineKeyboardMarkup markup => ctx.Mapper.Map<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup>(markup),
                             ReplyKeyboardMarkup markup => ctx.Mapper.Map<Telegram.Bot.Types.ReplyMarkups.ReplyKeyboardMarkup>(markup),
                             ReplyKeyboardRemove remove => ctx.Mapper.Map<Telegram.Bot.Types.ReplyMarkups.ReplyKeyboardRemove>(remove),
                             _ => null

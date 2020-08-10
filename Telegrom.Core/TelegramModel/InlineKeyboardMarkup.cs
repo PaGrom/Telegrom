@@ -5,7 +5,7 @@ namespace Telegrom.Core.TelegramModel
     /// <summary>
     /// This object represents an inline keyboard that appears right next to the <see cref="T:ShowMustNotGoOn.Core.TelegramModel.Message" /> it belongs to.
     /// </summary>
-    public class InlineKeyboardMarkup
+    public class InlineKeyboardMarkup : IReplyMarkup
     {
         /// <summary>
         /// Array of <see cref="T:ShowMustNotGoOn.Core.TelegramModel.InlineKeyboardButton" /> rows, each represented by an Array of <see cref="T:ShowMustNotGoOn.Core.TelegramModel.InlineKeyboardButton" />.

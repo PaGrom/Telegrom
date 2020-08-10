@@ -16,7 +16,7 @@ namespace Telegrom.StateMachine.Builder
             }
 
             Condition = condition;
-            StateNode = new StateNode(stateType, stateName ?? stateType.Name);
+            StateNode = new StateNode(stateType, $"Telegrom.StateNode.{stateName ?? stateType.Name}");
         }
 
         public IfState(Func<IStateContext, Task<bool>> condition, StateNode stateNode)

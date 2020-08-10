@@ -13,7 +13,7 @@ namespace Telegrom.StateMachine.Builder
                 throw new ArgumentException(nameof(stateType), $"Type must implement interface {nameof(IState)}");
             }
 
-            StateNode = new StateNode(stateType, stateName ?? stateType.Name);
+            StateNode = new StateNode(stateType, $"Telegrom.StateNode.{stateName ?? stateType.Name}");
         }
 
         public DefaultState(StateNode stateNode)
