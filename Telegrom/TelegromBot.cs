@@ -174,6 +174,7 @@ namespace Telegrom
             static bool NotNetFramework(string assemblyName)
             {
                 return !assemblyName.StartsWith("Microsoft.")
+                       && !assemblyName.StartsWith("Windows.")
                        && !assemblyName.StartsWith("System.")
                        && !assemblyName.StartsWith("Newtonsoft.")
                        && assemblyName != "netstandard";

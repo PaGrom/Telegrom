@@ -21,10 +21,5 @@
         /// Telegram User Last Name
         /// </summary>
         public string LastName { get; set; }
-
-        /// <summary>
-        /// User current state name
-        /// </summary>
-        public string CurrentStateName { get; set; }
     }
 }
