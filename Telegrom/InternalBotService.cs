@@ -11,21 +11,21 @@ namespace Telegrom
     internal class InternalBotService
     {
         private readonly SessionManager _sessionManager;
-        private readonly ITelegramUpdateDispatcher _telegramUpdateDispatcher;
-        private readonly ITelegramRequestDispatcher _telegramRequestDispatcher;
+        private readonly IUpdateDispatcher _updateDispatcher;
+        private readonly IRequestDispatcher _requestDispatcher;
         private readonly IWakeUpService _wakeUpService;
         private readonly ILogger<InternalBotService> _logger;
 
         public InternalBotService(SessionManager sessionManager,
             ITelegramUpdateReceiver telegramUpdateReceiver,
-            ITelegramUpdateDispatcher telegramUpdateDispatcher,
-            ITelegramRequestDispatcher telegramRequestDispatcher,
+            IUpdateDispatcher updateDispatcher,
+            IRequestDispatcher requestDispatcher,
             IWakeUpService wakeUpService,
             ILogger<InternalBotService> logger)
         {
             _sessionManager = sessionManager;
-            _telegramUpdateDispatcher = telegramUpdateDispatcher;
-            _telegramRequestDispatcher = telegramRequestDispatcher;
+            _updateDispatcher = updateDispatcher;
+            _requestDispatcher = requestDispatcher;
             _wakeUpService = wakeUpService;
             _logger = logger;
 
@@ -36,15 +36,15 @@ namespace Telegrom
         public async Task RunAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("InternalBotService started");
-            _ = _telegramUpdateDispatcher.RunAsync(cancellationToken);
+            _ = _updateDispatcher.RunAsync(cancellationToken);
             await _wakeUpService.WakeUpAsync(HandleTelegramMessageReceived, cancellationToken);
-            await _telegramRequestDispatcher.RunAsync(cancellationToken);
+            await _requestDispatcher.RunAsync(cancellationToken);
             await _sessionManager.CompleteAllAsync();
         }
 
         public async void HandleTelegramMessageReceived(Update update, CancellationToken cancellationToken)
         {
-            await _telegramUpdateDispatcher.DispatchAsync(update, cancellationToken);
+            await _updateDispatcher.DispatchAsync(update, cancellationToken);
         }
     }
 }

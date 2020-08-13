@@ -4,7 +4,7 @@ using Telegrom.Core.TelegramModel;
 
 namespace Telegrom.Core.MessageBus
 {
-    public interface ITelegramUpdateDispatcher
+    public interface IUpdateDispatcher
     {
         Task DispatchAsync(Update update, CancellationToken cancellationToken);
         Task RunAsync(CancellationToken cancellationToken);

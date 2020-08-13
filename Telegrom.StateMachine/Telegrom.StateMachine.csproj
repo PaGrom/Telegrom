@@ -12,4 +12,10 @@
     <ProjectReference Include="..\Telegrom.Core\Telegrom.Core.csproj" />
   </ItemGroup>
 
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+            <_Parameter1>Telegrom</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
+
 </Project>

@@ -8,32 +8,33 @@ using Telegram.Bot.Exceptions;
 using Telegrom.Core.MessageBus;
 using Telegrom.Core.TelegramModel;
 
-namespace Telegrom.TelegramService
+namespace Telegrom
 {
-    internal sealed class TelegramRequestDispatcher : ITelegramRequestDispatcher
+    internal sealed class RequestDispatcher : IRequestDispatcher
     {
-        private readonly ILogger<TelegramRequestDispatcher> _logger;
+        private readonly ILogger<RequestDispatcher> _logger;
         private readonly ITelegramBotClient _telegramBotClient;
-        private readonly IChannelReaderProvider<Request> _outgoingRequestsChannelReader;
-        private readonly IChannelWriterProvider<Request> _outgoingRequestsChannelWriter;
+        private readonly IGlobalOutgoingRequestQueueReader _outgoingRequestQueueReader;
+        private readonly IGlobalOutgoingRequestQueueWriter _outgoingRequestQueueWriter;
         private readonly IMapper _mapper;
 
-        public TelegramRequestDispatcher(
+        public RequestDispatcher(
             ITelegramBotClient telegramBotClient,
+            IGlobalOutgoingRequestQueueReader outgoingRequestQueueReader,
+            IGlobalOutgoingRequestQueueWriter outgoingRequestQueueWriter,
             IMapper mapper,
-            ILogger<TelegramRequestDispatcher> logger)
+            ILogger<RequestDispatcher> logger)
         {
             _telegramBotClient = telegramBotClient;
-            var channelHolder = new ChannelHolder<Request>();
-            _outgoingRequestsChannelReader = channelHolder;
-            _outgoingRequestsChannelWriter = channelHolder;
+            _outgoingRequestQueueWriter = outgoingRequestQueueWriter;
+            _outgoingRequestQueueReader = outgoingRequestQueueReader;
             _mapper = mapper;
             _logger = logger;
         }
 
         public async Task DispatchAsync(Request request, CancellationToken cancellationToken)
         {
-            await _outgoingRequestsChannelWriter.Writer.WriteAsync(request, cancellationToken);
+            await _outgoingRequestQueueWriter.EnqueueAsync(request, cancellationToken);
         }
 
         public async Task RunAsync(CancellationToken cancellationToken)
@@ -42,7 +43,7 @@ namespace Telegrom.TelegramService
             while (!cancellationToken.IsCancellationRequested)
                 try
                 {
-                    var request = await _outgoingRequestsChannelReader.Reader.ReadAsync(cancellationToken);
+                    var request = await _outgoingRequestQueueReader.DequeueAsync(cancellationToken);
 
                     await MakeRequestAsync(request, cancellationToken);
                     await Task.Delay(33, cancellationToken);

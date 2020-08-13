@@ -7,27 +7,29 @@ using Telegrom.Core.Contexts;
 using Telegrom.Core.MessageBus;
 using Telegrom.Core.TelegramModel;
 
-namespace Telegrom.TelegramService
+namespace Telegrom
 {
-    internal sealed class TelegramUpdateDispatcher : ITelegramUpdateDispatcher
+    internal sealed class UpdateDispatcher : IUpdateDispatcher
     {
         private readonly SessionManager _sessionManager;
-        private readonly ILogger<TelegramUpdateDispatcher> _logger;
-        private readonly IChannelReaderProvider<Update> _incomingUpdatesChannelReader;
-        private readonly IChannelWriterProvider<Update> _incomingUpdatesChannelWriter;
+        private readonly ILogger<UpdateDispatcher> _logger;
+        private readonly IGlobalIncomingUpdateQueueReader _incomingUpdateQueueReader;
+        private readonly IGlobalIncomingUpdateQueueWriter _incomingUpdateQueueWriter;
 
-        public TelegramUpdateDispatcher(SessionManager sessionManager, ILogger<TelegramUpdateDispatcher> logger)
+        public UpdateDispatcher(SessionManager sessionManager,
+            IGlobalIncomingUpdateQueueWriter incomingUpdateQueueWriter,
+            IGlobalIncomingUpdateQueueReader incomingUpdateQueueReader,
+            ILogger<UpdateDispatcher> logger)
         {
-            var channelHolder = new ChannelHolder<Update>();
-            _incomingUpdatesChannelReader = channelHolder;
-            _incomingUpdatesChannelWriter = channelHolder;
             _sessionManager = sessionManager;
+            _incomingUpdateQueueWriter = incomingUpdateQueueWriter;
+            _incomingUpdateQueueReader = incomingUpdateQueueReader;
             _logger = logger;
         }
 
         public async Task DispatchAsync(Update update, CancellationToken cancellationToken)
         {
-            await _incomingUpdatesChannelWriter.Writer.WriteAsync(update, cancellationToken);
+            await _incomingUpdateQueueWriter.EnqueueAsync(update, cancellationToken);
         }
 
         public async Task RunAsync(CancellationToken cancellationToken)
@@ -36,7 +38,7 @@ namespace Telegrom.TelegramService
             while (!cancellationToken.IsCancellationRequested)
                 try
                 {
-                    var update = await _incomingUpdatesChannelReader.Reader.ReadAsync(cancellationToken);
+                    var update = await _incomingUpdateQueueReader.DequeueAsync(cancellationToken);
 
                     var sessionContext = await _sessionManager.GetSessionContextAsync(update.From, cancellationToken);
                     await sessionContext.PostUpdateAsync(update, cancellationToken);

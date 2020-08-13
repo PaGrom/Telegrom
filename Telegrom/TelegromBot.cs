@@ -125,15 +125,33 @@ namespace Telegrom
                 .As<IUpdateService>()
                 .InstancePerSession();
 
-            builder.RegisterType<ChannelHolder<Update>>()
-                .As<IChannelReaderProvider<Update>>()
-                .As<IChannelWriterProvider<Update>>()
+            builder.RegisterType<GlobalIncomingUpdateQueue>()
+                .As<IGlobalIncomingUpdateQueueReader>()
+                .As<IGlobalIncomingUpdateQueueWriter>()
+                .SingleInstance();
+
+            builder.RegisterType<GlobalOutgoingRequestQueue>()
+                .As<IGlobalOutgoingRequestQueueReader>()
+                .As<IGlobalOutgoingRequestQueueWriter>()
+                .SingleInstance();
+
+            builder.RegisterType<SessionIncomingUpdateQueue>()
+                .As<ISessionIncomingUpdateQueueReader>()
+                .As<ISessionIncomingUpdateQueueWriter>()
                 .InstancePerSession();
 
-            builder.RegisterType<ChannelHolder<Request>>()
-                .As<IChannelReaderProvider<Request>>()
-                .As<IChannelWriterProvider<Request>>()
+            builder.RegisterType<SessionOutgoingRequestQueue>()
+                .As<ISessionOutgoingRequestQueueReader>()
+                .As<ISessionOutgoingRequestQueueWriter>()
                 .InstancePerSession();
+
+            builder.RegisterType<UpdateDispatcher>()
+                .As<IUpdateDispatcher>()
+                .SingleInstance();
+
+            builder.RegisterType<RequestDispatcher>()
+                .As<IRequestDispatcher>()
+                .SingleInstance();
 
             builder.RegisterModule<StateMachineModule>();
 

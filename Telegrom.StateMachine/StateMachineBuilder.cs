@@ -3,15 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using Autofac;
 using Autofac.Core;
 using Telegrom.Core.Extensions;
 using Telegrom.StateMachine.Builder;
-
-[assembly: InternalsVisibleTo("Telegrom")]
 
 namespace Telegrom.StateMachine
 {

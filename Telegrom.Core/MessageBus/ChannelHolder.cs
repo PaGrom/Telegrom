@@ -2,7 +2,7 @@
 
 namespace Telegrom.Core.MessageBus
 {
-    public class ChannelHolder<T> : IChannelReaderProvider<T>, IChannelWriterProvider<T>
+    internal sealed class ChannelHolder<T> : IChannelReaderProvider<T>, IChannelWriterProvider<T>
     {
         private readonly Channel<T> _channel;
 

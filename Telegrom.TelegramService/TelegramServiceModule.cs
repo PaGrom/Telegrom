@@ -59,14 +59,6 @@ namespace Telegrom.TelegramService
             builder.RegisterType<TelegramUpdateReceiver>()
                 .As<ITelegramUpdateReceiver>()
                 .SingleInstance();
-
-            builder.RegisterType<TelegramUpdateDispatcher>()
-                .As<ITelegramUpdateDispatcher>()
-                .SingleInstance();
-
-            builder.RegisterType<TelegramRequestDispatcher>()
-	            .As<ITelegramRequestDispatcher>()
-	            .SingleInstance();
         }
     }
 }

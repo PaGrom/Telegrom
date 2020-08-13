@@ -11,11 +11,11 @@ namespace Telegrom.Core.Contexts
     public sealed class SessionContext
     {
         private readonly ILifetimeScope _lifetimeScope;
-        private readonly IChannelReaderProvider<Update> _incomingChannelReaderProvider;
-        private readonly IChannelWriterProvider<Update> _incomingChannelWriterProvider;
-        private readonly IChannelReaderProvider<Request> _outgoingChannelReaderProvider;
-        private readonly IChannelWriterProvider<Request> _outgoingChannelWriterProvider;
-        private readonly ITelegramRequestDispatcher _telegramRequestDispatcher;
+        private readonly ISessionIncomingUpdateQueueReader _incomingUpdateQueueReader;
+        private readonly ISessionIncomingUpdateQueueWriter _incomingUpdateQueueWriter;
+        private readonly ISessionOutgoingRequestQueueReader _outgoingRequestQueueReader;
+        private readonly ISessionOutgoingRequestQueueWriter _outgoingRequestQueueWriter;
+        private readonly IRequestDispatcher _requestDispatcher;
         private readonly ISessionStateAttributesRemover _sessionStateAttributesRemover;
         private readonly IUpdateService _updateService;
         private readonly ILogger<SessionContext> _logger;
@@ -26,22 +26,22 @@ namespace Telegrom.Core.Contexts
 
         public SessionContext(ILifetimeScope lifetimeScope,
             User user,
-            IChannelReaderProvider<Update> incomingChannelReaderProvider,
-            IChannelWriterProvider<Update> incomingChannelWriterProvider,
-            IChannelReaderProvider<Request> outgoingChannelReaderProvider,
-            IChannelWriterProvider<Request> outgoingChannelWriterProvider,
-            ITelegramRequestDispatcher telegramRequestDispatcher,
+            ISessionIncomingUpdateQueueReader incomingUpdateQueueReader,
+            ISessionIncomingUpdateQueueWriter incomingUpdateQueueWriter,
+            ISessionOutgoingRequestQueueReader outgoingRequestQueueReader,
+            ISessionOutgoingRequestQueueWriter outgoingRequestQueueWriter,
+            IRequestDispatcher requestDispatcher,
             ISessionStateAttributesRemover sessionStateAttributesRemover,
             IUpdateService updateService,
             ILogger<SessionContext> logger)
         {
             _lifetimeScope = lifetimeScope;
+            _incomingUpdateQueueReader = incomingUpdateQueueReader;
+            _incomingUpdateQueueWriter = incomingUpdateQueueWriter;
+            _outgoingRequestQueueReader = outgoingRequestQueueReader;
+            _outgoingRequestQueueWriter = outgoingRequestQueueWriter;
             User = user;
-            _incomingChannelReaderProvider = incomingChannelReaderProvider;
-            _incomingChannelWriterProvider = incomingChannelWriterProvider;
-            _outgoingChannelReaderProvider = outgoingChannelReaderProvider;
-            _outgoingChannelWriterProvider = outgoingChannelWriterProvider;
-            _telegramRequestDispatcher = telegramRequestDispatcher;
+            _requestDispatcher = requestDispatcher;
             _sessionStateAttributesRemover = sessionStateAttributesRemover;
             _updateService = updateService;
             _logger = logger;
@@ -51,7 +51,7 @@ namespace Telegrom.Core.Contexts
         {
             async Task UpdateHandle()
             {
-                await foreach (var update in _incomingChannelReaderProvider.Reader.ReadAllAsync(cancellationToken))
+                await foreach (var update in _incomingUpdateQueueReader.DequeueAllAsync(cancellationToken))
                 {
                     await _updateService.SaveUpdateAsync(update, cancellationToken);
                     var updateContext = new UpdateContext(this, update);
@@ -67,9 +67,9 @@ namespace Telegrom.Core.Contexts
 
             async Task RequestHandle()
             {
-                await foreach (var request in _outgoingChannelReaderProvider.Reader.ReadAllAsync(cancellationToken))
+                await foreach (var request in _outgoingRequestQueueReader.DequeueAllAsync(cancellationToken))
                 {
-                    await _telegramRequestDispatcher.DispatchAsync(request, cancellationToken);
+                    await _requestDispatcher.DispatchAsync(request, cancellationToken);
                 }
             }
 
@@ -97,18 +97,16 @@ namespace Telegrom.Core.Contexts
 
         public async Task PostUpdateAsync(Update update, CancellationToken cancellationToken)
         {
-            await _incomingChannelWriterProvider.Writer.WriteAsync(update, cancellationToken);
+            await _incomingUpdateQueueWriter.EnqueueAsync(update, cancellationToken);
         }
 
         public async Task PostRequestAsync(Request request, CancellationToken cancellationToken)
         {
-            await _outgoingChannelWriterProvider.Writer.WriteAsync(request, cancellationToken);
+            await _outgoingRequestQueueWriter.EnqueueAsync(request, cancellationToken);
         }
 
         public async Task Complete()
         {
-            _incomingChannelWriterProvider.Writer.Complete();
-            _outgoingChannelWriterProvider.Writer.Complete();
             if (_updateHandleTask != null)
             {
                 await _updateHandleTask;
