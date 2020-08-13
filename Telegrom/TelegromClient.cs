@@ -13,13 +13,9 @@ namespace Telegrom
     {
         private readonly DatabaseContext _databaseContext;
 
-        public TelegromClient()
+        public TelegromClient(DbContextOptions dbContextOptions)
         {
-            var optionsBuilder = DatabaseOptions.Current ?? throw new Exception("You have to configure db");
-            var options = optionsBuilder
-                .EnableSensitiveDataLogging()
-                .Options;
-            _databaseContext = new DatabaseContext(options);
+            _databaseContext = new DatabaseContext(dbContextOptions);
         }
         public IAsyncEnumerable<IdentityUser> GetUsers()
         {

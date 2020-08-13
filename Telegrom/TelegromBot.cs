@@ -22,26 +22,28 @@ using Telegrom.TelegramService;
 
 namespace Telegrom
 {
-    public class TelegromBot : BackgroundService
+    public class TelegromBot : BackgroundService, IAsyncDisposable
     {
         private readonly ILifetimeScope _lifetimeScope;
 
-        public TelegromBot(ILifetimeScope lifetimeScope = null)
-        {
-            _lifetimeScope = lifetimeScope;
-        }
+        public TelegromClient TelegromClient { get; }
 
-        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+        public TelegromBot(ILifetimeScope rootLifetimeScope = null)
         {
             _ = StateMachineBuilder.Current ?? throw new Exception("You have to create StateMachineBuilder");
 
             _ = DatabaseOptions.Current ?? throw new Exception("You have to configure db");
 
-            var lifetimeScope = _lifetimeScope ?? new ContainerBuilder().Build();
+            rootLifetimeScope ??= new ContainerBuilder().Build();
 
-            await using var telegromLifetime = lifetimeScope.BeginLifetimeScope(Configure);
+            _lifetimeScope = rootLifetimeScope.BeginLifetimeScope(Configure);
 
-            await telegromLifetime.Resolve<InternalBotService>().RunAsync(cancellationToken);
+            TelegromClient = _lifetimeScope.Resolve<TelegromClient>();
+        }
+
+        protected override Task ExecuteAsync(CancellationToken cancellationToken)
+        {
+            return _lifetimeScope.Resolve<InternalBotService>().RunAsync(cancellationToken);
         }
 
         private static void Configure(ContainerBuilder builder)
@@ -152,6 +154,9 @@ namespace Telegrom
                     StateMachineBuilder.Current.DefaultStateName))
                 .As<IStateMachineConfigurationProvider>();
 
+            builder.RegisterType<TelegromClient>()
+                .SingleInstance();
+
             builder.RegisterType<InternalBotService>()
                 .AsSelf()
                 .SingleInstance()
@@ -212,6 +217,11 @@ namespace Telegrom
                 $"\n>> Assemblies loaded after scann ({(loaded.Keys.Count - alreadyLoaded)} assemblies in {sw.ElapsedMilliseconds} ms):");
             foreach (var a in loaded.Keys.OrderBy(k => k))
                 System.Diagnostics.Debug.WriteLine($">>>> {a}");
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            return _lifetimeScope.DisposeAsync();
         }
     }
 }

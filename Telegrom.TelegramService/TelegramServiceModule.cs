@@ -60,6 +60,10 @@ namespace Telegrom.TelegramService
                 .As<ITelegramUpdateReceiver>()
                 .SingleInstance();
 
+            builder.RegisterType<TelegramUpdateDispatcher>()
+                .As<ITelegramUpdateDispatcher>()
+                .SingleInstance();
+
             builder.RegisterType<TelegramRequestDispatcher>()
 	            .As<ITelegramRequestDispatcher>()
 	            .SingleInstance();

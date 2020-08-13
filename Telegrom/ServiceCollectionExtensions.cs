@@ -1,6 +1,7 @@
 ﻿using System;
 using Autofac;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace Telegrom
 {
@@ -8,7 +9,8 @@ namespace Telegrom
     {
         public static IServiceCollection AddTelegromBot(this IServiceCollection services, Action<ContainerBuilder> configurationAction = null)
         {
-            return services.AddHostedService<TelegromBot>();
+            return services.AddSingleton<TelegromBot>()
+                .AddSingleton<IHostedService>(p => p.GetService<TelegromBot>());
         }
     }
 }
