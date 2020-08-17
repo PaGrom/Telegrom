@@ -15,7 +15,6 @@ using Telegrom.Core;
 using Telegrom.Core.Contexts;
 using Telegrom.Core.Extensions;
 using Telegrom.Core.MessageBus;
-using Telegrom.Core.TelegramModel;
 using Telegrom.Database;
 using Telegrom.StateMachine;
 using Telegrom.TelegramService;
@@ -25,6 +24,8 @@ namespace Telegrom
     public class TelegromBot : BackgroundService, IAsyncDisposable
     {
         private readonly ILifetimeScope _lifetimeScope;
+
+        private ILoggerFactory _loggerFactory;
 
         public TelegromClient TelegromClient { get; }
 
@@ -36,6 +37,8 @@ namespace Telegrom
 
             rootLifetimeScope ??= new ContainerBuilder().Build();
 
+            rootLifetimeScope.TryResolve(out _loggerFactory);
+
             _lifetimeScope = rootLifetimeScope.BeginLifetimeScope(Configure);
 
             TelegromClient = _lifetimeScope.Resolve<TelegromClient>();
@@ -46,26 +49,31 @@ namespace Telegrom
             return _lifetimeScope.Resolve<InternalBotService>().RunAsync(cancellationToken);
         }
 
-        private static void Configure(ContainerBuilder builder)
+        private void Configure(ContainerBuilder builder)
         {
-            var loggerFactory = LoggerFactory.Create(loggingBuilder =>
+            if (_loggerFactory == null)
             {
-                loggingBuilder.ClearProviders();
-                loggingBuilder.AddConsole(consoleOptions =>
-                {
-                    consoleOptions.Format = ConsoleLoggerFormat.Default;
-                    consoleOptions.TimestampFormat = "[HH:mm:ss] ";
-                });
-                loggingBuilder.SetMinimumLevel(LogLevel.Trace);
-            });
-            builder.RegisterInstance(loggerFactory);
-            builder.RegisterGeneric(typeof(Logger<>))
-                .As(typeof(ILogger<>))
-                .SingleInstance();
+                _loggerFactory = LoggerOptions.Current
+                                 ?? LoggerFactory.Create(loggingBuilder =>
+                                 {
+                                     loggingBuilder.ClearProviders();
+                                     loggingBuilder.AddConsole(consoleOptions =>
+                                     {
+                                         consoleOptions.Format = ConsoleLoggerFormat.Default;
+                                         consoleOptions.TimestampFormat = "[HH:mm:ss] ";
+                                     });
+                                     loggingBuilder.SetMinimumLevel(LogLevel.Trace);
+                                 });
+
+                builder.RegisterInstance(_loggerFactory);
+                builder.RegisterGeneric(typeof(Logger<>))
+                    .As(typeof(ILogger<>))
+                    .SingleInstance();
+            }
 
             var options = DatabaseOptions.Current
                 .EnableSensitiveDataLogging()
-                .UseLoggerFactory(loggerFactory)
+                .UseLoggerFactory(_loggerFactory)
                 .Options;
 
             builder.RegisterInstance(options)
