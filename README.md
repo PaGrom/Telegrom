@@ -1,2 +1,2 @@
-# ShowMustNotGoOn
-Telegram Bot
+# Telegrom
+Mini framework for your telegram bots
