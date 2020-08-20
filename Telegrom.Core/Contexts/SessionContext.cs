@@ -51,8 +51,9 @@ namespace Telegrom.Core.Contexts
         {
             async Task UpdateHandle()
             {
-                await foreach (var update in _incomingUpdateQueueReader.DequeueAllAsync(cancellationToken))
+                while (!cancellationToken.IsCancellationRequested)
                 {
+                    var update = await _incomingUpdateQueueReader.DequeueAsync(cancellationToken);
                     await _updateService.SaveUpdateAsync(update, cancellationToken);
                     var updateContext = new UpdateContext(this, update);
                     await using var innerScope = _lifetimeScope.BeginLifetimeScope(
@@ -67,8 +68,9 @@ namespace Telegrom.Core.Contexts
 
             async Task RequestHandle()
             {
-                await foreach (var request in _outgoingRequestQueueReader.DequeueAllAsync(cancellationToken))
+                while (!cancellationToken.IsCancellationRequested)
                 {
+                    var request = await _outgoingRequestQueueReader.DequeueAsync(cancellationToken);
                     await _requestDispatcher.DispatchAsync(request, cancellationToken);
                 }
             }

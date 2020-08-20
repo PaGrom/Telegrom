@@ -29,11 +29,6 @@ namespace Telegrom
             return _channelReaderProvider.Reader.ReadAsync(cancellationToken);
         }
 
-        public IAsyncEnumerable<Update> DequeueAllAsync(CancellationToken cancellationToken)
-        {
-            return _channelReaderProvider.Reader.ReadAllAsync(cancellationToken);
-        }
-
         public void Dispose()
         {
             _channelWriterProvider.Writer.Complete();
