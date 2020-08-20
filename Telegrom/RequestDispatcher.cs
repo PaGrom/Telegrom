@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using AutoMapper;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
-using Telegram.Bot.Requests.Abstractions;
 using Telegrom.Core.MessageBus;
 using Telegrom.Core.TelegramModel;
 
@@ -17,19 +15,16 @@ namespace Telegrom
         private readonly ITelegramBotClient _telegramBotClient;
         private readonly IGlobalOutgoingRequestQueueReader _outgoingRequestQueueReader;
         private readonly IGlobalOutgoingRequestQueueWriter _outgoingRequestQueueWriter;
-        private readonly IMapper _mapper;
 
         public RequestDispatcher(
             ITelegramBotClient telegramBotClient,
             IGlobalOutgoingRequestQueueReader outgoingRequestQueueReader,
             IGlobalOutgoingRequestQueueWriter outgoingRequestQueueWriter,
-            IMapper mapper,
             ILogger<RequestDispatcher> logger)
         {
             _telegramBotClient = telegramBotClient;
             _outgoingRequestQueueWriter = outgoingRequestQueueWriter;
             _outgoingRequestQueueReader = outgoingRequestQueueReader;
-            _mapper = mapper;
             _logger = logger;
         }
 
