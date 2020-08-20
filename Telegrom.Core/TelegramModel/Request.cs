@@ -1,13 +1,23 @@
-﻿namespace Telegrom.Core.TelegramModel
+﻿using System;
+using Telegram.Bot.Requests.Abstractions;
+
+namespace Telegrom.Core.TelegramModel
 {
-    /// <summary>
-    /// Telegram Request base class
-    /// </summary>
-    public abstract class Request
+    public sealed class Request
     {
-        /// <summary>
-        /// Unique identifier for the target chat or username of the target channel
-        /// </summary>
-        public int ChatId { get; protected set; }
+        internal object RequestObject { get; }
+
+        internal Type RequestType { get; }
+
+        public Request(object telegramRequest)
+        {
+            if (!telegramRequest.GetType().IsAssignableFrom(typeof(IRequest<>)))
+            {
+                throw new ArgumentException($"Request has to implement {typeof(IRequest<>).FullName} interface");
+            }
+
+            RequestObject = telegramRequest;
+            RequestType = telegramRequest.GetType();
+        }
     }
 }

@@ -5,6 +5,7 @@ using AutoMapper;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
+using Telegram.Bot.Requests.Abstractions;
 using Telegrom.Core.MessageBus;
 using Telegrom.Core.TelegramModel;
 
@@ -80,17 +81,9 @@ namespace Telegrom
 
         private Task MakeRequestAsync(Request request, CancellationToken cancellationToken)
         {
-            Task task = request switch
-            {
-                AnswerCallbackQueryRequest answerCallbackQueryRequest => _telegramBotClient.MakeRequestAsync(_mapper.Map<Telegram.Bot.Requests.AnswerCallbackQueryRequest>(answerCallbackQueryRequest), cancellationToken),
-                DeleteMessageRequest deleteMessageRequest => _telegramBotClient.MakeRequestAsync(_mapper.Map<Telegram.Bot.Requests.DeleteMessageRequest>(deleteMessageRequest), cancellationToken),
-                EditMessageCaptionRequest editMessageCaptionRequest => _telegramBotClient.MakeRequestAsync(_mapper.Map<Telegram.Bot.Requests.EditMessageCaptionRequest>(editMessageCaptionRequest), cancellationToken),
-                EditMessageMediaRequest editMessageMediaRequest => _telegramBotClient.MakeRequestAsync(_mapper.Map<Telegram.Bot.Requests.EditMessageMediaRequest>(editMessageMediaRequest), cancellationToken),
-                EditMessageReplyMarkupRequest editMessageReplyMarkupRequest => _telegramBotClient.MakeRequestAsync(_mapper.Map<Telegram.Bot.Requests.EditMessageReplyMarkupRequest>(editMessageReplyMarkupRequest), cancellationToken),
-                SendMessageRequest sendMessageRequest => _telegramBotClient.MakeRequestAsync(_mapper.Map<Telegram.Bot.Requests.SendMessageRequest>(sendMessageRequest), cancellationToken),
-                SendPhotoRequest sendPhotoRequest => _telegramBotClient.MakeRequestAsync(_mapper.Map<Telegram.Bot.Requests.SendPhotoRequest>(sendPhotoRequest), cancellationToken),
-                _ => throw new NotImplementedException()
-            };
+            var makeRequestAsyncMethodInfo = _telegramBotClient.GetType().GetMethod(nameof(ITelegramBotClient.MakeRequestAsync));
+
+            var task = (Task)makeRequestAsyncMethodInfo.Invoke(_telegramBotClient, new []{ request.RequestObject, cancellationToken });
 
             return task;
         }
