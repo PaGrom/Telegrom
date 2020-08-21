@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,7 +19,16 @@ namespace Telegrom.Database
             _dbContextOptions = dbContextOptions;
         }
 
-        public async Task<T> GetGlobalAttributeAsync<T>(Guid guid, CancellationToken cancellationToken)
+        public IAsyncEnumerable<T> GetGlobalAttributes<T>(CancellationToken cancellationToken) where T : IGlobalAttribute
+        {
+            using var context = new DatabaseContext(_dbContextOptions);
+            return context.GlobalAttributes
+                .Where(ga => ga.Type.Equals(typeof(T).FullName))
+                .Select(ga => JsonConvert.DeserializeObject<T>(ga.Value))
+                .AsAsyncEnumerable();
+        }
+
+        public async Task<T> GetGlobalAttributeAsync<T>(Guid guid, CancellationToken cancellationToken) where T : IGlobalAttribute
         {
             await using var context = new DatabaseContext(_dbContextOptions);
             var attribute = await context.GlobalAttributes
@@ -27,7 +37,7 @@ namespace Telegrom.Database
             return JsonConvert.DeserializeObject<T>(attribute.Value);
         }
 
-        public async Task<Guid?> GetAttributeIdByValueAsync<T>(T value, CancellationToken cancellationToken)
+        public async Task<Guid?> GetAttributeIdByValueAsync<T>(T value, CancellationToken cancellationToken) where T : IGlobalAttribute
         {
             await using var context = new DatabaseContext(_dbContextOptions);
             var serializedValue = JsonConvert.SerializeObject(value);
@@ -38,7 +48,7 @@ namespace Telegrom.Database
             return attribute?.Id;
         } 
 
-        public async Task CreateOrUpdateGlobalAttributeAsync<T>(Guid guid, T obj, CancellationToken cancellationToken)
+        public async Task CreateOrUpdateGlobalAttributeAsync<T>(Guid guid, T obj, CancellationToken cancellationToken) where T : IGlobalAttribute
         {
             await using var context = new DatabaseContext(_dbContextOptions);
 

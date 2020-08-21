@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,12 +19,16 @@ namespace Telegrom
         private readonly IGlobalOutgoingRequestQueueWriter _outgoingRequestQueueWriter;
         private readonly DatabaseContext _databaseContext;
 
+        public IGlobalAttributesService GlobalAttributesService { get; }
+
         public TelegromClient(DbContextOptions dbContextOptions,
             IGlobalIncomingUpdateQueueWriter incomingUpdateQueueWriter,
-            IGlobalOutgoingRequestQueueWriter outgoingRequestQueueWriter)
+            IGlobalOutgoingRequestQueueWriter outgoingRequestQueueWriter,
+            IGlobalAttributesService globalAttributesService)
         {
             _incomingUpdateQueueWriter = incomingUpdateQueueWriter;
             _outgoingRequestQueueWriter = outgoingRequestQueueWriter;
+            GlobalAttributesService = globalAttributesService;
             _databaseContext = new DatabaseContext(dbContextOptions);
         }
 
@@ -39,14 +42,6 @@ namespace Telegrom
             return _databaseContext.SessionAttributes
                 .Where(a => a.SessionId == user.Id && a.Type == typeof(T).FullName)
                 .Select(a => JsonConvert.DeserializeObject<T>(a.Value))
-                .AsAsyncEnumerable();
-        }
-
-        public IAsyncEnumerable<T> GetGlobalAttributes<T>()
-        {
-            return _databaseContext.GlobalAttributes
-                .Where(ga => ga.Type.Equals(typeof(T).FullName))
-                .Select(ga => JsonConvert.DeserializeObject<T>(ga.Value))
                 .AsAsyncEnumerable();
         }
 
