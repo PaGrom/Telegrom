@@ -9,22 +9,22 @@ namespace Telegrom
 {
     internal sealed class SessionOutgoingRequestQueue : ISessionOutgoingRequestQueueWriter, ISessionOutgoingRequestQueueReader, IDisposable
     {
-        private readonly IChannelReaderProvider<RequestBase> _channelReaderProvider;
-        private readonly IChannelWriterProvider<RequestBase> _channelWriterProvider;
+        private readonly IChannelReaderProvider<Request> _channelReaderProvider;
+        private readonly IChannelWriterProvider<Request> _channelWriterProvider;
 
         public SessionOutgoingRequestQueue()
         {
-            var channelHolder = new ChannelHolder<RequestBase>();
+            var channelHolder = new ChannelHolder<Request>();
             _channelReaderProvider = channelHolder;
             _channelWriterProvider = channelHolder;
         }
 
-        public ValueTask EnqueueAsync(RequestBase requestBase, CancellationToken cancellationToken)
+        public ValueTask EnqueueAsync(Request request, CancellationToken cancellationToken)
         {
-            return _channelWriterProvider.Writer.WriteAsync(requestBase, cancellationToken);
+            return _channelWriterProvider.Writer.WriteAsync(request, cancellationToken);
         }
 
-        public ValueTask<RequestBase> DequeueAsync(CancellationToken cancellationToken)
+        public ValueTask<Request> DequeueAsync(CancellationToken cancellationToken)
         {
             return _channelReaderProvider.Reader.ReadAsync(cancellationToken);
         }

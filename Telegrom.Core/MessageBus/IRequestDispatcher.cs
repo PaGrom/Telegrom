@@ -6,7 +6,7 @@ namespace Telegrom.Core.MessageBus
 {
     public interface IRequestDispatcher
     {
-        Task DispatchAsync(RequestBase requestBase, CancellationToken cancellationToken);
+        Task DispatchAsync(Request request, CancellationToken cancellationToken);
         Task RunAsync(CancellationToken cancellationToken);
     }
 }
