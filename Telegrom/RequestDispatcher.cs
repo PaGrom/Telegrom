@@ -28,9 +28,9 @@ namespace Telegrom
             _logger = logger;
         }
 
-        public async Task DispatchAsync(Request request, CancellationToken cancellationToken)
+        public async Task DispatchAsync(RequestBase requestBase, CancellationToken cancellationToken)
         {
-            await _outgoingRequestQueueWriter.EnqueueAsync(request, cancellationToken);
+            await _outgoingRequestQueueWriter.EnqueueAsync(requestBase, cancellationToken);
         }
 
         public async Task RunAsync(CancellationToken cancellationToken)
@@ -74,13 +74,13 @@ namespace Telegrom
             _logger.LogInformation("Request dispatcher cancelled");
         }
 
-        private Task MakeRequestAsync(Request request, CancellationToken cancellationToken)
+        private Task MakeRequestAsync(RequestBase requestBase, CancellationToken cancellationToken)
         {
-            var respondType = request.IRequestGenericArgumentType;
+            var respondType = requestBase.GenericArgumentType;
 
             var makeRequestAsyncMethodInfo = _telegramBotClient.GetType().GetMethod(nameof(_telegramBotClient.MakeRequestAsync)).MakeGenericMethod(respondType);
 
-            var task = (Task)makeRequestAsyncMethodInfo.Invoke(_telegramBotClient, new []{ request.RequestObject, cancellationToken });
+            var task = (Task)makeRequestAsyncMethodInfo.Invoke(_telegramBotClient, new []{ requestBase.Instance, cancellationToken });
 
             return task;
         }

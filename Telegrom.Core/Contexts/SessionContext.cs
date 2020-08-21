@@ -102,9 +102,9 @@ namespace Telegrom.Core.Contexts
             await _incomingUpdateQueueWriter.EnqueueAsync(update, cancellationToken);
         }
 
-        public async Task PostRequestAsync(Request request, CancellationToken cancellationToken)
+        public async Task PostRequestAsync(RequestBase requestBase, CancellationToken cancellationToken)
         {
-            await _outgoingRequestQueueWriter.EnqueueAsync(request, cancellationToken);
+            await _outgoingRequestQueueWriter.EnqueueAsync(requestBase, cancellationToken);
         }
 
         public async Task Complete()

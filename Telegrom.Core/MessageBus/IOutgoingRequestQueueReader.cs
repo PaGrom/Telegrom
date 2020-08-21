@@ -6,6 +6,6 @@ namespace Telegrom.Core.MessageBus
 {
     public interface IOutgoingRequestQueueReader
     {
-        ValueTask<Request> DequeueAsync(CancellationToken cancellationToken);
+        ValueTask<RequestBase> DequeueAsync(CancellationToken cancellationToken);
     }
 }

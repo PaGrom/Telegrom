@@ -6,6 +6,6 @@ namespace Telegrom.Core.MessageBus
 {
     public interface IOutgoingRequestQueueWriter
     {
-        ValueTask EnqueueAsync(Request request, CancellationToken cancellationToken);
+        ValueTask EnqueueAsync(RequestBase requestBase, CancellationToken cancellationToken);
     }
 }

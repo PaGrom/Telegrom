@@ -6,6 +6,6 @@ namespace Telegrom.Core
 {
     public interface ITelegramService
     {
-	    Task MakeRequestAsync(Request request, CancellationToken cancellationToken);
+	    Task MakeRequestAsync(RequestBase requestBase, CancellationToken cancellationToken);
     }
 }
