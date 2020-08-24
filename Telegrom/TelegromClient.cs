@@ -48,7 +48,7 @@ namespace Telegrom
         public async Task SendMessageAsync(IdentityUser user, string message, CancellationToken cancellationToken)
         {
             var messageRequest = new SendMessageRequest(user.Id, message);
-            await _outgoingRequestQueueWriter.EnqueueAsync(new Request(messageRequest), cancellationToken);
+            await _outgoingRequestQueueWriter.EnqueueAsync(Request.Wrap(messageRequest), cancellationToken);
         }
     }
 }

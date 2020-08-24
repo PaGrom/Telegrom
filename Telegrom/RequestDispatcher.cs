@@ -76,11 +76,11 @@ namespace Telegrom
 
         private Task MakeRequestAsync(Request request, CancellationToken cancellationToken)
         {
-            var respondType = request.IRequestGenericArgumentType;
+            var respondType = request.GenericArgumentType;
 
             var makeRequestAsyncMethodInfo = _telegramBotClient.GetType().GetMethod(nameof(_telegramBotClient.MakeRequestAsync)).MakeGenericMethod(respondType);
 
-            var task = (Task)makeRequestAsyncMethodInfo.Invoke(_telegramBotClient, new []{ request.RequestObject, cancellationToken });
+            var task = (Task)makeRequestAsyncMethodInfo.Invoke(_telegramBotClient, new []{ request.Instance, cancellationToken });
 
             return task;
         }

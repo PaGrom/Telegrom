@@ -1,40 +1,32 @@
 ﻿using System;
+using System.Dynamic;
 using System.Linq;
 using Telegram.Bot.Requests.Abstractions;
 
 namespace Telegrom.Core.TelegramModel
 {
-    public sealed class Request
+    public abstract class Request
     {
-        internal object RequestObject { get; }
+        internal abstract object Instance { get; }
 
-        internal Type RequestType { get; }
+        internal abstract Type GenericArgumentType { get; }
 
-        internal Type IRequestGenericArgumentType
+        public static Request Wrap<TResponse>(IRequest<TResponse> request)
         {
-            get
-            {
-                var iRequestInterfaceType = RequestType.GetInterfaces()
-                    .Single(i =>
-                        i.IsGenericType
-                        && i.GetGenericTypeDefinition() == typeof(IRequest<>));
-
-                return iRequestInterfaceType.GetGenericArguments()[0];
-            }
+            return new RequestImpl<TResponse>(request);
         }
 
-        public Request(object telegramRequest)
+        private class RequestImpl<TResponse> : Request
         {
-            if (!telegramRequest.GetType().GetInterfaces()
-                .Any(x => 
-                    x.IsGenericType && 
-                    x.GetGenericTypeDefinition() == typeof(IRequest<>)))
+            private readonly IRequest<TResponse> _instance;
+
+            public RequestImpl(IRequest<TResponse> request)
             {
-                throw new ArgumentException($"Request has to implement {typeof(IRequest<>).FullName} interface");
+                _instance = request;
             }
 
-            RequestObject = telegramRequest;
-            RequestType = telegramRequest.GetType();
+            internal override object Instance => _instance;
+            internal override Type GenericArgumentType => typeof(TResponse);
         }
     }
 }
