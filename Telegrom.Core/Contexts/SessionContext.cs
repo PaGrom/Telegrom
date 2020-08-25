@@ -109,6 +109,9 @@ namespace Telegrom.Core.Contexts
 
         public async Task Complete()
         {
+            _incomingUpdateQueueWriter.Complete();
+            _outgoingRequestQueueWriter.Complete();
+
             if (_updateHandleTask != null)
             {
                 await _updateHandleTask;

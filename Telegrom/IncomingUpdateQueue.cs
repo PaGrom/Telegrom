@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Telegrom.Core.MessageBus;
@@ -29,9 +28,14 @@ namespace Telegrom
             return _channelReaderProvider.Reader.ReadAsync(cancellationToken);
         }
 
-        public void Dispose()
+        public void Complete()
         {
             _channelWriterProvider.Writer.Complete();
+        }
+
+        public void Dispose()
+        {
+            Complete();
         }
     }
 }
