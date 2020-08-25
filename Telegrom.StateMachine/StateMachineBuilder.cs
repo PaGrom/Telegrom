@@ -18,7 +18,7 @@ namespace Telegrom.StateMachine
         private StateNode _initStateNode;
         private StateNode _defaultStateNode;
 
-        private readonly List<IUpdateInterceptor> _interceptors = new List<IUpdateInterceptor>();
+        private readonly List<Type> _interceptors = new List<Type>();
 
         private readonly HashSet<string> _stateNames = new HashSet<string>();
 
@@ -46,9 +46,9 @@ namespace Telegrom.StateMachine
             _defaultStateNode = stateNode;
         }
 
-        public void AddUpdateInterceptor(IUpdateInterceptor updateInterceptor)
+        public void AddUpdateInterceptor<T>() where T: IUpdateInterceptor
         {
-            _interceptors.Add(updateInterceptor);
+            _interceptors.Add(typeof(T));
         }
 
         internal void Build(ContainerBuilder builder)
@@ -57,7 +57,7 @@ namespace Telegrom.StateMachine
 
             foreach (var updateInterceptor in _interceptors)
             {
-                _builder.RegisterInstance(updateInterceptor)
+                _builder.RegisterType(updateInterceptor)
                     .As<IUpdateInterceptor>()
                     .InstancePerUpdate();
             }
