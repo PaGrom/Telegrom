@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using Autofac;
 using Microsoft.Extensions.Logging;
@@ -82,6 +83,11 @@ namespace Telegrom.Core.Contexts
                     try
                     {
                         await task();
+                        break;
+                    }
+                    catch (ChannelClosedException ex)
+                    {
+                        _logger.LogInformation(ex, $"Channel for user {User.Id} has been closed");
                         break;
                     }
                     catch (Exception ex)
