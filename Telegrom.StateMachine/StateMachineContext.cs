@@ -1,4 +1,6 @@
-﻿namespace Telegrom.StateMachine
+﻿using System;
+
+namespace Telegrom.StateMachine
 {
     internal class StateMachineContext : IStateMachineContext
     {

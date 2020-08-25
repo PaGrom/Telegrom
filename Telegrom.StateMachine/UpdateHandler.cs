@@ -1,4 +1,7 @@
-﻿using System.Threading;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
 using Microsoft.Extensions.Logging;
@@ -14,6 +17,7 @@ namespace Telegrom.StateMachine
         private readonly IStateMachineConfigurationProvider _configurationProvider;
         private readonly IStateMachineContext _stateMachineContext;
         private readonly IIdentityStatesService _identityStatesService;
+        private readonly IEnumerable<IUpdateInterceptor> _updateInterceptors;
         private readonly ILogger<UpdateHandler> _logger;
 
         public UpdateHandler(
@@ -22,6 +26,7 @@ namespace Telegrom.StateMachine
             IStateMachineConfigurationProvider configurationProvider,
             IStateMachineContext stateMachineContext,
             IIdentityStatesService identityStatesService,
+            IEnumerable<IUpdateInterceptor> updateInterceptors,
             ILogger<UpdateHandler> logger)
         {
             _lifetimeScope = lifetimeScope;
@@ -29,12 +34,29 @@ namespace Telegrom.StateMachine
             _configurationProvider = configurationProvider;
             _stateMachineContext = stateMachineContext;
             _identityStatesService = identityStatesService;
+            _updateInterceptors = updateInterceptors;
             _logger = logger;
         }
 
         public async Task Execute(CancellationToken cancellationToken)
         {
             var stateName = await _identityStatesService.GetOrSetDefaultCurrentStateAsync(_configurationProvider.InitialStateName, cancellationToken);
+
+            try
+            {
+                foreach (var updateInterceptor in _updateInterceptors)
+                {
+                    if (!updateInterceptor.NonInterceptableStates.Contains(stateName))
+                    {
+                        await updateInterceptor.BeforeHandle(cancellationToken);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, $"Get exception during update interceptor handle for user {_updateContext.SessionContext.User.Id}");
+                return;
+            }
 
             _logger.LogInformation($"Current state {stateName}");
 

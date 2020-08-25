@@ -8,7 +8,7 @@ namespace Telegrom.StateMachine.Builder
     {
         internal Type StateType { get; }
 
-        internal string StateName { get; }
+        public string StateName { get; }
 
         internal NextStateKind? NextStateKind { get; private set; }
 
