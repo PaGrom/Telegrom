@@ -58,6 +58,8 @@ namespace Telegrom.StateMachine
                 return;
             }
 
+            stateName = await _identityStatesService.GetOrSetDefaultCurrentStateAsync(_configurationProvider.InitialStateName, cancellationToken);
+
             _logger.LogInformation($"Current state {stateName}");
 
             IState state;
