@@ -33,9 +33,9 @@ namespace Telegrom.StateMachine
             set => _current = value ?? throw new ArgumentNullException(nameof(value));
         }
 
-        public StateNode AddInit<TInit>() where TInit: IState
+        public StateNode AddInit<TInit>(string stateName = null) where TInit: IState
         {
-            _initStateNode = new StateNode(typeof(TInit), "init");
+            _initStateNode = new StateNode(typeof(TInit), $"{StateNode.StateNamePrefix}{stateName ?? typeof(TInit).Name}");
             _defaultStateNode = _initStateNode;
 
             return _initStateNode;

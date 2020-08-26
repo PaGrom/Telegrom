@@ -13,7 +13,12 @@ namespace Telegrom.StateMachine.Builder
                 throw new ArgumentException(nameof(stateType), $"Type must implement interface {nameof(IState)}");
             }
 
-            StateNode = new StateNode(stateType, $"Telegrom.StateNode.{stateName ?? stateType.Name}");
+            if (stateName != null && string.IsNullOrWhiteSpace(stateName))
+            {
+                throw new ArgumentException("State name cannot be empty", nameof(stateName));
+            }
+
+            StateNode = new StateNode(stateType, $"{StateNode.StateNamePrefix}{stateName ?? stateType.Name}");
         }
 
         public DefaultState(StateNode stateNode)

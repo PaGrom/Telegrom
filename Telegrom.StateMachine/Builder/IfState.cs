@@ -12,11 +12,16 @@ namespace Telegrom.StateMachine.Builder
         {
             if (!typeof(IState).IsAssignableFrom(stateType))
             {
-                throw new ArgumentException(nameof(stateType), $"Type must implement interface {nameof(IState)}");
+                throw new ArgumentException($"Type must implement interface {nameof(IState)}", nameof(stateType));
+            }
+
+            if (stateName != null && string.IsNullOrWhiteSpace(stateName))
+            {
+                throw new ArgumentException("State name cannot be empty", nameof(stateName));
             }
 
             Condition = condition;
-            StateNode = new StateNode(stateType, $"Telegrom.StateNode.{stateName ?? stateType.Name}");
+            StateNode = new StateNode(stateType, $"{StateNode.StateNamePrefix}{stateName ?? stateType.Name}");
         }
 
         public IfState(Func<IStateContext, Task<bool>> condition, StateNode stateNode)

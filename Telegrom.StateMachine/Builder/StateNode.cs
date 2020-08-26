@@ -6,6 +6,8 @@ namespace Telegrom.StateMachine.Builder
 {
     public sealed class StateNode
     {
+        public const string StateNamePrefix = "Telegrom.StateNode.";
+
         internal Type StateType { get; }
 
         public string StateName { get; }

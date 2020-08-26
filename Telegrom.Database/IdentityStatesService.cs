@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Telegrom.Core;
 using Telegrom.Core.Contexts;
 using Telegrom.Database.Model;
+using Telegrom.StateMachine.Builder;
 
 namespace Telegrom.Database
 {
@@ -42,6 +43,11 @@ namespace Telegrom.Database
 
         public async Task UpdateCurrentStateAsync(string stateName, CancellationToken cancellationToken)
         {
+            if (!stateName.StartsWith(StateNode.StateNamePrefix))
+            {
+                stateName = StateNode.StateNamePrefix + stateName;
+            }
+
             var identityState = await _context.IdentityStates
                 .FindAsync(new object[] {_sessionContext.User.Id}, cancellationToken);
 
