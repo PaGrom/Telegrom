@@ -118,6 +118,7 @@ namespace Telegrom
                 .InstancePerLifetimeScope();
 
             builder.RegisterType<SessionManager>()
+                .WithParameter(new TypedParameter(typeof(int), SessionManagerOptions.MaxActiveSessionsNumber))
                 .InstancePerLifetimeScope();
 
             //builder.RegisterType<MessageHandler>()

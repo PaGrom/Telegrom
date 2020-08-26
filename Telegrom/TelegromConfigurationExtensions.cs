@@ -12,7 +12,16 @@ namespace Telegrom
         {
             _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
-            return configuration.Use(LoggerOptions.Current, x => LoggerOptions.Current = loggerFactory);
+            return configuration.Use(loggerFactory, x => LoggerOptions.Current = x);
+        }
+
+        public static ITelegromConfiguration SetMaxActiveSessionsNumber(
+            this ITelegromConfiguration configuration,
+            int maxActiveSessionsNumber)
+        {
+            _ = configuration ?? throw new ArgumentNullException(nameof(configuration));
+
+            return configuration.Use(maxActiveSessionsNumber, x => SessionManagerOptions.MaxActiveSessionsNumber = x);
         }
     }
 }

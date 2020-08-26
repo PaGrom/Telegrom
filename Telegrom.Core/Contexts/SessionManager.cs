@@ -15,12 +15,13 @@ namespace Telegrom.Core.Contexts
         private readonly object _syncRoot = new object();
         private readonly LinkedList<int> _recentSessionContextsQueue = new LinkedList<int>();
         private readonly Dictionary<int, SessionContext> _sessionContexts = new Dictionary<int, SessionContext>();
-        private const int MaxActiveSessions = 1;
+        private readonly int _maxActiveSessions;
 
-        public SessionManager(ILifetimeScope lifetimeScope, IIdentityService identityService)
+        public SessionManager(ILifetimeScope lifetimeScope, IIdentityService identityService, int maxActiveSessions)
         {
             _lifetimeScope = lifetimeScope;
             _identityService = identityService;
+            _maxActiveSessions = maxActiveSessions;
         }
 
         public async Task<SessionContext> GetSessionContextAsync(User user, CancellationToken cancellationToken)
@@ -46,7 +47,7 @@ namespace Telegrom.Core.Contexts
                         _sessionContexts.Add(user.Id, sessionContext);
 
                         _recentSessionContextsQueue.AddFirst(user.Id);
-                        while (_recentSessionContextsQueue.Count > MaxActiveSessions)
+                        while (_recentSessionContextsQueue.Count > _maxActiveSessions)
                         {
                             var sessionId = _recentSessionContextsQueue.Last.Value;
                             _recentSessionContextsQueue.RemoveLast();
