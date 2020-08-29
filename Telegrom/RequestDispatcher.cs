@@ -74,15 +74,17 @@ namespace Telegrom
             _logger.LogInformation("Request dispatcher cancelled");
         }
 
-        private Task MakeRequestAsync(Request request, CancellationToken cancellationToken)
+        private async Task MakeRequestAsync(Request request, CancellationToken cancellationToken)
         {
             var respondType = request.GenericArgumentType;
 
             var makeRequestAsyncMethodInfo = _telegramBotClient.GetType().GetMethod(nameof(_telegramBotClient.MakeRequestAsync)).MakeGenericMethod(respondType);
 
-            var task = (Task)makeRequestAsyncMethodInfo.Invoke(_telegramBotClient, new []{ request.Instance, cancellationToken });
+            dynamic awaitable = makeRequestAsyncMethodInfo.Invoke(_telegramBotClient, new []{ request.Instance, cancellationToken });
 
-            return task;
+            await awaitable;
+
+            await request.Callback(awaitable.GetAwaiter().GetResult());
         }
     }
 }

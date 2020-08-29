@@ -4,6 +4,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using Autofac;
 using Microsoft.Extensions.Logging;
+using Telegram.Bot.Requests.Abstractions;
 using Telegrom.Core.MessageBus;
 using Telegrom.Core.TelegramModel;
 
@@ -111,6 +112,26 @@ namespace Telegrom.Core.Contexts
         public async Task PostRequestAsync(Request request, CancellationToken cancellationToken)
         {
             await _outgoingRequestQueueWriter.EnqueueAsync(request, cancellationToken);
+        }
+
+        public async Task<TResponse> PostRequestAsync<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken)
+        {
+            TResponse result = default;
+
+            var task = new Task(() => {});
+
+            Func<object, Task> callback = async res =>
+            {
+                result = (TResponse)res;
+                await task;
+            };
+
+            var req = Request.Wrap(request, callback);
+            await _outgoingRequestQueueWriter.EnqueueAsync(req, cancellationToken);
+
+            await Task.WhenAll(task);
+
+            return result;
         }
 
         public async Task Complete()
