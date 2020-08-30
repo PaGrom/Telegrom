@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using Telegram.Bot.Requests;
+using Telegram.Bot.Requests.Abstractions;
 using Telegrom.Core;
 using Telegrom.Core.MessageBus;
 using Telegrom.Core.TelegramModel;
@@ -45,10 +45,12 @@ namespace Telegrom
                 .AsAsyncEnumerable();
         }
 
-        public async Task SendMessageAsync(IdentityUser user, string message, CancellationToken cancellationToken)
+        public async Task<TResponse> PostRequestAsync<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken)
         {
-            var messageRequest = new SendMessageRequest(user.Id, message);
-            await _outgoingRequestQueueWriter.EnqueueAsync(Request.Wrap(messageRequest), cancellationToken);
+            var taskCompletionSource = new TaskCompletionSource<object>();
+            var req = Request.Wrap(request, taskCompletionSource);
+            await _outgoingRequestQueueWriter.EnqueueAsync(req, cancellationToken);
+            return (TResponse)await taskCompletionSource.Task;
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Dynamic;
-using System.Linq;
+using System.Threading.Tasks;
 using Telegram.Bot.Requests.Abstractions;
 
 namespace Telegrom.Core.TelegramModel
@@ -11,22 +10,29 @@ namespace Telegrom.Core.TelegramModel
 
         internal abstract Type GenericArgumentType { get; }
 
+        internal abstract TaskCompletionSource<object> TaskCompletionSource { get; }
+
         public static Request Wrap<TResponse>(IRequest<TResponse> request)
         {
-            return new RequestImpl<TResponse>(request);
+            return new RequestImpl<TResponse>(request, new TaskCompletionSource<object>());
+        }
+
+        public static Request Wrap<TResponse>(IRequest<TResponse> request, TaskCompletionSource<object> taskCompletionSource)
+        {
+            return new RequestImpl<TResponse>(request, taskCompletionSource);
         }
 
         private class RequestImpl<TResponse> : Request
         {
-            private readonly IRequest<TResponse> _instance;
-
-            public RequestImpl(IRequest<TResponse> request)
+            public RequestImpl(IRequest<TResponse> request, TaskCompletionSource<object> taskCompletionSource)
             {
-                _instance = request;
+                Instance = request;
+                TaskCompletionSource = taskCompletionSource;
             }
 
-            internal override object Instance => _instance;
+            internal override object Instance { get; }
             internal override Type GenericArgumentType => typeof(TResponse);
+            internal override TaskCompletionSource<object> TaskCompletionSource { get; }
         }
     }
 }
