@@ -2,8 +2,8 @@
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Telegram.Bot.Types;
 using Telegrom.Core;
-using Telegrom.Core.TelegramModel;
 using Telegrom.Database.Model;
 
 namespace Telegrom.Database

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Autofac;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot.Requests.Abstractions;
+using Telegram.Bot.Types;
 using Telegrom.Core.MessageBus;
 using Telegrom.Core.TelegramModel;
 

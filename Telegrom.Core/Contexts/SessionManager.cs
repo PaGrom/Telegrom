@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
-using Telegrom.Core.TelegramModel;
+using Telegram.Bot.Types;
 
 namespace Telegrom.Core.Contexts
 {

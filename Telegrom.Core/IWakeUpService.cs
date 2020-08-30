@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Telegrom.Core.TelegramModel;
+using Telegram.Bot.Types;
 
 namespace Telegrom.Core
 {

@@ -1,4 +1,4 @@
-﻿using Telegrom.Core.TelegramModel;
+﻿using Telegram.Bot.Types;
 
 namespace Telegrom.Core.Contexts
 {
