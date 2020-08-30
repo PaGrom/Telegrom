@@ -116,22 +116,10 @@ namespace Telegrom.Core.Contexts
 
         public async Task<TResponse> PostRequestAsync<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken)
         {
-            TResponse result = default;
-
-            var task = new Task(() => {});
-
-            Func<object, Task> callback = async res =>
-            {
-                result = (TResponse)res;
-                await task;
-            };
-
-            var req = Request.Wrap(request, callback);
+            var taskCompletionSource = new TaskCompletionSource<object>();
+            var req = Request.Wrap(request, taskCompletionSource);
             await _outgoingRequestQueueWriter.EnqueueAsync(req, cancellationToken);
-
-            await Task.WhenAll(task);
-
-            return result;
+            return (TResponse) await taskCompletionSource.Task;
         }
 
         public async Task Complete()

@@ -82,9 +82,7 @@ namespace Telegrom
 
             dynamic awaitable = makeRequestAsyncMethodInfo.Invoke(_telegramBotClient, new []{ request.Instance, cancellationToken });
 
-            await awaitable;
-
-            await request.Callback(awaitable.GetAwaiter().GetResult());
+            request.TaskCompletionSource.SetResult(await awaitable);
         }
     }
 }
