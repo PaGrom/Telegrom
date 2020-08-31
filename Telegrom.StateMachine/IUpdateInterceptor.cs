@@ -6,7 +6,7 @@ namespace Telegrom.StateMachine
 {
     public interface IUpdateInterceptor
     {
-        Task BeforeHandle(CancellationToken cancellationToken);
+        Task<bool> BeforeHandle(CancellationToken cancellationToken);
         IEnumerable<string> NonInterceptableStates { get; }
     }
 }
