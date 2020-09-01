@@ -10,19 +10,18 @@ using Telegrom.Database.Model;
 
 namespace Telegrom.Database
 {
-    public sealed class GlobalAttributesService : IGlobalAttributesService
+    public sealed class GlobalAttributesService : IGlobalAttributesService, IAsyncDisposable
     {
-        private readonly DbContextOptions _dbContextOptions;
+        private readonly DatabaseContext _dbContext;
 
         public GlobalAttributesService(DbContextOptions dbContextOptions)
         {
-            _dbContextOptions = dbContextOptions;
+            _dbContext = new DatabaseContext(dbContextOptions);
         }
 
         public IAsyncEnumerable<T> GetGlobalAttributesAsync<T>() where T : IGlobalAttribute
         {
-            using var context = new DatabaseContext(_dbContextOptions);
-            return context.GlobalAttributes
+            return _dbContext.GlobalAttributes
                 .Where(ga => ga.Type.Equals(typeof(T).FullName))
                 .Select(ga => JsonConvert.DeserializeObject<T>(ga.Value))
                 .AsAsyncEnumerable();
@@ -30,8 +29,7 @@ namespace Telegrom.Database
 
         public async Task<T> GetGlobalAttributeAsync<T>(Guid guid, CancellationToken cancellationToken) where T : IGlobalAttribute
         {
-            await using var context = new DatabaseContext(_dbContextOptions);
-            var attribute = await context.GlobalAttributes
+            var attribute = await _dbContext.GlobalAttributes
                 .FindAsync(new object[] { guid, typeof(T).FullName }, cancellationToken);
 
             return JsonConvert.DeserializeObject<T>(attribute.Value);
@@ -39,9 +37,7 @@ namespace Telegrom.Database
 
         public async Task CreateOrUpdateGlobalAttributeAsync<T>(T obj, CancellationToken cancellationToken) where T : IGlobalAttribute
         {
-            await using var context = new DatabaseContext(_dbContextOptions);
-
-            var existedAttribute = await context.GlobalAttributes
+            var existedAttribute = await _dbContext.GlobalAttributes
                 .FindAsync(new object[] { obj.Id, typeof(T).FullName }, cancellationToken);
 
             if (existedAttribute != null)
@@ -50,7 +46,7 @@ namespace Telegrom.Database
             }
             else
             {
-                await context.GlobalAttributes.AddAsync(new GlobalAttribute
+                await _dbContext.GlobalAttributes.AddAsync(new GlobalAttribute
                 {
                     Id = obj.Id,
                     Type = typeof(T).FullName,
@@ -58,7 +54,12 @@ namespace Telegrom.Database
                 }, cancellationToken);
             }
 
-            await context.SaveChangesAsync(cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            return _dbContext.DisposeAsync();
         }
     }
 }
