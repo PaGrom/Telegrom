@@ -19,7 +19,7 @@ namespace Telegrom.Database
             _dbContextOptions = dbContextOptions;
         }
 
-        public IAsyncEnumerable<T> GetGlobalAttributes<T>(CancellationToken cancellationToken) where T : IGlobalAttribute
+        public IAsyncEnumerable<T> GetGlobalAttributesAsync<T>() where T : IGlobalAttribute
         {
             using var context = new DatabaseContext(_dbContextOptions);
             return context.GlobalAttributes
@@ -37,23 +37,12 @@ namespace Telegrom.Database
             return JsonConvert.DeserializeObject<T>(attribute.Value);
         }
 
-        public async Task<Guid?> GetAttributeIdByValueAsync<T>(T value, CancellationToken cancellationToken) where T : IGlobalAttribute
-        {
-            await using var context = new DatabaseContext(_dbContextOptions);
-            var serializedValue = JsonConvert.SerializeObject(value);
-            var attribute = await context.GlobalAttributes
-                .Where(a => a.Type == typeof(T).FullName && a.Value == serializedValue)
-                .FirstOrDefaultAsync(cancellationToken);
-            
-            return attribute?.Id;
-        } 
-
-        public async Task CreateOrUpdateGlobalAttributeAsync<T>(Guid guid, T obj, CancellationToken cancellationToken) where T : IGlobalAttribute
+        public async Task CreateOrUpdateGlobalAttributeAsync<T>(T obj, CancellationToken cancellationToken) where T : IGlobalAttribute
         {
             await using var context = new DatabaseContext(_dbContextOptions);
 
             var existedAttribute = await context.GlobalAttributes
-                .FindAsync(new object[] { guid, typeof(T).FullName }, cancellationToken);
+                .FindAsync(new object[] { obj.Id, typeof(T).FullName }, cancellationToken);
 
             if (existedAttribute != null)
             {
@@ -63,7 +52,7 @@ namespace Telegrom.Database
             {
                 await context.GlobalAttributes.AddAsync(new GlobalAttribute
                 {
-                    Id = guid,
+                    Id = obj.Id,
                     Type = typeof(T).FullName,
                     Value = JsonConvert.SerializeObject(obj)
                 }, cancellationToken);
