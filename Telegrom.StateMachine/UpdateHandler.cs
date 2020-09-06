@@ -44,12 +44,18 @@ namespace Telegrom.StateMachine
 
             try
             {
+                var continueHandling = true;
                 foreach (var updateInterceptor in _updateInterceptors)
                 {
-                    if (!updateInterceptor.NonInterceptableStates.Contains(stateName))
+                    if (!updateInterceptor.NonInterceptableStates.Contains(stateName) && !await updateInterceptor.BeforeHandle(cancellationToken))
                     {
-                        await updateInterceptor.BeforeHandle(cancellationToken);
+                        continueHandling = false;
                     }
+                }
+
+                if (!continueHandling)
+                {
+                    return;
                 }
             }
             catch (Exception ex)
