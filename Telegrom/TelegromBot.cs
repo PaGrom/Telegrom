@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
-using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -103,19 +102,6 @@ namespace Telegrom
                 .As<ISessionStateAttributesRemover>();
 
             builder.RegisterModule<TelegramServiceModule>();
-
-            builder.Register(ctx => new MapperConfiguration(cfg =>
-            {
-                var profiles = ctx.Resolve<IEnumerable<Profile>>().ToList();
-                foreach (var profile in profiles)
-                {
-                    cfg.AddProfile(profile);
-                }
-            }));
-
-            builder.Register(ctx => ctx.Resolve<MapperConfiguration>().CreateMapper())
-                .As<IMapper>()
-                .InstancePerLifetimeScope();
 
             builder.RegisterType<SessionManager>()
                 .WithParameter(new TypedParameter(typeof(int), SessionManagerOptions.MaxActiveSessionsNumber))

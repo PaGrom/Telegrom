@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Telegram.Bot.Types;
 using Telegrom.Core.MessageBus;
-using Telegrom.Core.TelegramModel;
 
 namespace Telegrom
 {

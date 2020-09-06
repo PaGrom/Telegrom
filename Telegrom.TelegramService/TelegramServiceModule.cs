@@ -1,10 +1,8 @@
 ﻿using System.Net;
 using Autofac;
-using AutoMapper;
 using MihaZupan;
 using Telegram.Bot;
 using Telegrom.Core;
-using Telegrom.Core.MessageBus;
 
 namespace Telegrom.TelegramService
 {
@@ -51,10 +49,6 @@ namespace Telegrom.TelegramService
                     .AsImplementedInterfaces()
                     .SingleInstance();
             }
-
-            builder.RegisterType<TelegramMappingProfile>()
-                .As<Profile>()
-                .InstancePerLifetimeScope();
 
             builder.RegisterType<TelegramUpdateReceiver>()
                 .As<ITelegramUpdateReceiver>()

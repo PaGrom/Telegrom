@@ -3,9 +3,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot.Exceptions;
+using Telegram.Bot.Types;
 using Telegrom.Core.Contexts;
 using Telegrom.Core.MessageBus;
-using Telegrom.Core.TelegramModel;
+using Telegrom.TelegramService;
 
 namespace Telegrom
 {
@@ -40,7 +41,7 @@ namespace Telegrom
                 {
                     var update = await _incomingUpdateQueueReader.DequeueAsync(cancellationToken);
 
-                    var sessionContext = await _sessionManager.GetSessionContextAsync(update.From, cancellationToken);
+                    var sessionContext = await _sessionManager.GetSessionContextAsync(update.GetUser(), cancellationToken);
                     await sessionContext.PostUpdateAsync(update, cancellationToken);
                 }
                 catch (OperationCanceledException)

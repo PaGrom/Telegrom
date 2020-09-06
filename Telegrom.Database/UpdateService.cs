@@ -1,8 +1,8 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Telegram.Bot.Types;
 using Telegrom.Core;
-using Telegrom.Core.TelegramModel;
 using Telegrom.Database.Model;
 
 namespace Telegrom.Database
@@ -21,7 +21,7 @@ namespace Telegrom.Database
         public async Task SaveUpdateAsync(Update update, CancellationToken cancellationToken)
         {
             var sessionUpdate = await _context.SessionUpdates
-                .FindAsync(new object[] { _user.Id, update.UpdateId }, cancellationToken);
+                .FindAsync(new object[] { _user.Id, update.Id }, cancellationToken);
 
             if (sessionUpdate != null)
             {
@@ -32,7 +32,7 @@ namespace Telegrom.Database
                 await _context.SessionUpdates.AddAsync(new SessionUpdate
                 {
                     IdentityId = _user.Id,
-                    UpdateId = update.UpdateId,
+                    UpdateId = update.Id,
                     UpdateType = update.GetType().AssemblyQualifiedName,
                     Update = JsonConvert.SerializeObject(update)
                 }, cancellationToken);
@@ -44,7 +44,7 @@ namespace Telegrom.Database
         public async Task MakeUpdateProcessedAsync(Update update, CancellationToken cancellationToken)
         {
             var sessionUpdate = await _context.SessionUpdates
-                .FindAsync(new object[] { _user.Id, update.UpdateId }, cancellationToken);
+                .FindAsync(new object[] { _user.Id, update.Id }, cancellationToken);
 
             sessionUpdate.Processed = true;
 

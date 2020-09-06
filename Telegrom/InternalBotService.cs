@@ -1,10 +1,10 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Telegram.Bot.Types;
 using Telegrom.Core;
 using Telegrom.Core.Contexts;
 using Telegrom.Core.MessageBus;
-using Telegrom.Core.TelegramModel;
 
 namespace Telegrom
 {
