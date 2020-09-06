@@ -29,5 +29,11 @@ namespace Telegrom.StateMachine.Builder
             Condition = condition;
             StateNode = stateNode;
         }
+
+        public IfState(Func<IStateContext, bool> condition, StateNode stateNode)
+        {
+            Condition = context => new Task<bool>(() => condition(context));
+            StateNode = stateNode;
+        }
     }
 }
