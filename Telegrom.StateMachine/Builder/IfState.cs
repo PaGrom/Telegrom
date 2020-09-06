@@ -24,6 +24,10 @@ namespace Telegrom.StateMachine.Builder
             StateNode = new StateNode(stateType, $"{StateNode.StateNamePrefix}{stateName ?? stateType.Name}");
         }
 
+        public IfState(Func<IStateContext, bool> condition, Type stateType, string stateName = null)
+            : this(context => new Task<bool>(() => condition(context)), stateType, stateName)
+        { }
+
         public IfState(Func<IStateContext, Task<bool>> condition, StateNode stateNode)
         {
             Condition = condition;
@@ -31,9 +35,7 @@ namespace Telegrom.StateMachine.Builder
         }
 
         public IfState(Func<IStateContext, bool> condition, StateNode stateNode)
-        {
-            Condition = context => new Task<bool>(() => condition(context));
-            StateNode = stateNode;
-        }
+            : this(context => new Task<bool>(() => condition(context)), stateNode)
+        { }
     }
 }
