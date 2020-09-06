@@ -1,14 +1,15 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Telegrom.StateMachine.Builder
 {
     public sealed class IfState
     {
-        internal Func<IStateContext, Task<bool>> Condition { get; }
+        internal Func<IStateContext, CancellationToken, Task<bool>> Condition { get; }
         internal StateNode StateNode { get; }
 
-        public IfState(Func<IStateContext, Task<bool>> condition, Type stateType, string stateName = null)
+        public IfState(Func<IStateContext, CancellationToken, Task<bool>> condition, Type stateType, string stateName = null)
         {
             if (!typeof(IState).IsAssignableFrom(stateType))
             {
@@ -25,17 +26,17 @@ namespace Telegrom.StateMachine.Builder
         }
 
         public IfState(Func<IStateContext, bool> condition, Type stateType, string stateName = null)
-            : this(context => new Task<bool>(() => condition(context)), stateType, stateName)
+            : this((context, ctk) => Task.Run(() => condition(context), ctk), stateType, stateName)
         { }
 
-        public IfState(Func<IStateContext, Task<bool>> condition, StateNode stateNode)
+        public IfState(Func<IStateContext, CancellationToken, Task<bool>> condition, StateNode stateNode)
         {
             Condition = condition;
             StateNode = stateNode;
         }
 
         public IfState(Func<IStateContext, bool> condition, StateNode stateNode)
-            : this(context => new Task<bool>(() => condition(context)), stateNode)
+            : this((context, ctk) => Task.Run(() => condition(context), ctk), stateNode)
         { }
     }
 }
