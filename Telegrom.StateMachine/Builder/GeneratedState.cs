@@ -34,7 +34,7 @@ namespace Telegrom.StateMachine.Builder
 
             await SaveOutputStateAttributesAsync(cancellationToken);
 
-            await MoveNextAsync(NextStateKind.AfterOnEnter);
+            await MoveNextAsync(NextStateKind.AfterOnEnter, cancellationToken);
         }
 
         public async Task Handle(CancellationToken cancellationToken)
@@ -43,7 +43,7 @@ namespace Telegrom.StateMachine.Builder
 
             await SaveOutputStateAttributesAsync(cancellationToken);
 
-            await MoveNextAsync(NextStateKind.AfterHandle);
+            await MoveNextAsync(NextStateKind.AfterHandle, cancellationToken);
         }
 
         public async Task OnExit(CancellationToken cancellationToken)
@@ -52,10 +52,10 @@ namespace Telegrom.StateMachine.Builder
 
             await SaveOutputStateAttributesAsync(cancellationToken);
 
-            await MoveNextAsync(NextStateKind.AfterOnExit);
+            await MoveNextAsync(NextStateKind.AfterOnExit, cancellationToken);
         }
 
-        private async Task MoveNextAsync(NextStateKind nextStateKind)
+        private async Task MoveNextAsync(NextStateKind nextStateKind, CancellationToken cancellationToken)
         {
             if (_stateNode.NextStateKind != nextStateKind)
             {
@@ -66,7 +66,7 @@ namespace Telegrom.StateMachine.Builder
 
             foreach (var ifState in _stateNode.IfStates)
             {
-                if (await ifState.Condition(_stateContext))
+                if (await ifState.Condition(_stateContext, cancellationToken))
                 {
                     _stateContext.StateMachineContext.MoveTo(ifState.StateNode.StateName);
                     break;
