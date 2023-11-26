@@ -1,0 +1,37 @@
+name: Build and Publish NuGet
+
+on:
+  push:
+    branches: [ master ]
+
+env:
+  MAJOR_VERSION: 0
+  MINOR_VERSION: 0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Install dependencies
+      run: dotnet restore Telegrom/Telegrom.csproj
+
+    - name: Build
+      run: dotnet build Telegrom/Telegrom.csproj --no-restore --configuration Release
+
+    - name: Test
+      run: dotnet test Telegrom/Telegrom.csproj --no-build
+
+    - name: Pack
+      run: dotnet pack Telegrom/Telegrom.csproj --no-build --configuration Release --output nupkg /p:PackageVersion=${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ github.run_number }}
+
+    - name: Publish
+      run: dotnet nuget push ./nupkg/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{secrets.NUGET_API_KEY}}
+      if: github.ref == 'refs/heads/master'
