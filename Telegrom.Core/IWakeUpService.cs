@@ -7,6 +7,6 @@ namespace Telegrom.Core
 {
     public interface IWakeUpService
     {
-        Task WakeUpAsync(Action<Update, CancellationToken> handler, CancellationToken cancellationToken);
+        Task WakeUpAsync(Func<Update, CancellationToken, Task> handler, CancellationToken cancellationToken);
     }
 }

@@ -2,7 +2,7 @@
 
   <ItemGroup>
     <PackageReference Include="Autofac" />
-    <PackageReference Include="HttpToSocks5Proxy" />
+    <PackageReference Include="Microsoft.Extensions.Http" />
     <PackageReference Include="Telegram.Bot" />
   </ItemGroup>
 

@@ -18,7 +18,7 @@ namespace Telegrom.Database
             _dbContextOptions = dbContextOptions;
         }
 
-        public async Task WakeUpAsync(Action<Update, CancellationToken> handler, CancellationToken cancellationToken)
+        public async Task WakeUpAsync(Func<Update, CancellationToken, Task> handler, CancellationToken cancellationToken)
         {
             await using var context = new DatabaseContext(_dbContextOptions);
             var notProcessedUpdates = await context.SessionUpdates

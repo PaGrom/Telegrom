@@ -11,6 +11,7 @@ namespace Telegrom
     internal class InternalBotService
     {
         private readonly SessionManager _sessionManager;
+        private readonly ITelegramUpdateReceiver _telegramUpdateReceiver;
         private readonly IUpdateDispatcher _updateDispatcher;
         private readonly IRequestDispatcher _requestDispatcher;
         private readonly IWakeUpService _wakeUpService;
@@ -24,27 +25,27 @@ namespace Telegrom
             ILogger<InternalBotService> logger)
         {
             _sessionManager = sessionManager;
+            _telegramUpdateReceiver = telegramUpdateReceiver;
             _updateDispatcher = updateDispatcher;
             _requestDispatcher = requestDispatcher;
             _wakeUpService = wakeUpService;
             _logger = logger;
-
-            telegramUpdateReceiver.SetUpdateReceivedHandler(HandleTelegramMessageReceived);
-            telegramUpdateReceiver.Start();
         }
 
         public async Task RunAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("InternalBotService started");
+            _telegramUpdateReceiver.SetUpdateReceivedHandler(HandleTelegramMessageReceived);
+            _telegramUpdateReceiver.Start(cancellationToken);
             _ = _updateDispatcher.RunAsync(cancellationToken);
             await _wakeUpService.WakeUpAsync(HandleTelegramMessageReceived, cancellationToken);
             await _requestDispatcher.RunAsync(cancellationToken);
             await _sessionManager.CompleteAllAsync();
         }
 
-        public async void HandleTelegramMessageReceived(Update update, CancellationToken cancellationToken)
+        private Task HandleTelegramMessageReceived(Update update, CancellationToken cancellationToken)
         {
-            await _updateDispatcher.DispatchAsync(update, cancellationToken);
+            return _updateDispatcher.DispatchAsync(update, cancellationToken);
         }
     }
 }

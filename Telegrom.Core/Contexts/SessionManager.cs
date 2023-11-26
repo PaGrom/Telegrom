@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Autofac;
+﻿using Autofac;
 using Telegram.Bot.Types;
 
 namespace Telegrom.Core.Contexts
@@ -12,9 +7,9 @@ namespace Telegrom.Core.Contexts
     {
         private readonly ILifetimeScope _lifetimeScope;
         private readonly IIdentityService _identityService;
-        private readonly object _syncRoot = new object();
-        private readonly LinkedList<int> _recentSessionContextsQueue = new LinkedList<int>();
-        private readonly Dictionary<int, SessionContext> _sessionContexts = new Dictionary<int, SessionContext>();
+        private readonly object _syncRoot = new();
+        private readonly LinkedList<long> _recentSessionContextsQueue = [];
+        private readonly Dictionary<long, SessionContext> _sessionContexts = new();
         private readonly int _maxActiveSessions;
 
         public SessionManager(ILifetimeScope lifetimeScope, IIdentityService identityService, int maxActiveSessions)
@@ -65,9 +60,9 @@ namespace Telegrom.Core.Contexts
             return sessionContext;
         }
 
-        public async Task CompleteAllAsync()
+        public Task CompleteAllAsync()
         {
-            await Task.WhenAll(_sessionContexts.Values.Select(sessionContext => sessionContext.Complete()));
+            return Task.WhenAll(_sessionContexts.Values.Select(sessionContext => sessionContext.Complete()));
         }
 
         public async ValueTask DisposeAsync()

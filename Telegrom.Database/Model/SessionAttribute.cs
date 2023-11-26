@@ -9,7 +9,7 @@ namespace Telegrom.Database.Model
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public Guid Id { get; set; }
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
-        public int SessionId { get; set; }
+        public long SessionId { get; set; }
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public string Type { get; set; }
         public string Value { get; set; }

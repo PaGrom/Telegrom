@@ -6,7 +6,7 @@ namespace Telegrom.Database.Model
     public sealed class SessionUpdate
     {
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
-        public int IdentityId { get; set; }
+        public long IdentityId { get; set; }
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public int UpdateId { get; set; }
         public string UpdateType { get; set; }

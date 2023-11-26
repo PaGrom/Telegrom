@@ -4,9 +4,9 @@ using Telegram.Bot.Types;
 
 namespace Telegrom.Core
 {
-    public interface ITelegramUpdateReceiver : IDisposable
+    public interface ITelegramUpdateReceiver
     {
-        void Start();
-        void SetUpdateReceivedHandler(Action<Update, CancellationToken> handler);
+        void Start(CancellationToken cancellationToken);
+        void SetUpdateReceivedHandler(Func<Update, CancellationToken, Task> handler);
     }
 }
